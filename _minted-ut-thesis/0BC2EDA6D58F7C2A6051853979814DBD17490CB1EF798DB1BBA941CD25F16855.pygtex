@@ -1,0 +1,181 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+cp}{\PYGZsh{}ifndef WANSTEMCELLCYCLEMODEL\PYGZus{}HPP\PYGZus{}}
+\PYG{c+cp}{\PYGZsh{}define WANSTEMCELLCYCLEMODEL\PYGZus{}HPP\PYGZus{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}AbstractCellPopulation.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}AbstractSimpleCellCycleModel.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}RandomNumberGenerator.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}Cell.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}StemCellProliferativeType.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}SmartPointers.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}ColumnDataWriter.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}LogFile.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}HeCellCycleModel.hpp\PYGZdq{}}
+
+\PYG{c+cm}{/***********************************}
+\PYG{c+cm}{ * WAN STEM CELL CYCLE MODEL}
+\PYG{c+cm}{ * A simple model standing in for the CMZ \PYGZdq{}stem cells\PYGZdq{} described in\PYGZsq{}}
+\PYG{c+cm}{ * Wan et al. 2016 [Wan2016]}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * USE: By default, WanStemCellCycleModels consistently divide asymmetrically.}
+\PYG{c+cm}{ * InitialiseDaughterCell() marks offspring for RPC fate}
+\PYG{c+cm}{ * So\PYGZhy{}marked cells are given HeCellCycleModels for their next division.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Change default model parameters with SetModelParameters(\PYGZlt{}params\PYGZgt{});}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * 2 per\PYGZhy{}model\PYGZhy{}event output modes:}
+\PYG{c+cm}{ * EnableModeEventOutput() enables mitotic mode event logging\PYGZhy{}all cells will write to the singleton log file}
+\PYG{c+cm}{ * EnableModelDebugOutput() enables more detailed debug output, each seed will have its own file written to}
+\PYG{c+cm}{ * by a ColumnDataWriter passed to it from the test}
+\PYG{c+cm}{ * (eg. by the SetupDebugOutput helper function in the project simulator)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * 1 mitotic\PYGZhy{}event\PYGZhy{}sequence sampler (only samples one \PYGZdq{}path\PYGZdq{} through the lineage):}
+\PYG{c+cm}{ * EnableSequenceSampler() \PYGZhy{} one \PYGZdq{}sequence\PYGZdq{} of progenitors writes mitotic event type to a string in the singleton log file}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ ************************************/}
+
+\PYG{k}{class} \PYG{n+nc}{WanStemCellCycleModel} \PYG{o}{:} \PYG{k}{public} \PYG{n}{AbstractSimpleCellCycleModel}
+\PYG{p}{\PYGZob{}}
+    \PYG{k}{friend} \PYG{k}{class} \PYG{n+nc}{TestSimpleCellCycleModels}\PYG{p}{;}
+
+\PYG{k}{private}\PYG{o}{:}
+
+    \PYG{c+cm}{/** Needed for serialization. */}
+    \PYG{k}{friend} \PYG{k}{class} \PYG{n+nc}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{access}\PYG{p}{;}
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Archive the cell\PYGZhy{}cycle model and random number generator, never used directly \PYGZhy{} boost uses this.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param archive the archive}
+\PYG{c+cm}{     * @param version the current version of this class}
+\PYG{c+cm}{     */}
+    \PYG{k}{template}\PYG{o}{\PYGZlt{}}\PYG{k}{class} \PYG{n+nc}{Archive}\PYG{o}{\PYGZgt{}}
+    \PYG{k+kt}{void} \PYG{n}{serialize}\PYG{p}{(}\PYG{n}{Archive} \PYG{o}{\PYGZam{}} \PYG{n}{archive}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{version}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{base\PYGZus{}object}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractSimpleCellCycleModel}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{o}{*}\PYG{k}{this}\PYG{p}{);}
+
+        \PYG{n}{SerializableSingleton}\PYG{o}{\PYGZlt{}}\PYG{n}{RandomNumberGenerator}\PYG{o}{\PYGZgt{}*} \PYG{n}{p\PYGZus{}wrapper} \PYG{o}{=}
+                \PYG{n}{RandomNumberGenerator}\PYG{o}{::}\PYG{n}{Instance}\PYG{p}{()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{GetSerializationWrapper}\PYG{p}{();}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{p\PYGZus{}wrapper}\PYG{p}{;}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{mCellCycleDuration}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{//Private write functions for models}
+    \PYG{k+kt}{void} \PYG{n}{WriteModeEventOutput}\PYG{p}{();}
+    \PYG{k+kt}{void} \PYG{n+nf}{WriteDebugData}\PYG{p}{();}
+
+\PYG{k}{protected}\PYG{o}{:}
+    \PYG{c+c1}{//mode/output variables}
+    \PYG{k+kt}{bool} \PYG{n}{mExpandingStemPopulation}\PYG{p}{;}
+    \PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractCellPopulation}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{mPopulation}\PYG{p}{;}
+    \PYG{k+kt}{bool} \PYG{n}{mOutput}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mEventStartTime}\PYG{p}{;}
+    \PYG{c+c1}{//debug writer stuff}
+    \PYG{k+kt}{bool} \PYG{n}{mDebug}\PYG{p}{;}
+    \PYG{k+kt}{int} \PYG{n}{mTimeID}\PYG{p}{;}
+    \PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{mVarIDs}\PYG{p}{;}
+    \PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{ColumnDataWriter}\PYG{o}{\PYGZgt{}} \PYG{n}{mDebugWriter}\PYG{p}{;}
+    \PYG{c+c1}{//model parameters and state memory vars}
+    \PYG{k+kt}{int} \PYG{n}{mBasePopulation}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mGammaShift}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mGammaShape}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mGammaScale}\PYG{p}{;}
+    \PYG{k+kt}{unsigned} \PYG{n}{mMitoticMode}\PYG{p}{;}
+    \PYG{k+kt}{unsigned} \PYG{n}{mSeed}\PYG{p}{;}
+    \PYG{k+kt}{bool} \PYG{n}{mTimeDependentCycleDuration}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mPeakRateTime}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mIncreasingRateSlope}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mDecreasingRateSlope}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{mBaseGammaScale}\PYG{p}{;}
+    \PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}} \PYG{n}{mHeParamVector}\PYG{p}{;}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Protected copy\PYGZhy{}constructor for use by CreateCellCycleModel().}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * The only way for external code to create a copy of a cell cycle model}
+\PYG{c+cm}{     * is by calling that method, to ensure that a model of the correct subclass is created.}
+\PYG{c+cm}{     * This copy\PYGZhy{}constructor helps subclasses to ensure that all member variables are correctly copied when this happens.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * This method is called by child classes to set member variables for a daughter cell upon cell division.}
+\PYG{c+cm}{     * Note that the parent cell cycle model will have had ResetForDivision() called just before CreateCellCycleModel() is called,}
+\PYG{c+cm}{     * so performing an exact copy of the parent is suitable behaviour. Any daughter\PYGZhy{}cell\PYGZhy{}specific initialisation}
+\PYG{c+cm}{     * can be done in InitialiseDaughterCell().}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param rModel the cell cycle model to copy.}
+\PYG{c+cm}{     */}
+    \PYG{n}{WanStemCellCycleModel}\PYG{p}{(}\PYG{k}{const} \PYG{n}{WanStemCellCycleModel}\PYG{o}{\PYGZam{}} \PYG{n}{rModel}\PYG{p}{);}
+
+\PYG{k}{public}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Constructor \PYGZhy{} just a default, mBirthTime is set in the AbstractCellCycleModel class.}
+\PYG{c+cm}{     */}
+    \PYG{n}{WanStemCellCycleModel}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * SetCellCycleDuration() method to set length of cell cycle}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{void} \PYG{n+nf}{SetCellCycleDuration}\PYG{p}{();}
+
+    \PYG{c+cm}{/**pro}
+\PYG{c+cm}{     * Overridden builder method to create new copies of}
+\PYG{c+cm}{     * this cell\PYGZhy{}cycle model.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @return new cell\PYGZhy{}cycle model}
+\PYG{c+cm}{     */}
+    \PYG{n}{AbstractCellCycleModel}\PYG{o}{*} \PYG{n+nf}{CreateCellCycleModel}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Overridden ResetForDivision() method.}
+\PYG{c+cm}{     **/}
+    \PYG{k+kt}{void} \PYG{n+nf}{ResetForDivision}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Overridden Initialise() method.}
+\PYG{c+cm}{     * Sets proliferative type as stem cell}
+\PYG{c+cm}{     **/}
+
+    \PYG{k+kt}{void} \PYG{n+nf}{Initialise}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Overridden InitialiseDaughterCell() method.}
+\PYG{c+cm}{     * Used to implement asymmetric mitotic mode}
+\PYG{c+cm}{     * Daughter cells are initialised w/ He cell cycle model}
+\PYG{c+cm}{     * */}
+    \PYG{k+kt}{void} \PYG{n+nf}{InitialiseDaughterCell}\PYG{p}{();}
+
+    \PYG{c+cm}{/*Model setup functions for standard He (SetModelParameters) and deterministic alternative (SetDeterministicMode) models}
+\PYG{c+cm}{     * Default parameters are from refits of He et al + deterministic alternatives}
+\PYG{c+cm}{     * He 2012 params: mitoticModePhase2 = 8, mitoticModePhase3 = 15, p1PP = 1, p1PD = 0, p2PP = .2, p2PD = .4, p3PP = .2, p3PD = 0}
+\PYG{c+cm}{     * gammaShift = 4, gammaShape = 2, gammaScale = 1, sisterShift = 1}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{void} \PYG{n+nf}{SetModelParameters}\PYG{p}{(}\PYG{k+kt}{double} \PYG{n}{gammaShift} \PYG{o}{=} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{k+kt}{double} \PYG{n}{gammaShape} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k+kt}{double} \PYG{n}{gammaScale} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}} \PYG{n}{heParamVector} \PYG{o}{=} \PYG{p}{\PYGZob{}} \PYG{l+m+mi}{8}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mf}{.2}\PYG{p}{,} \PYG{l+m+mf}{.4}\PYG{p}{,} \PYG{l+m+mf}{.2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{p}{\PYGZcb{});}
+    \PYG{k+kt}{void} \PYG{n+nf}{EnableExpandingStemPopulation}\PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{basePopulation}\PYG{p}{,} \PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractCellPopulation}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{p\PYGZus{}population}\PYG{p}{);}
+    \PYG{k+kt}{void} \PYG{n+nf}{SetTimeDependentCycleDuration}\PYG{p}{(}\PYG{k+kt}{double} \PYG{n}{peakRateTime}\PYG{p}{,} \PYG{k+kt}{double} \PYG{n}{increasingSlope}\PYG{p}{,} \PYG{k+kt}{double} \PYG{n}{decreasingSlope}\PYG{p}{);}
+
+    \PYG{c+c1}{//Functions to enable per\PYGZhy{}cell mitotic mode logging for mode rate \PYGZam{} sequence sampling fixtures}
+    \PYG{c+c1}{//Uses singleton logfile}
+    \PYG{k+kt}{void} \PYG{n+nf}{EnableModeEventOutput}\PYG{p}{(}\PYG{k+kt}{double} \PYG{n}{eventStart}\PYG{p}{,} \PYG{k+kt}{unsigned} \PYG{n}{seed}\PYG{p}{);}
+
+    \PYG{c+c1}{//More detailed debug output. Needs a ColumnDataWriter passed to it}
+    \PYG{c+c1}{//Only declare ColumnDataWriter directory, filename, etc; do not set up otherwise}
+    \PYG{k+kt}{void} \PYG{n+nf}{EnableModelDebugOutput}\PYG{p}{(}\PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{ColumnDataWriter}\PYG{o}{\PYGZgt{}} \PYG{n}{debugWriter}\PYG{p}{);}
+
+    \PYG{c+c1}{//Not used, but must be overwritten lest WanStemCellCycleModels be abstract}
+    \PYG{k+kt}{double} \PYG{n+nf}{GetAverageTransitCellCycleTime}\PYG{p}{();}
+    \PYG{k+kt}{double} \PYG{n+nf}{GetAverageStemCellCycleTime}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Overridden OutputCellCycleModelParameters() method.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param rParamsFile the file stream to which the parameters are output}
+\PYG{c+cm}{     */}
+    \PYG{k}{virtual} \PYG{k+kt}{void} \PYG{n+nf}{OutputCellCycleModelParameters}\PYG{p}{(}\PYG{n}{out\PYGZus{}stream}\PYG{o}{\PYGZam{}} \PYG{n}{rParamsFile}\PYG{p}{);}
+\PYG{p}{\PYGZcb{};}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}SerializationExportWrapper.hpp\PYGZdq{}}
+\PYG{c+c1}{// Declare identifier for the serializer}
+\PYG{n}{CHASTE\PYGZus{}CLASS\PYGZus{}EXPORT}\PYG{p}{(}\PYG{n}{WanStemCellCycleModel}\PYG{p}{)}
+
+\PYG{c+cp}{\PYGZsh{}endif }\PYG{c+cm}{/*WANSTEMCELLCYCLEMODEL\PYGZus{}HPP\PYGZus{}*/}
+\end{Verbatim}

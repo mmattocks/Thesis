@@ -1,0 +1,46 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{module} \PYG{n}{BioMotifInference}
+    \PYG{k}{using} \PYG{n}{BioSequences}\PYG{p}{,} \PYG{n}{Distributed}\PYG{p}{,} \PYG{n}{Distributions}\PYG{p}{,} \PYG{n}{Serialization}\PYG{p}{,} \PYG{n}{UnicodePlots}
+    \PYG{k}{import} \PYG{n}{DataFrames}\PYG{o}{:}\PYG{n}{DataFrame}
+    \PYG{k}{import} \PYG{n}{ProgressMeter}\PYG{o}{:} \PYG{n}{AbstractProgress}\PYG{p}{,} \PYG{n}{Progress}\PYG{p}{,} \PYG{n+nd}{@showprogress}\PYG{p}{,} \PYG{n}{next!}\PYG{p}{,} \PYG{n}{move\PYGZus{}cursor\PYGZus{}up\PYGZus{}while\PYGZus{}clearing\PYGZus{}lines}\PYG{p}{,} \PYG{n}{printover}\PYG{p}{,} \PYG{n}{durationstring}
+    \PYG{k}{import} \PYG{n}{Printf}\PYG{o}{:} \PYG{n+nd}{@sprintf}
+    \PYG{k}{import} \PYG{n}{StatsFuns}\PYG{o}{:} \PYG{n}{logaddexp}\PYG{p}{,} \PYG{n}{logsumexp} \PYG{c}{\PYGZsh{}both are needed as logsumexp for two terms is deprecated}
+    \PYG{k}{import} \PYG{n}{Random}\PYG{o}{:} \PYG{n}{rand}\PYG{p}{,} \PYG{n}{seed!}\PYG{p}{,} \PYG{n}{shuffle!}
+    \PYG{k}{import} \PYG{n}{Distances}\PYG{o}{:} \PYG{n}{euclidean}
+    \PYG{k}{import} \PYG{n}{BioBackgroundModels}\PYG{o}{:} \PYG{n}{lps}
+
+    \PYG{c}{\PYGZsh{}CONSTANTS GIVING RISE TO IMPLEMENTATION\PYGZhy{}SPECIFIC SAMPLING EFFECTS}
+    \PYG{k+kd}{global} \PYG{n}{TUNING\PYGZus{}MEMORY}\PYG{o}{=}\PYG{l+m+mi}{1500} \PYG{c}{\PYGZsh{}number of past function calls to consider when tuning permutation function weights}
+    \PYG{k+kd}{global} \PYG{n}{CONVERGENCE\PYGZus{}MEMORY}\PYG{o}{=}\PYG{l+m+mi}{500} \PYG{c}{\PYGZsh{}number of iterates to display for convergence interval history}
+    \PYG{k+kd}{global} \PYG{n}{PWM\PYGZus{}SHIFT\PYGZus{}DIST}\PYG{o}{=}\PYG{n}{Weibull}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c}{\PYGZsh{}distribution of weight matrix permutation magnitudes}
+    \PYG{k+kd}{global} \PYG{n}{PWM\PYGZus{}SHIFT\PYGZus{}FREQ}\PYG{o}{=.}\PYG{l+m+mi}{2} \PYG{c}{\PYGZsh{}proportion of positions in source to permute weight matrix}
+    \PYG{k+kd}{global} \PYG{n}{PWM\PYGZus{}LENGTHPERM\PYGZus{}FREQ}\PYG{o}{=.}\PYG{l+m+mi}{2} \PYG{c}{\PYGZsh{}proportion of sources to permute length}
+    \PYG{k+kd}{global} \PYG{n}{LENGTHPERM\PYGZus{}RANGE}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{3}
+    \PYG{k+kd}{global} \PYG{n}{MIN\PYGZus{}MIX\PYGZus{}PERMFREQ}\PYG{o}{=.}\PYG{l+m+mi}{0001} \PYG{c}{\PYGZsh{}minimum proportion of mix positions to permute in relevant mix perm funcs}
+    \PYG{k+kd}{global} \PYG{n}{PRIOR\PYGZus{}WT}\PYG{o}{=}\PYG{l+m+mf}{3.} \PYG{c}{\PYGZsh{}estimate prior dirichlets from product of this constant and sample \PYGZdq{}mle\PYGZdq{} wm}
+    \PYG{k+kd}{global} \PYG{n}{PRIOR\PYGZus{}LENGTH\PYGZus{}MASS}\PYG{o}{=.}\PYG{l+m+mi}{8}
+    \PYG{k+kd}{global} \PYG{n}{EROSION\PYGZus{}INFO\PYGZus{}THRESH}\PYG{o}{=}\PYG{l+m+mf}{1.}
+    
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}IPM/ICA\PYGZus{}PWM\PYGZus{}Model.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{export} \PYG{n}{Model\PYGZus{}Record}
+    \PYG{k}{export} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}IPM/IPM\PYGZus{}likelihood.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}IPM/IPM\PYGZus{}prior\PYGZus{}utilities.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}ensemble/IPM\PYGZus{}Ensemble.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{export} \PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{,} \PYG{n}{assemble\PYGZus{}IPMs}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}ensemble/ensemble\PYGZus{}utilities.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}permutation/permute\PYGZus{}utilities.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}permutation/orthogonality\PYGZus{}helper.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}permutation/permute\PYGZus{}functions.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{export} \PYG{n}{full\PYGZus{}perm\PYGZus{}funcvec}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}permutation/permute\PYGZus{}control.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{export} \PYG{n}{Permute\PYGZus{}Instruct}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}permutation/Permute\PYGZus{}Tuner.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/model\PYGZus{}display.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/worker\PYGZus{}diagnostics.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/ns\PYGZus{}progressmeter.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}nested sampler/nested\PYGZus{}step.jl\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}nested sampler/converge\PYGZus{}ensemble.jl\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k}{end} \PYG{c}{\PYGZsh{} module}
+\end{Verbatim}

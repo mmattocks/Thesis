@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{struct} \PYG{n}{LoadConfig}
+    \PYG{n}{k\PYGZus{}range}\PYG{o}{::}\PYG{k+kt}{UnitRange}
+    \PYG{n}{o\PYGZus{}range}\PYG{o}{::}\PYG{k+kt}{UnitRange}
+    \PYG{n}{blacklist}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{whitelist}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}}
+    \PYG{k}{function} \PYG{n}{LoadConfig}\PYG{p}{(}\PYG{n}{k\PYGZus{}range}\PYG{p}{,} \PYG{n}{o\PYGZus{}range}\PYG{p}{;} \PYG{n}{blacklist}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}(),} \PYG{n}{whitelist}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}())}
+        \PYG{n}{assert\PYGZus{}loadconfig}\PYG{p}{(}\PYG{n}{k\PYGZus{}range}\PYG{p}{,} \PYG{n}{o\PYGZus{}range}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new}\PYG{p}{(}\PYG{n}{k\PYGZus{}range}\PYG{p}{,} \PYG{n}{o\PYGZus{}range}\PYG{p}{,} \PYG{n}{blacklist}\PYG{p}{,} \PYG{n}{whitelist}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{assert\PYGZus{}loadconfig}\PYG{p}{(}\PYG{n}{k\PYGZus{}range}\PYG{p}{,}\PYG{n}{o\PYGZus{}range}\PYG{p}{)}
+    \PYG{n}{k\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Minimum value of LoadConfig k\PYGZus{}range is 1!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{o\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Minimum value of LoadConfig o\PYGZus{}range is 0!\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{return} \PYG{k+kc}{true}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}subfunc to handle balancing memory load on dissimilar machines in cluster}
+\PYG{k}{function} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}models}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{hmm\PYGZus{}jobs}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{config}\PYG{o}{::}\PYG{n}{LoadConfig}\PYG{p}{,} \PYG{n}{timeout}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{300}\PYG{p}{)}
+    \PYG{n}{jobid}\PYG{o}{::}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,} \PYG{n}{start\PYGZus{}iterate}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{,} \PYG{n}{job\PYGZus{}norm}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}\PYG{p}{,} \PYG{n}{observations}\PYG{o}{::}\PYG{k+kt}{Matrix} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{hmm\PYGZus{}jobs}\PYG{p}{)}
+
+    \PYG{n}{starttime}\PYG{o}{=}\PYG{n}{time}\PYG{p}{()}
+    \PYG{k}{while} \PYG{p}{(}\PYG{n}{jobid}\PYG{o}{.}\PYG{n}{K} \PYG{o}{\PYGZlt{}} \PYG{n}{config}\PYG{o}{.}\PYG{n}{k\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{||} \PYG{n}{jobid}\PYG{o}{.}\PYG{n}{K} \PYG{o}{\PYGZgt{}} \PYG{n}{config}\PYG{o}{.}\PYG{n}{k\PYGZus{}range}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]} \PYG{o}{||} \PYG{n}{jobid}\PYG{o}{.}\PYG{n}{order} \PYG{o}{\PYGZlt{}} \PYG{n}{config}\PYG{o}{.}\PYG{n}{o\PYGZus{}range}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{||} \PYG{n}{jobid}\PYG{o}{.}\PYG{n}{order} \PYG{o}{\PYGZgt{}} \PYG{n}{config}\PYG{o}{.}\PYG{n}{o\PYGZus{}range}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]} \PYG{o}{||} \PYG{n}{jobid} \PYG{k+kp}{in} \PYG{n}{config}\PYG{o}{.}\PYG{n}{blacklist} \PYG{o}{||} \PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{whitelist}\PYG{p}{)}\PYG{o}{\PYGZgt{}}\PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{o}{!}\PYG{p}{(}\PYG{n}{jobid} \PYG{k+kp}{in} \PYG{n}{config}\PYG{o}{.}\PYG{n}{whitelist}\PYG{p}{)))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{time}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{n}{starttime} \PYG{o}{\PYGZlt{}=} \PYG{n}{timeout}\PYG{p}{)} \PYG{c}{\PYGZsh{}while a job prohibited by load table, keep putting the job back and drawing a new one}
+        \PYG{n}{put!}\PYG{p}{(}\PYG{n}{hmm\PYGZus{}jobs}\PYG{p}{,} \PYG{p}{(}\PYG{n}{jobid}\PYG{p}{,} \PYG{n}{start\PYGZus{}iterate}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{n}{job\PYGZus{}norm}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{))}
+        \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{start\PYGZus{}iterate}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{n}{job\PYGZus{}norm}\PYG{p}{,} \PYG{n}{observations} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{hmm\PYGZus{}jobs}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{p}{(}\PYG{n}{time}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{n}{starttime} \PYG{o}{\PYGZgt{}} \PYG{n}{timeout}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{k}{return} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{start\PYGZus{}iterate}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{n}{job\PYGZus{}norm}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{)}
+\PYG{k}{end}
+\end{Verbatim}

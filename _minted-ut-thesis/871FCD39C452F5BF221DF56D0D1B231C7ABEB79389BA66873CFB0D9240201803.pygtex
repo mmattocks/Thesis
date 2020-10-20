@@ -1,0 +1,26 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{function} \PYG{n}{reset\PYGZus{}ensemble}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{::}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{)}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{=}\PYG{n}{deepcopy}\PYG{p}{(}\PYG{n+nb}{e}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{string}\PYG{p}{(}\PYG{n}{i}\PYG{p}{)} \PYG{k+kp}{in} \PYG{p}{[}\PYG{n}{basename}\PYG{p}{(}\PYG{n}{record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)} \PYG{k}{for} \PYG{n}{record} \PYG{k+kp}{in} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{]}
+            \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{[}\PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{isequal}\PYG{p}{(}\PYG{n}{string}\PYG{p}{(}\PYG{n}{i}\PYG{p}{)),} \PYG{p}{[}\PYG{n}{basename}\PYG{p}{(}\PYG{n}{record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)} \PYG{k}{for} \PYG{n}{record} \PYG{k+kp}{in} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{])]}
+        \PYG{k}{else}
+            \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{retained\PYGZus{}posterior\PYGZus{}samples}\PYG{p}{[}\PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{isequal}\PYG{p}{(}\PYG{n}{string}\PYG{p}{(}\PYG{n}{i}\PYG{p}{)),} \PYG{p}{[}\PYG{n}{basename}\PYG{p}{(}\PYG{n}{record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)} \PYG{k}{for} \PYG{n}{record} \PYG{k+kp}{in} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{retained\PYGZus{}posterior\PYGZus{}samples}\PYG{p}{])]}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{contour}\PYG{o}{=}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Xi}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Xi}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}wi}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}wi}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Liwi}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Liwi}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Zi}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{log\PYGZus{}Zi}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{Hi}\PYG{o}{=}\PYG{p}{[}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{Hi}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{retained\PYGZus{}posterior\PYGZus{}samples}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Model\PYGZus{}Record}\PYG{p}{\PYGZcb{}()}
+
+    \PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{model\PYGZus{}counter}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{new\PYGZus{}e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{1}
+
+    \PYG{k}{return} \PYG{n}{new\PYGZus{}e}
+\PYG{k}{end}
+\end{Verbatim}

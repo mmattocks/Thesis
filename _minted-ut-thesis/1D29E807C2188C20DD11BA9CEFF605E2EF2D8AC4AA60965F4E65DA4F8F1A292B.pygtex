@@ -1,0 +1,139 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{struct} \PYG{n}{Chain\PYGZus{}Report}
+    \PYG{n}{id}\PYG{o}{::}\PYG{n}{Chain\PYGZus{}ID}
+    \PYG{n}{final\PYGZus{}hmm}\PYG{o}{::}\PYG{n}{BHMM}
+    \PYG{n}{test\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+    \PYG{n}{naive\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+    \PYG{n}{final\PYGZus{}delta}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+    \PYG{n}{state\PYGZus{}run\PYGZus{}lengths}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{convergence\PYGZus{}values}\PYG{o}{::}\PYG{n}{Chains}
+    \PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{::}\PYG{n}{ChainDataFrame}
+    \PYG{n}{converged}\PYG{o}{::}\PYG{k+kt}{Bool}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{Base}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{,} \PYG{n}{report}\PYG{o}{::}\PYG{n}{Chain\PYGZus{}Report}\PYG{p}{)}
+    \PYG{n}{nominal\PYGZus{}dict}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}th\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}st\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}nd\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}rd\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}th\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}th\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{haskey}\PYG{p}{(}\PYG{n}{nominal\PYGZus{}dict}\PYG{p}{,}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{n}{nom\PYGZus{}str}\PYG{o}{=}\PYG{n}{nominal\PYGZus{}dict}\PYG{p}{[}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{p}{])} \PYG{o}{:} \PYG{p}{(}\PYG{n}{nom\PYGZus{}str}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}th\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{stdout}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}BHMM EM Chain Results}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;} \PYG{n}{bold}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{K}\PYG{p}{)}\PYG{l+s}{\PYGZhy{}state, }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{p}{)}\PYG{l+s+si}{\PYGZdl{}nom\PYGZus{}str}\PYG{l+s}{ order BHMM\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Trained on observation set }\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id}\PYG{p}{)}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{report}\PYG{o}{.}\PYG{n}{test\PYGZus{}lh} \PYG{o}{\PYGZgt{}} \PYG{n}{report}\PYG{o}{.}\PYG{n}{naive\PYGZus{}lh} \PYG{o}{?} \PYG{p}{(}\PYG{n}{lh\PYGZus{}str}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}greater\PYGZdq{}}\PYG{p}{;} \PYG{n}{lh\PYGZus{}color}\PYG{o}{=:}\PYG{n}{green}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{lh\PYGZus{}str}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}less\PYGZdq{}}\PYG{p}{;} \PYG{n}{lh\PYGZus{}color}\PYG{o}{=:}\PYG{n}{red}\PYG{p}{)}
+    \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Test logP(O|θ): }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{test\PYGZus{}lh}\PYG{p}{)}\PYG{l+s}{, }\PYG{l+s+si}{\PYGZdl{}lh\PYGZus{}str}\PYG{l+s}{ than the naive model\PYGZsq{}s }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{naive\PYGZus{}lh}\PYG{p}{)}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;} \PYG{n}{color}\PYG{o}{=}\PYG{n}{lh\PYGZus{}color}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Replicate }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{replicate}\PYG{p}{)}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{report}\PYG{o}{.}\PYG{n}{converged} \PYG{o}{?} \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Converged with final step δ }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{final\PYGZus{}delta}\PYG{p}{)}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)} \PYG{o}{:} \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Failed to converge!\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{} ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Last θ:\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{final\PYGZus{}hmm}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}State Mean Feature Length (bp)\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{state\PYGZus{}run\PYGZus{}lengths}\PYG{p}{)}
+        \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}K}\PYG{l+s+si}{\PYGZdl{}i}\PYG{l+s}{: }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{state\PYGZus{}run\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.*}\PYG{n}{float}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{} ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶ ̶̶ ̶ ̶ ̶\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{lh\PYGZus{}vec}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{([}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}values}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}logP(O|θ)\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{data}\PYG{o}{...}\PYG{p}{][}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{])}
+
+    \PYG{n}{lh\PYGZus{}plot}\PYG{o}{=}\PYG{n}{lineplot}\PYG{p}{([}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mf}{1.}\PYG{o}{..}\PYG{p}{],}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{;}\PYG{n}{title}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}Chain likelihood evolution\PYGZdq{}}\PYG{p}{,} \PYG{n}{xlabel}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}Training iterate\PYGZdq{}}\PYG{p}{,} \PYG{n}{xlim}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{),} \PYG{n}{ylim}\PYG{o}{=} \PYG{p}{(}\PYG{n}{floor}\PYG{p}{(}\PYG{n}{minimum}\PYG{p}{(}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{),}\PYG{n}{sigdigits}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{n}{ceil}\PYG{p}{(}\PYG{n}{maximum}\PYG{p}{(}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{),}\PYG{n}{sigdigits}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)),} \PYG{n}{name}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}logP(O|θ)\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{lineplot!}\PYG{p}{(}\PYG{n}{lh\PYGZus{}plot}\PYG{p}{,[}\PYG{n}{report}\PYG{o}{.}\PYG{n}{naive\PYGZus{}lh} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{lh\PYGZus{}vec}\PYG{p}{)],} \PYG{n}{color}\PYG{o}{=:}\PYG{n}{magenta}\PYG{p}{,}\PYG{n}{name}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}naive\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{lh\PYGZus{}plot}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{k1vec}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{([}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}values}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}K1\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{data}\PYG{o}{...}\PYG{p}{])}
+    \PYG{n}{k\PYGZus{}plot}\PYG{o}{=}\PYG{n}{lineplot}\PYG{p}{(}\PYG{n}{k1vec}\PYG{p}{,} \PYG{n}{title}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}State p(Auto) evolution\PYGZdq{}}\PYG{p}{,} \PYG{n}{xlabel}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}Training iterate\PYGZdq{}}\PYG{p}{,} \PYG{n}{ylabel}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}prob\PYGZdq{}}\PYG{p}{,} \PYG{n}{name}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}K1\PYGZdq{}}\PYG{p}{,}\PYG{n}{ylim}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{xlim}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{k1vec}\PYG{p}{)))}
+    \PYG{k}{for} \PYG{n}{k} \PYG{k+kp}{in} \PYG{l+m+mi}{2}\PYG{o}{:}\PYG{n}{report}\PYG{o}{.}\PYG{n}{id}\PYG{o}{.}\PYG{n}{K}
+        \PYG{n}{kvec}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{([}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}values}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}K}\PYG{l+s+si}{\PYGZdl{}k}\PYG{l+s}{\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{data}\PYG{o}{...}\PYG{p}{])}
+        \PYG{n}{lineplot!}\PYG{p}{(}\PYG{n}{k\PYGZus{}plot}\PYG{p}{,}\PYG{n}{kvec}\PYG{p}{,}\PYG{n}{name}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}K}\PYG{l+s+si}{\PYGZdl{}k}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{n}{k\PYGZus{}plot}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{)}
+
+    \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Convergence Diagnostics}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{n}{bold}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}short\PYGZdq{}}
+        \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Convergence diagnostics unavailable for chains \PYGZlt{}10 steps!}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=:}\PYG{n}{yellow}\PYG{p}{)}
+    \PYG{k}{elseif} \PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}error\PYGZdq{}}
+        \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Convergence diagnostics errored! Zeros in autotransition matrix?}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=:}\PYG{n}{red}\PYG{p}{)}
+    \PYG{k}{else}        
+        \PYG{n}{all}\PYG{p}{(}\PYG{k+kt}{Bool}\PYG{o}{.}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{.}\PYG{n}{nt}\PYG{o}{.}\PYG{n}{stationarity}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{all}\PYG{p}{(}\PYG{k+kt}{Bool}\PYG{o}{.}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{.}\PYG{n}{nt}\PYG{o}{.}\PYG{n}{test}\PYG{p}{))} \PYG{o}{?} \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Likelihood and autotransition probabilites converged and passing tests.}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=:}\PYG{n}{green}\PYG{p}{)} \PYG{o}{:} \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Not all parameters converged or passing tests!}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{n}{color}\PYG{o}{=:}\PYG{n}{red}\PYG{p}{)}
+        \PYG{n}{display}\PYG{p}{(}\PYG{n}{report}\PYG{o}{.}\PYG{n}{convergence\PYGZus{}diagnostic}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+    
+\PYG{k}{function} \PYG{n}{latex\PYGZus{}report}\PYG{p}{(}\PYG{n}{report}\PYG{o}{::}\PYG{n}{Chain\PYGZus{}Report}\PYG{p}{)}
+
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{report\PYGZus{}chains}\PYG{p}{(}\PYG{n}{chains}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{EM\PYGZus{}step}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{test\PYGZus{}sets}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{};} \PYG{n}{naive\PYGZus{}hmm}\PYG{o}{=}\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)]))}
+    \PYG{n}{job\PYGZus{}ids}\PYG{o}{=}\PYG{p}{[}\PYG{n}{id} \PYG{k}{for} \PYG{p}{(}\PYG{n}{id}\PYG{p}{,}\PYG{n}{chain}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{chains}\PYG{p}{]} \PYG{c}{\PYGZsh{} make list of chain\PYGZus{}ids}
+    \PYG{n}{partitions}\PYG{o}{=}\PYG{n}{unique}\PYG{p}{([}\PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id} \PYG{k}{for} \PYG{n}{id} \PYG{k+kp}{in} \PYG{n}{job\PYGZus{}ids}\PYG{p}{])} \PYG{c}{\PYGZsh{}get list of unique partitions represented among chain\PYGZus{}ids}
+    \PYG{n}{naive\PYGZus{}order} \PYG{o}{=} \PYG{k+kt}{Integer}\PYG{p}{(}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{naive\PYGZus{}hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}\PYG{p}{))}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{partition} \PYG{k+kp}{in} \PYG{n}{partitions} \PYG{c}{\PYGZsh{}check that all partitions are available for testing and make sure codes for naive hmm are generated by adding job\PYGZus{}ids}
+        \PYG{o}{!}\PYG{p}{(}\PYG{n}{partition} \PYG{k+kp}{in} \PYG{n}{keys}\PYG{p}{(}\PYG{n}{test\PYGZus{}sets}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Observation set }\PYG{l+s+si}{\PYGZdl{}partition}\PYG{l+s}{ required by chains for testing not present in test sets!\PYGZdq{}}\PYG{p}{))}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{partition}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{naive\PYGZus{}hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{),}\PYG{n}{naive\PYGZus{}order}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{n}{code\PYGZus{}dict}\PYG{o}{=}\PYG{n}{code\PYGZus{}job\PYGZus{}obs}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{test\PYGZus{}sets}\PYG{p}{)} \PYG{c}{\PYGZsh{}code all the obs sets that are necessary ot perform our tests}
+    \PYG{n}{naive\PYGZus{}lhs}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}()} \PYG{c}{\PYGZsh{}construct dict of naive likelihoods for all partitions to be tested prior to individual tests}
+    \PYG{n+nd}{@showprogress} \PYG{l+m+mi}{1} \PYG{l+s}{\PYGZdq{}Testing naive hmm...\PYGZdq{}} \PYG{k}{for} \PYG{p}{((}\PYG{n}{partition}\PYG{p}{,}\PYG{n}{order}\PYG{p}{),}\PYG{n}{obs\PYGZus{}set}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{code\PYGZus{}dict}
+        \PYG{n}{order}\PYG{o}{==}\PYG{n}{naive\PYGZus{}order} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{naive\PYGZus{}lhs}\PYG{p}{[}\PYG{n}{partition}\PYG{p}{]}\PYG{o}{=}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{n}{partition}\PYG{p}{,}\PYG{n}{naive\PYGZus{}order}\PYG{p}{)],}\PYG{n}{naive\PYGZus{}hmm}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{n}{reports}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,}\PYG{n}{Chain\PYGZus{}Report}\PYG{p}{\PYGZcb{}()}
+    \PYG{n+nd}{@showprogress} \PYG{l+m+mi}{1} \PYG{l+s}{\PYGZdq{}Testing chains...\PYGZdq{}} \PYG{k}{for} \PYG{p}{(}\PYG{n}{id}\PYG{p}{,} \PYG{n}{chain}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{chains}
+        \PYG{n}{chains\PYGZus{}array}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{),}\PYG{l+m+mi}{1}\PYG{o}{+}\PYG{n}{id}\PYG{o}{.}\PYG{n}{K}\PYG{p}{)}
+        \PYG{k}{for} \PYG{p}{(}\PYG{n}{n}\PYG{p}{,}\PYG{n}{step}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{)}
+            \PYG{n}{chains\PYGZus{}array}\PYG{p}{[}\PYG{n}{n}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{=}\PYG{n}{step}\PYG{o}{.}\PYG{n}{log\PYGZus{}p}
+            \PYG{n}{chains\PYGZus{}array}\PYG{p}{[}\PYG{n}{n}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{]}\PYG{o}{=}\PYG{n}{get\PYGZus{}diagonal\PYGZus{}array}\PYG{p}{(}\PYG{n}{step}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{)}
+        \PYG{k}{end}
+        \PYG{n}{convergence\PYGZus{}values}\PYG{o}{=}\PYG{n}{Chains}\PYG{p}{(}\PYG{n}{chains\PYGZus{}array}\PYG{p}{,[}\PYG{l+s}{\PYGZdq{}logP(O|θ)\PYGZdq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+s}{\PYGZdq{}K\PYGZdq{}}\PYG{o}{*}\PYG{n}{string}\PYG{p}{(}\PYG{n}{i}\PYG{p}{)} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{id}\PYG{o}{.}\PYG{n}{K}\PYG{p}{]}\PYG{o}{...}\PYG{p}{])}
+        \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{)}\PYG{o}{\PYGZgt{}=}\PYG{l+m+mi}{10} 
+            \PYG{k}{try}
+                \PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{=}\PYG{n}{heideldiag}\PYG{p}{(}\PYG{n}{convergence\PYGZus{}values}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+            \PYG{k}{catch}
+                \PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{=}\PYG{n}{ChainDataFrame}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}error\PYGZdq{}}\PYG{p}{,(;}\PYG{o}{:}\PYG{n}{a}\PYG{o}{=\PYGZgt{}}\PYG{p}{[}\PYG{l+m+mf}{1.}\PYG{p}{]))}            
+            \PYG{k}{end}
+        \PYG{k}{else}
+            \PYG{n}{convergence\PYGZus{}diagnostic}\PYG{o}{=}\PYG{n}{ChainDataFrame}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}short\PYGZdq{}}\PYG{p}{,(;}\PYG{o}{:}\PYG{n}{a}\PYG{o}{=\PYGZgt{}}\PYG{p}{[}\PYG{l+m+mf}{1.}\PYG{p}{]))}
+        \PYG{k}{end}
+
+        \PYG{n}{id}\PYG{o}{.}\PYG{n}{K} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{o}{?} \PYG{p}{(}\PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{o}{=}\PYG{n}{sim\PYGZus{}run\PYGZus{}lengths}\PYG{p}{(}\PYG{n}{get\PYGZus{}diagonal\PYGZus{}array}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{),}\PYG{l+m+mi}{1000}\PYG{p}{))} \PYG{o}{:} \PYG{p}{(}\PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{n+nb}{Inf}\PYG{p}{])}
+        \PYG{n}{test\PYGZus{}lh}\PYG{o}{=}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,}\PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{p}{)],} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{)}
+        \PYG{n}{reports}\PYG{p}{[}\PYG{n}{id}\PYG{p}{]}\PYG{o}{=}\PYG{n}{Chain\PYGZus{}Report}\PYG{p}{(}\PYG{n}{id}\PYG{p}{,} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{test\PYGZus{}lh}\PYG{p}{,} \PYG{n}{naive\PYGZus{}lhs}\PYG{p}{[}\PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id}\PYG{p}{],} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{delta}\PYG{p}{,} \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{p}{,} \PYG{n}{convergence\PYGZus{}values}\PYG{p}{,} \PYG{n}{convergence\PYGZus{}diagnostic}\PYG{p}{,} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{converged}\PYG{p}{)}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{reports}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{get\PYGZus{}diagonal\PYGZus{}array}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{)}
+    \PYG{n}{k} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{)}
+    \PYG{n}{diagonal} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{k}
+        \PYG{n}{diagonal}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{diagonal}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function to simulate run lengths for vector of diagonal values}
+\PYG{k}{function} \PYG{n}{sim\PYGZus{}run\PYGZus{}lengths}\PYG{p}{(}\PYG{n}{diagonal\PYGZus{}value}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{,} \PYG{n}{samples}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+    \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{diagonal\PYGZus{}value}\PYG{p}{))}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{value}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{diagonal\PYGZus{}value}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{value} \PYG{o}{==} \PYG{l+m+mf}{0.}
+            \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{l+m+mf}{0.}
+        \PYG{k}{elseif} \PYG{n}{value} \PYG{o}{==}\PYG{l+m+mf}{1.}
+            \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n+nb}{Inf}
+        \PYG{k}{else}
+            \PYG{n}{runlengths} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{samples}\PYG{p}{)}
+            \PYG{k}{for} \PYG{n}{s} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{samples}
+                \PYG{n}{run} \PYG{o}{=} \PYG{k+kc}{true}
+                \PYG{n}{runlength} \PYG{o}{=} \PYG{l+m+mi}{0}
+                \PYG{k}{while} \PYG{n}{run}
+                    \PYG{n}{runlength} \PYG{o}{+=} \PYG{l+m+mi}{1}
+                    \PYG{k}{if} \PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{n}{value}
+                        \PYG{n}{run} \PYG{o}{=} \PYG{k+kc}{false}
+                    \PYG{k}{end}
+                \PYG{k}{end}
+                \PYG{n}{runlengths}\PYG{p}{[}\PYG{n}{s}\PYG{p}{]} \PYG{o}{=} \PYG{n}{runlength}
+            \PYG{k}{end}
+            \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{mean}\PYG{p}{(}\PYG{n}{runlengths}\PYG{p}{)}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{mean\PYGZus{}run\PYGZus{}lengths}
+\PYG{k}{end}
+\end{Verbatim}

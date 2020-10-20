@@ -1,0 +1,10 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+                \PYG{c}{\PYGZsh{}subfuncs to handle sums of log probabilities that may include \PYGZhy{}Inf (ie p=0), returning \PYGZhy{}Inf in this case rather than NaNs}
+                \PYG{k}{function} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{adjuvants}\PYG{p}{)}
+                    \PYG{n}{prob} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{adjuvants}\PYG{p}{)} \PYG{p}{;} \PYG{n}{isnan}\PYG{p}{(}\PYG{n}{prob}\PYG{p}{)} \PYG{o}{?} \PYG{o}{\PYGZhy{}} \PYG{n+nb}{Inf} \PYG{o}{:} \PYG{n}{prob}
+                \PYG{k}{end}
+                
+                \PYG{k}{function} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{base}\PYG{p}{,} \PYG{n}{adjuvants}\PYG{o}{...}\PYG{p}{)}
+                    \PYG{n}{prob} \PYG{o}{=} \PYG{n}{base}\PYG{o}{+}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{adjuvants}\PYG{p}{)} \PYG{p}{;} \PYG{n}{isnan}\PYG{p}{(}\PYG{n}{prob}\PYG{p}{)} \PYG{o}{?} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf} \PYG{o}{:} \PYG{n}{prob}
+                \PYG{k}{end}
+\end{Verbatim}

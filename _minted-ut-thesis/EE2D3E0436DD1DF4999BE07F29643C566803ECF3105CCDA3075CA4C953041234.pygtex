@@ -1,0 +1,240 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}iostream\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}string\PYGZgt{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}cxxtest/TestSuite.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}ExecutableSupport.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}Exception.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}PetscTools.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}PetscException.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}BoijeCellCycleModel.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}OffLatticeSimulationPropertyStop.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}AbstractCellBasedTestSuite.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}WildTypeCellMutationState.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}TransitCellProliferativeType.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}DifferentiatedCellProliferativeType.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}BoijeRetinalNeuralFates.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}CellsGenerator.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}HoneycombMeshGenerator.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}NodesOnlyMesh.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}NodeBasedCellPopulation.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}VertexBasedCellPopulation.hpp\PYGZdq{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}ColumnDataWriter.hpp\PYGZdq{}}
+
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{argc}\PYG{p}{,} \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{argv}\PYG{p}{[])}
+\PYG{p}{\PYGZob{}}
+    \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{StartupWithoutShowingCopyright}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{argc}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{argv}\PYG{p}{);}
+    \PYG{c+c1}{//main() returns code indicating sim run success or failure mode}
+    \PYG{k+kt}{int} \PYG{n}{exit\PYGZus{}code} \PYG{o}{=} \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{EXIT\PYGZus{}OK}\PYG{p}{;}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{argc} \PYG{o}{!=} \PYG{l+m+mi}{13}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}
+                \PYG{l+s}{\PYGZdq{}Wrong arguments for simulator.}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Usage (replace\PYGZlt{}\PYGZgt{} with values, pass bools as 0 or 1):}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{ BoijeSimulator \PYGZlt{}directoryString\PYGZgt{} \PYGZlt{}filenameString\PYGZgt{} \PYGZlt{}outputModeUnsigned(0=counts,1=events,2=sequence)\PYGZgt{} \PYGZlt{}debugOutputBool\PYGZgt{} \PYGZlt{}startSeedUnsigned\PYGZgt{} \PYGZlt{}endSeedUnsigned\PYGZgt{} \PYGZlt{}endGenerationUnsigned\PYGZgt{} \PYGZlt{}phase2GenerationUnsigned\PYGZgt{} \PYGZlt{}phase3GenerationUnsigned\PYGZgt{} \PYGZlt{}pAtoh7Double(0\PYGZhy{}1)\PYGZgt{} \PYGZlt{}pPtf1aDouble(0\PYGZhy{}1)\PYGZgt{} \PYGZlt{}pngDouble(0\PYGZhy{}1)\PYGZgt{}\PYGZdq{}}\PYG{p}{,}
+                \PYG{n+nb}{true}\PYG{p}{);}
+        \PYG{n}{exit\PYGZus{}code} \PYG{o}{=} \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{EXIT\PYGZus{}BAD\PYGZus{}ARGUMENTS}\PYG{p}{;}
+        \PYG{k}{return} \PYG{n}{exit\PYGZus{}code}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/***********************}
+\PYG{c+cm}{     * SIMULATOR PARAMETERS}
+\PYG{c+cm}{     ***********************/}
+    \PYG{n}{std}\PYG{o}{::}\PYG{n}{string} \PYG{n}{directoryString}\PYG{p}{,} \PYG{n}{filenameString}\PYG{p}{;}
+    \PYG{k+kt}{int} \PYG{n}{outputMode}\PYG{p}{;} \PYG{c+c1}{//0 = counts; 1 = mitotic mode events; 2 = mitotic mode sequence sampling}
+    \PYG{k+kt}{bool} \PYG{n}{debugOutput}\PYG{p}{;}
+    \PYG{k+kt}{unsigned} \PYG{n}{startSeed}\PYG{p}{,} \PYG{n}{endSeed}\PYG{p}{,} \PYG{n}{endGeneration}\PYG{p}{,} \PYG{n}{phase2Generation}\PYG{p}{,} \PYG{n}{phase3Generation}\PYG{p}{;}
+    \PYG{k+kt}{double} \PYG{n}{pAtoh7}\PYG{p}{,} \PYG{n}{pPtf1a}\PYG{p}{,} \PYG{n}{png}\PYG{p}{;} \PYG{c+c1}{//stochastic model parameters}
+
+    \PYG{c+c1}{//PARSE ARGUMENTS}
+    \PYG{n}{directoryString} \PYG{o}{=} \PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{];}
+    \PYG{n}{filenameString} \PYG{o}{=} \PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{];}
+    \PYG{n}{outputMode} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoi}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]);}
+    \PYG{n}{debugOutput} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]);}
+    \PYG{n}{startSeed} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{]);}
+    \PYG{n}{endSeed} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{]);}
+    \PYG{n}{endGeneration} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]);}
+    \PYG{n}{phase2Generation} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{8}\PYG{p}{]);}
+    \PYG{n}{phase3Generation} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stoul}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{9}\PYG{p}{]);}
+    \PYG{n}{pAtoh7} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stod}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{10}\PYG{p}{]);}
+    \PYG{n}{pPtf1a} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stod}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{11}\PYG{p}{]);}
+    \PYG{n}{png} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{stod}\PYG{p}{(}\PYG{n}{argv}\PYG{p}{[}\PYG{l+m+mi}{12}\PYG{p}{]);}
+
+    \PYG{c+cm}{/************************}
+\PYG{c+cm}{     * PARAMETER/ARGUMENT SANITY CHECK}
+\PYG{c+cm}{     ************************/}
+    \PYG{k+kt}{bool} \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{!=} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{outputMode} \PYG{o}{!=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{outputMode} \PYG{o}{!=} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}
+                \PYG{l+s}{\PYGZdq{}Bad outputMode (argument 3). Must be 0 (counts) 1 (mitotic events) or 2 (sequence sampling)\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{endSeed} \PYG{o}{\PYGZlt{}} \PYG{n}{startSeed}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad start \PYGZam{} end seeds (arguments, 5, 6). endSeed must not be \PYGZlt{} startSeed\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{endGeneration} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad endGeneration (argument 7). endGeneration must be \PYGZgt{} 0\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{phase3Generation} \PYG{o}{\PYGZlt{}} \PYG{n}{phase2Generation}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}
+                \PYG{l+s}{\PYGZdq{}Bad phase2Generation or phase3Generation (arguments 8, 9). phase3Generation must be \PYGZgt{} phase2Generation. Both must be \PYGZgt{}0\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{pAtoh7} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{o}{||} \PYG{n}{pAtoh7} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad pAtoh7 (argument 10). Must be  0\PYGZhy{}1\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{pPtf1a} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{o}{||} \PYG{n}{pPtf1a} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad pPtf1a (argument 11). Must be  0\PYGZhy{}1\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{png} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{o}{||} \PYG{n}{png} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad png (argument 12). Must be  0\PYGZhy{}1\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{sane} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{sane} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{PrintError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Exiting with bad arguments. See errors for details\PYGZdq{}}\PYG{p}{);}
+        \PYG{n}{exit\PYGZus{}code} \PYG{o}{=} \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{EXIT\PYGZus{}BAD\PYGZus{}ARGUMENTS}\PYG{p}{;}
+        \PYG{k}{return} \PYG{n}{exit\PYGZus{}code}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/************************}
+\PYG{c+cm}{     * SIMULATOR OUTPUT SETUP}
+\PYG{c+cm}{     ************************/}
+
+\PYG{c+c1}{//Set up singleton LogFile}
+    \PYG{n}{LogFile}\PYG{o}{*} \PYG{n}{p\PYGZus{}log} \PYG{o}{=} \PYG{n}{LogFile}\PYG{o}{::}\PYG{n}{Instance}\PYG{p}{();}
+    \PYG{n}{p\PYGZus{}log}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{Set}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{directoryString}\PYG{p}{,} \PYG{n}{filenameString}\PYG{p}{);}
+
+    \PYG{n}{ExecutableSupport}\PYG{o}{::}\PYG{n}{Print}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Simulator writing file \PYGZdq{}} \PYG{o}{+} \PYG{n}{filenameString} \PYG{o}{+} \PYG{l+s}{\PYGZdq{} to directory \PYGZdq{}} \PYG{o}{+} \PYG{n}{directoryString}\PYG{p}{);}
+
+\PYG{c+c1}{//Log entry counter}
+    \PYG{k+kt}{unsigned} \PYG{n}{entry\PYGZus{}number} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+
+\PYG{c+c1}{//Write appropriate headers to log}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Entry}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Seed}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Count}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Time (hpf)}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Seed}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{CellID}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Mitotic Mode (0=PP;1=PD;2=DD)}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Entry}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Seed}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Sequence}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+
+\PYG{c+c1}{//Instance RNG}
+    \PYG{n}{RandomNumberGenerator}\PYG{o}{*} \PYG{n}{p\PYGZus{}RNG} \PYG{o}{=} \PYG{n}{RandomNumberGenerator}\PYG{o}{::}\PYG{n}{Instance}\PYG{p}{();}
+
+\PYG{c+c1}{//Initialise pointers to relevant singleton ProliferativeTypes and Properties}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{WildTypeCellMutationState}\PYG{p}{,} \PYG{n}{p\PYGZus{}state}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{TransitCellProliferativeType}\PYG{p}{,} \PYG{n}{p\PYGZus{}Mitotic}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{DifferentiatedCellProliferativeType}\PYG{p}{,} \PYG{n}{p\PYGZus{}PostMitotic}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{RetinalGanglion}\PYG{p}{,} \PYG{n}{p\PYGZus{}RGC\PYGZus{}fate}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{AmacrineHorizontal}\PYG{p}{,} \PYG{n}{p\PYGZus{}AC\PYGZus{}HC\PYGZus{}fate}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{ReceptorBipolar}\PYG{p}{,} \PYG{n}{p\PYGZus{}PR\PYGZus{}BC\PYGZus{}fate}\PYG{p}{);}
+    \PYG{n}{MAKE\PYGZus{}PTR}\PYG{p}{(}\PYG{n}{CellLabel}\PYG{p}{,} \PYG{n}{p\PYGZus{}label}\PYG{p}{);}
+
+    \PYG{c+cm}{/************************}
+\PYG{c+cm}{     * SIMULATOR SETUP \PYGZam{} RUN}
+\PYG{c+cm}{     ************************/}
+
+\PYG{c+c1}{//iterate through supplied seed range, executing one simulation per seed}
+    \PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{unsigned} \PYG{n}{seed} \PYG{o}{=} \PYG{n}{startSeed}\PYG{p}{;} \PYG{n}{seed} \PYG{o}{\PYGZlt{}=} \PYG{n}{endSeed}\PYG{p}{;} \PYG{n}{seed}\PYG{o}{++}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{entry\PYGZus{}number} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{\PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{seed} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;} \PYG{c+c1}{//write seed to log \PYGZhy{} sequence written by cellcyclemodel objects}
+
+        \PYG{c+c1}{//initialise pointer to debugWriter}
+        \PYG{n}{ColumnDataWriter}\PYG{o}{*} \PYG{n}{debugWriter}\PYG{p}{;}
+
+        \PYG{c+c1}{//initialise SimulationTime (permits cellcyclemodel setup)}
+        \PYG{n}{SimulationTime}\PYG{o}{::}\PYG{n}{Instance}\PYG{p}{()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetStartTime}\PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{);}
+
+        \PYG{c+c1}{//Reseed the RNG with the required seed}
+        \PYG{n}{p\PYGZus{}RNG}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{Reseed}\PYG{p}{(}\PYG{n}{seed}\PYG{p}{);}
+
+        \PYG{c+c1}{//Initialise a HeCellCycleModel and set it up with appropriate TiL values}
+        \PYG{n}{BoijeCellCycleModel}\PYG{o}{*} \PYG{n}{p\PYGZus{}cycle\PYGZus{}model} \PYG{o}{=} \PYG{k}{new} \PYG{n}{BoijeCellCycleModel}\PYG{p}{;}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{debugOutput}\PYG{p}{)}
+        \PYG{p}{\PYGZob{}}
+            \PYG{c+c1}{//Pass ColumnDataWriter to cell cycle model for debug output}
+            \PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{ColumnDataWriter}\PYG{o}{\PYGZgt{}} \PYG{n}{p\PYGZus{}debugWriter}\PYG{p}{(}
+                    \PYG{k}{new} \PYG{n}{ColumnDataWriter}\PYG{p}{(}\PYG{n}{directoryString}\PYG{p}{,} \PYG{n}{filenameString} \PYG{o}{+} \PYG{l+s}{\PYGZdq{}DEBUG\PYGZus{}\PYGZdq{}} \PYG{o}{+} \PYG{n}{std}\PYG{o}{::}\PYG{n}{to\PYGZus{}string}\PYG{p}{(}\PYG{n}{seed}\PYG{p}{),} \PYG{n+nb}{false}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{));}
+            \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{EnableModelDebugOutput}\PYG{p}{(}\PYG{n}{p\PYGZus{}debugWriter}\PYG{p}{);}
+            \PYG{n}{debugWriter} \PYG{o}{=} \PYG{o}{\PYGZam{}*}\PYG{n}{p\PYGZus{}debugWriter}\PYG{p}{;}
+        \PYG{p}{\PYGZcb{}}
+
+        \PYG{c+c1}{//Setup lineages\PYGZsq{} cycle model with appropriate parameters}
+        \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetDimension}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetPostMitoticType}\PYG{p}{(}\PYG{n}{p\PYGZus{}PostMitotic}\PYG{p}{);}
+
+        \PYG{c+c1}{//Setup vector containing lineage founder with the properly set up cell cycle model}
+        \PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{n}{CellPtr}\PYG{o}{\PYGZgt{}} \PYG{n}{cells}\PYG{p}{;}
+        \PYG{n}{CellPtr} \PYG{n}{p\PYGZus{}cell}\PYG{p}{(}\PYG{k}{new} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{p\PYGZus{}state}\PYG{p}{,} \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{p}{));}
+        \PYG{n}{p\PYGZus{}cell}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetCellProliferativeType}\PYG{p}{(}\PYG{n}{p\PYGZus{}Mitotic}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetModelParameters}\PYG{p}{(}\PYG{n}{phase2Generation}\PYG{p}{,} \PYG{n}{phase3Generation}\PYG{p}{,} \PYG{n}{pAtoh7}\PYG{p}{,} \PYG{n}{pPtf1a}\PYG{p}{,} \PYG{n}{png}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetSpecifiedTypes}\PYG{p}{(}\PYG{n}{p\PYGZus{}RGC\PYGZus{}fate}\PYG{p}{,} \PYG{n}{p\PYGZus{}AC\PYGZus{}HC\PYGZus{}fate}\PYG{p}{,} \PYG{n}{p\PYGZus{}PR\PYGZus{}BC\PYGZus{}fate}\PYG{p}{);}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{n}{p\PYGZus{}cycle\PYGZus{}model}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{EnableSequenceSampler}\PYG{p}{(}\PYG{n}{p\PYGZus{}label}\PYG{p}{);}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{n}{p\PYGZus{}cell}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{AddCellProperty}\PYG{p}{(}\PYG{n}{p\PYGZus{}label}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}cell}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{InitialiseCellCycleModel}\PYG{p}{();}
+        \PYG{n}{cells}\PYG{p}{.}\PYG{n}{push\PYGZus{}back}\PYG{p}{(}\PYG{n}{p\PYGZus{}cell}\PYG{p}{);}
+
+        \PYG{c+c1}{//Generate 1x1 mesh for single\PYGZhy{}cell colony}
+        \PYG{n}{HoneycombMeshGenerator} \PYG{n}{generator}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{);}
+        \PYG{n}{MutableMesh}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}*} \PYG{n}{p\PYGZus{}generating\PYGZus{}mesh} \PYG{o}{=} \PYG{n}{generator}\PYG{p}{.}\PYG{n}{GetMesh}\PYG{p}{();}
+        \PYG{n}{NodesOnlyMesh}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}} \PYG{n}{mesh}\PYG{p}{;}
+        \PYG{n}{mesh}\PYG{p}{.}\PYG{n}{ConstructNodesWithoutMesh}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p\PYGZus{}generating\PYGZus{}mesh}\PYG{p}{,} \PYG{l+m+mf}{1.5}\PYG{p}{);}
+
+        \PYG{c+c1}{//Setup cell population}
+        \PYG{n}{NodeBasedCellPopulation}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}*} \PYG{n}{cell\PYGZus{}population}\PYG{p}{(}\PYG{k}{new} \PYG{n}{NodeBasedCellPopulation}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{mesh}\PYG{p}{,} \PYG{n}{cells}\PYG{p}{));}
+
+        \PYG{c+c1}{//Setup simulator \PYGZam{} run simulation}
+        \PYG{n}{boost}\PYG{o}{::}\PYG{n}{shared\PYGZus{}ptr}\PYG{o}{\PYGZlt{}}\PYG{n}{OffLatticeSimulationPropertyStop}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{p\PYGZus{}simulator}\PYG{p}{(}
+                \PYG{k}{new} \PYG{n}{OffLatticeSimulationPropertyStop}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{o}{*}\PYG{n}{cell\PYGZus{}population}\PYG{p}{));}
+        \PYG{n}{p\PYGZus{}simulator}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetStopProperty}\PYG{p}{(}\PYG{n}{p\PYGZus{}Mitotic}\PYG{p}{);} \PYG{c+c1}{//simulation to stop if no mitotic cells are left}
+        \PYG{n}{p\PYGZus{}simulator}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetDt}\PYG{p}{(}\PYG{l+m+mf}{0.25}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}simulator}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetEndTime}\PYG{p}{(}\PYG{n}{endGeneration}\PYG{p}{);}
+        \PYG{n}{p\PYGZus{}simulator}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{SetOutputDirectory}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}UnusedSimOutput\PYGZdq{}} \PYG{o}{+} \PYG{n}{filenameString}\PYG{p}{);} \PYG{c+c1}{//unused output}
+        \PYG{n}{p\PYGZus{}simulator}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{Solve}\PYG{p}{();}
+
+        \PYG{c+c1}{//Count lineage size}
+        \PYG{k+kt}{unsigned} \PYG{n}{count} \PYG{o}{=} \PYG{n}{cell\PYGZus{}population}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{GetNumRealCells}\PYG{p}{();}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{entry\PYGZus{}number} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{\PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{seed} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{\PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{count} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{outputMode} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*}\PYG{n}{p\PYGZus{}log} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+
+        \PYG{c+c1}{//Reset for next simulation}
+        \PYG{n}{SimulationTime}\PYG{o}{::}\PYG{n}{Destroy}\PYG{p}{();}
+        \PYG{k}{delete} \PYG{n}{cell\PYGZus{}population}\PYG{p}{;}
+        \PYG{n}{entry\PYGZus{}number}\PYG{o}{++}\PYG{p}{;}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{debugOutput}\PYG{p}{)}
+        \PYG{p}{\PYGZob{}}
+            \PYG{n}{debugWriter}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{Close}\PYG{p}{();}
+        \PYG{p}{\PYGZcb{}}
+
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{p\PYGZus{}RNG}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{Destroy}\PYG{p}{();}
+    \PYG{n}{LogFile}\PYG{o}{::}\PYG{n}{Close}\PYG{p}{();}
+
+    \PYG{k}{return} \PYG{n}{exit\PYGZus{}code}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\PYG{p}{;}
+\end{Verbatim}

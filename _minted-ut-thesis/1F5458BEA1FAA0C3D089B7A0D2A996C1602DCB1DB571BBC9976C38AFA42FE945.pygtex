@@ -1,0 +1,84 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}function to partition genome and set up Distributed RemoteChannels so partitions can be sampled simultaneously}
+\PYG{k}{function} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{genome\PYGZus{}path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{gff3\PYGZus{}path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{c}{\PYGZsh{}argument checking}
+    \PYG{o}{!}\PYG{n}{ispath}\PYG{p}{(}\PYG{n}{genome\PYGZus{}path}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad genome path!\PYGZdq{}}\PYG{p}{))}
+    \PYG{o}{!}\PYG{n}{ispath}\PYG{p}{(}\PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad genome index path!\PYGZdq{}}\PYG{p}{))}
+    \PYG{o}{!}\PYG{n}{ispath}\PYG{p}{(}\PYG{n}{gff3\PYGZus{}path}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad gff3 path!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{sample\PYGZus{}set\PYGZus{}length} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sample set length must be a positive integer!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{sample\PYGZus{}window\PYGZus{}min} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{||} \PYG{n}{sample\PYGZus{}window\PYGZus{}max} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sample window minimum and maximum bounds must be positive integers!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{sample\PYGZus{}window\PYGZus{}min} \PYG{o}{\PYGZgt{}=} \PYG{n}{sample\PYGZus{}window\PYGZus{}max} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sample window minimum size must be smaller than maximum size\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{perigenic\PYGZus{}pad} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Perigenic pad must be 0 or positive!\PYGZdq{}}\PYG{p}{))}
+
+    \PYG{n}{coordinate\PYGZus{}partitions} \PYG{o}{=} \PYG{n}{partition\PYGZus{}genome\PYGZus{}coordinates}\PYG{p}{(}\PYG{n}{gff3\PYGZus{}path}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+    \PYG{n}{sample\PYGZus{}sets} \PYG{o}{=} \PYG{n}{DataFrame}\PYG{p}{[]}
+    \PYG{n}{input\PYGZus{}sample\PYGZus{}jobs} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{)))} \PYG{c}{\PYGZsh{}channel to hold sampling jobs}
+    \PYG{n}{completed\PYGZus{}sample\PYGZus{}jobs} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{)))} \PYG{c}{\PYGZsh{}channel to hold completed sample dfs}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{coordinate\PYGZus{}partitions}
+        \PYG{n}{add\PYGZus{}metacoordinates!}\PYG{p}{(}\PYG{n}{partition}\PYG{p}{)}
+        \PYG{n}{put!}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,} \PYG{p}{(}\PYG{n}{genome\PYGZus{}path}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{,} \PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{,} \PYG{n}{deterministic}\PYG{p}{))}
+    \PYG{k}{end}
+    \PYG{n}{progress\PYGZus{}channel} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{20}\PYG{p}{))}
+    \PYG{k}{return} \PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{execute\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{channels}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{n}{RemoteChannel}\PYG{p}{,}\PYG{n}{RemoteChannel}\PYG{p}{,}\PYG{n}{RemoteChannel}\PYG{p}{,}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{},} \PYG{n}{worker\PYGZus{}pool}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{};} \PYG{n}{partitions}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length} \PYG{o}{=} \PYG{n}{channels}
+
+    \PYG{c}{\PYGZsh{}argument checking}
+    \PYG{n}{length}\PYG{p}{(}\PYG{n}{worker\PYGZus{}pool}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Worker pool must contain one or more worker IDs!\PYGZdq{}}\PYG{p}{))}
+    \PYG{o}{!}\PYG{n}{isready}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Input sample channel not ready, likely channel set from setup\PYGZus{}sample\PYGZus{}jobs passed incorrectly\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{sample\PYGZus{}set\PYGZus{}length} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sample set length must be a positive integer, likely channel set from setup\PYGZus{}sample\PYGZus{}jobs passed incorrectly\PYGZdq{}}\PYG{p}{))}
+
+    \PYG{c}{\PYGZsh{}send sampling jobs to workers}
+    \PYG{k}{if} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+        \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Sampling..\PYGZdq{}}
+        \PYG{c}{\PYGZsh{}WORKERS SAMPLE}
+        \PYG{k}{for} \PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{worker}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{worker\PYGZus{}pool}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZlt{}=} \PYG{n}{partitions} \PYG{c}{\PYGZsh{}no more workers than partitions to be used}
+                \PYG{n}{remote\PYGZus{}do}\PYG{p}{(}\PYG{n}{get\PYGZus{}sample\PYGZus{}set}\PYG{p}{,} \PYG{n}{worker}\PYG{p}{,} \PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{)}
+            \PYG{k}{end}
+        \PYG{k}{end}
+    \PYG{k}{else}
+        \PYG{n+nd}{@error} \PYG{l+s}{\PYGZdq{}No sampling jobs!\PYGZdq{}}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}progress meters for sampling}
+    \PYG{n}{sampling\PYGZus{}meters}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,} \PYG{n}{Progress}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{overall\PYGZus{}sampling\PYGZus{}meter}\PYG{o}{=}\PYG{n}{Progress}\PYG{p}{(}\PYG{n}{partitions}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Overall sampling progress:\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{completed\PYGZus{}counter} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{update!}\PYG{p}{(}\PYG{n}{overall\PYGZus{}sampling\PYGZus{}meter}\PYG{p}{,} \PYG{n}{completed\PYGZus{}counter}\PYG{p}{)}
+    \PYG{n}{sampling\PYGZus{}offset} \PYG{o}{=} \PYG{n}{ones}\PYG{p}{(}\PYG{k+kt}{Bool}\PYG{p}{,} \PYG{n}{partitions}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}collect progress updates while waiting on completion of sampling jobs}
+    \PYG{k}{while} \PYG{n}{completed\PYGZus{}counter} \PYG{o}{\PYGZlt{}} \PYG{n}{partitions}
+        \PYG{n}{wait}\PYG{p}{(}\PYG{n}{progress\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{partition\PYGZus{}id}\PYG{p}{,} \PYG{n}{progress} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{progress\PYGZus{}channel}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{haskey}\PYG{p}{(}\PYG{n}{sampling\PYGZus{}meters}\PYG{p}{,} \PYG{n}{partition\PYGZus{}id}\PYG{p}{)}
+            \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{update!}\PYG{p}{(}\PYG{n}{sampling\PYGZus{}meters}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{],} \PYG{n}{progress}\PYG{p}{)}
+        \PYG{k}{else}
+            \PYG{n}{offset} \PYG{o}{=} \PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{sampling\PYGZus{}offset}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+            \PYG{n}{sampling\PYGZus{}meters}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]} \PYG{o}{=} \PYG{n}{Progress}\PYG{p}{(}\PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Sampling partition }\PYG{l+s+si}{\PYGZdl{}partition\PYGZus{}id}\PYG{l+s}{:\PYGZdq{}}\PYG{p}{,} \PYG{n}{offset}\PYG{p}{)}
+            \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{update!}\PYG{p}{(}\PYG{n}{sampling\PYGZus{}meters}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{],} \PYG{n}{progress}\PYG{p}{)}
+            \PYG{n}{sampling\PYGZus{}offset}\PYG{p}{[}\PYG{n}{offset}\PYG{p}{]} \PYG{o}{=} \PYG{k+kc}{false}
+        \PYG{k}{end}
+        \PYG{k}{if} \PYG{n}{progress} \PYG{o}{==} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}
+            \PYG{n}{completed\PYGZus{}counter} \PYG{o}{+=} \PYG{l+m+mi}{1}
+            \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{update!}\PYG{p}{(}\PYG{n}{overall\PYGZus{}sampling\PYGZus{}meter}\PYG{p}{,} \PYG{n}{completed\PYGZus{}counter}\PYG{p}{)}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}collect sample dfs by partition id when ready}
+    \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{DataFrame}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{collected\PYGZus{}counter} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{k}{while} \PYG{n}{collected\PYGZus{}counter} \PYG{o}{\PYGZlt{}} \PYG{n}{partitions}
+        \PYG{n}{wait}\PYG{p}{(}\PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{partition\PYGZus{}id}\PYG{p}{,} \PYG{n}{sample\PYGZus{}df} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sample\PYGZus{}df}
+        \PYG{n}{collected\PYGZus{}counter} \PYG{o}{+=} \PYG{l+m+mi}{1}
+        \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Partition }\PYG{l+s+si}{\PYGZdl{}partition\PYGZus{}id}\PYG{l+s}{ completed sampling...\PYGZdq{}}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}
+\PYG{k}{end}
+\end{Verbatim}

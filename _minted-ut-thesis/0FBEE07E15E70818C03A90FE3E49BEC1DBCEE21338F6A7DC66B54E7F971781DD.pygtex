@@ -1,0 +1,80 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{function} \PYG{n}{linear\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{O}\PYG{p}{,}\PYG{n}{T} \PYG{o}{=} \PYG{n}{size}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{);}
+    \PYG{n}{a} \PYG{o}{=} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{));} \PYG{n}{A} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{)} \PYG{c}{\PYGZsh{}less expensive to transpose transmatrix in the backwards\PYGZus{}sweep than to transpose here and take a ranged view ie view(A,m:m,:) is more expensive than transpose(view(A,m,:))}
+    \PYG{n}{N} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{);} \PYG{n}{Γ} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}\PYG{p}{);}
+    \PYG{n}{mask}\PYG{o}{=}\PYG{n}{observations}\PYG{o}{.!=}\PYG{l+m+mi}{0}
+    \PYG{c}{\PYGZsh{}INITIALIZATION}
+    \PYG{n}{βoi\PYGZus{}T} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{,}\PYG{n}{N}\PYG{p}{);} \PYG{n}{βoi\PYGZus{}t} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{,}\PYG{n}{N}\PYG{p}{)} \PYG{c}{\PYGZsh{}log betas at T initialised as zeros}
+    \PYG{n}{Eoγim\PYGZus{}T} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{Γ}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{);} \PYG{n}{Eoγim\PYGZus{}t} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{Γ}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{m} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n+nb}{γ} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{Γ}\PYG{p}{,} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}
+        \PYG{n}{observations}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]]} \PYG{o}{==} \PYG{n+nb}{γ} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{m} \PYG{o}{==} \PYG{n}{i} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{Eoγim\PYGZus{}T}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,} \PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{m}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{Tijm\PYGZus{}T} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{);} \PYG{n}{Tijm\PYGZus{}t} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{N}\PYG{p}{)} \PYG{c}{\PYGZsh{}Ti,j(T,m) = 0 for all m; in logspace}
+        
+    \PYG{c}{\PYGZsh{}RECURRENCE}
+    \PYG{n}{βoi\PYGZus{}T}\PYG{p}{,}\PYG{n}{Tijm\PYGZus{}T}\PYG{p}{,}\PYG{n}{Eoγim\PYGZus{}T}\PYG{o}{=}\PYG{n}{backwards\PYGZus{}sweep!}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{A}\PYG{p}{,}\PYG{n}{N}\PYG{p}{,}\PYG{n}{Γ}\PYG{p}{,}\PYG{n}{βoi\PYGZus{}T}\PYG{p}{,}\PYG{n}{βoi\PYGZus{}t}\PYG{p}{,}\PYG{n}{Tijm\PYGZus{}T}\PYG{p}{,}\PYG{n}{Tijm\PYGZus{}t}\PYG{p}{,}\PYG{n}{Eoγim\PYGZus{}T}\PYG{p}{,}\PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{,}\PYG{n}{mask}\PYG{p}{,}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+        
+    \PYG{c}{\PYGZsh{}TERMINATION}
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{c\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{α1om} \PYG{o}{=} \PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,}\PYG{n}{a}\PYG{p}{)} \PYG{c}{\PYGZsh{}first position forward msgs}
+    \PYG{n}{log\PYGZus{}pobs} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c\PYGZus{}lse}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{α1om}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{βoi\PYGZus{}T}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{]}
+
+    \PYG{n}{Toij} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c\PYGZus{}lse}\PYG{p}{([}\PYG{n}{lps}\PYG{p}{(}\PYG{n}{Tijm\PYGZus{}T}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{,}\PYG{n}{m}\PYG{p}{],} \PYG{n}{α1om}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{n}{m}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])} \PYG{k}{for} \PYG{n}{m} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{])} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n}{j} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{]} \PYG{c}{\PYGZsh{}terminate Tijs with forward messages}
+    \PYG{n}{Eoiγ} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c\PYGZus{}lse}\PYG{p}{([}\PYG{n}{lps}\PYG{p}{(}\PYG{n}{Eoγim\PYGZus{}T}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{n+nb}{γ}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{m}\PYG{p}{],} \PYG{n}{α1om}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{n}{m}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])} \PYG{k}{for} \PYG{n}{m} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{])} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n+nb}{γ} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{Γ}\PYG{p}{]} \PYG{c}{\PYGZsh{}terminate Eids with forward messages}
+
+    \PYG{c}{\PYGZsh{}INTEGRATE ACROSS OBSERVATIONS AND SOLVE FOR NEW BHMM PARAMS}
+    \PYG{c}{\PYGZsh{}INITIAL STATE DIST}
+    \PYG{n}{a\PYGZus{}o}\PYG{o}{=}\PYG{n}{α1om}\PYG{o}{.+}\PYG{n}{βoi\PYGZus{}T}\PYG{o}{.\PYGZhy{}}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{α1om}\PYG{o}{.+}\PYG{n}{βoi\PYGZus{}T}\PYG{p}{))} \PYG{c}{\PYGZsh{}estimate a for each o}
+    \PYG{n}{obs\PYGZus{}penalty}\PYG{o}{=}\PYG{n}{log}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)} \PYG{c}{\PYGZsh{}broadcast subtraction to normalise log prob vals by obs number}
+    \PYG{n}{new\PYGZus{}a}\PYG{o}{=}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachcol}\PYG{p}{(}\PYG{n}{a\PYGZus{}o}\PYG{p}{))}\PYG{o}{.\PYGZhy{}}\PYG{n}{obs\PYGZus{}penalty} \PYG{c}{\PYGZsh{}sum over obs and normalise by number of obs}
+    \PYG{c}{\PYGZsh{}TRANSITION MATRIX}
+    \PYG{n}{new\PYGZus{}A} \PYG{o}{=} \PYG{p}{[}\PYG{n}{c\PYGZus{}lse}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Toij}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{))} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n}{j} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{]}\PYG{o}{.\PYGZhy{}}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachcol}\PYG{p}{(}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{([}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Toij}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{])))}
+    \PYG{c}{\PYGZsh{}EMISSION MATRIX}
+    \PYG{n}{new\PYGZus{}b}\PYG{o}{=}\PYG{p}{[}\PYG{n}{c\PYGZus{}lse}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Eoiγ}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n+nb}{γ}\PYG{p}{))} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n+nb}{γ} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{Γ}\PYG{p}{]}\PYG{o}{.\PYGZhy{}}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachcol}\PYG{p}{(}\PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{([}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Eoiγ}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{])))}
+    \PYG{n}{new\PYGZus{}B}\PYG{o}{=}\PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{new\PYGZus{}b}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{]}
+
+    \PYG{k}{return} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{new\PYGZus{}a}\PYG{p}{),} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{new\PYGZus{}A}\PYG{p}{),} \PYG{n}{new\PYGZus{}B}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{partition}\PYG{p}{),} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{)}
+\PYG{k}{end}
+                \PYG{c}{\PYGZsh{}LINEAR\PYGZus{}STEP SUBFUNCS}
+                \PYG{k}{function} \PYG{n}{backwards\PYGZus{}sweep!}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{N}\PYG{p}{,} \PYG{n}{Γ}\PYG{p}{,} \PYG{n}{βoi\PYGZus{}T}\PYG{p}{,} \PYG{n}{βoi\PYGZus{}t}\PYG{p}{,} \PYG{n}{Tijm\PYGZus{}T}\PYG{p}{,} \PYG{n}{Tijm\PYGZus{}t}\PYG{p}{,} \PYG{n}{Eoγim\PYGZus{}T}\PYG{p}{,} \PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{,} \PYG{n}{mask}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+                    \PYG{k}{for} \PYG{n}{t} \PYG{k+kp}{in} \PYG{n}{maximum}\PYG{p}{(}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{1}
+                        \PYG{n}{last\PYGZus{}β}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{βoi\PYGZus{}T}\PYG{p}{)}
+                        \PYG{n}{lls} \PYG{o}{=} \PYG{n}{c\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{])}
+                        \PYG{n}{omask} \PYG{o}{=} \PYG{n}{findall}\PYG{p}{(}\PYG{n}{mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{])}
+                        \PYG{n}{βoi\PYGZus{}T}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{.+=} \PYG{n}{view}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)}
+                        \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{m} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}
+                            \PYG{n}{βoi\PYGZus{}t}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,}\PYG{n}{m}\PYG{p}{]} \PYG{o}{=} \PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{βoi\PYGZus{}T}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)}\PYG{o}{.+}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,}\PYG{n}{m}\PYG{p}{,}\PYG{o}{:}\PYG{p}{))))}
+                            \PYG{k}{for} \PYG{n}{j} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}
+                                \PYG{n}{Tijm\PYGZus{}t}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{m}\PYG{p}{]} \PYG{o}{.=} \PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Tijm\PYGZus{}T}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{,}\PYG{o}{:}\PYG{p}{),} \PYG{n}{view}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{o}{:}\PYG{p}{),} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,}\PYG{n}{m}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)))))}
+                                \PYG{n}{i}\PYG{o}{==}\PYG{n}{m} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{Tijm\PYGZus{}t}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{m}\PYG{p}{]} \PYG{o}{.=} \PYG{n}{logaddexp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{Tijm\PYGZus{}t}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{m}\PYG{p}{],} \PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{last\PYGZus{}β}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{n}{A}\PYG{p}{[}\PYG{n}{m}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],}\PYG{n}{lls}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,}\PYG{n}{j}\PYG{p}{])))}
+                            \PYG{k}{end}
+                            \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{N}\PYG{p}{,} \PYG{n+nb}{γ} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{Γ}
+                                \PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{[}\PYG{n}{omask}\PYG{p}{,} \PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{m}\PYG{p}{]} \PYG{o}{.=} \PYG{n}{c\PYGZus{}lse}\PYG{o}{.}\PYG{p}{(}\PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{Eoγim\PYGZus{}T}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{n+nb}{γ}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{),}\PYG{n}{view}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,}\PYG{n}{omask}\PYG{p}{,}\PYG{o}{:}\PYG{p}{),}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,}\PYG{n}{m}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)))))}
+                                \PYG{k}{if} \PYG{n}{i}\PYG{o}{==}\PYG{n}{m}
+                                    \PYG{n}{symmask} \PYG{o}{=} \PYG{n}{findall}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{t}\PYG{p}{]}\PYG{o}{.==}\PYG{n+nb}{γ}\PYG{p}{)}
+                                    \PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{[}\PYG{n}{symmask}\PYG{p}{,} \PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{m}\PYG{p}{]} \PYG{o}{.=} \PYG{n}{logaddexp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{[}\PYG{n}{symmask}\PYG{p}{,} \PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{m}\PYG{p}{],} \PYG{n}{βoi\PYGZus{}t}\PYG{p}{[}\PYG{n}{symmask}\PYG{p}{,}\PYG{n}{m}\PYG{p}{])}
+                                \PYG{k}{end}
+                            \PYG{k}{end}
+                        \PYG{k}{end}
+                        \PYG{n}{βoi\PYGZus{}T}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{βoi\PYGZus{}t}\PYG{p}{);} \PYG{n}{Tijm\PYGZus{}T}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{Tijm\PYGZus{}t}\PYG{p}{);} \PYG{n}{Eoγim\PYGZus{}T} \PYG{o}{=} \PYG{n}{copy}\PYG{p}{(}\PYG{n}{Eoγim\PYGZus{}t}\PYG{p}{);}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{βoi\PYGZus{}T}\PYG{p}{,} \PYG{n}{Tijm\PYGZus{}T}\PYG{p}{,} \PYG{n}{Eoγim\PYGZus{}T}
+                \PYG{k}{end}
+
+                \PYG{c}{\PYGZsh{}logsumexp}
+                \PYG{k}{function} \PYG{n}{c\PYGZus{}lse}\PYG{p}{(}\PYG{n}{X}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{};} \PYG{n}{dims}\PYG{o}{=:}\PYG{p}{)} \PYG{n}{where} \PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Real}\PYG{p}{\PYGZcb{}}
+                    \PYG{n}{u}\PYG{o}{=}\PYG{n}{maximum}\PYG{p}{(}\PYG{n}{X}\PYG{p}{)}
+                    \PYG{n}{u} \PYG{n}{isa} \PYG{k+kt}{AbstractArray} \PYG{o}{||} \PYG{n}{isfinite}\PYG{p}{(}\PYG{n}{u}\PYG{p}{)} \PYG{o}{||} \PYG{k}{return} \PYG{n}{float}\PYG{p}{(}\PYG{n}{u}\PYG{p}{)}
+                    \PYG{k}{return} \PYG{n}{u} \PYG{o}{+} \PYG{n}{log}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{x} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{exp}\PYG{p}{(}\PYG{n}{x}\PYG{o}{\PYGZhy{}}\PYG{n}{u}\PYG{p}{),} \PYG{n}{X}\PYG{p}{))}
+                \PYG{k}{end}
+
+                \PYG{c}{\PYGZsh{}log likelihoods}
+                \PYG{k}{function} \PYG{n}{c\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{observation}\PYG{p}{)}
+                    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{observation}\PYG{p}{),}\PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{))}
+                    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{d} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+                        \PYG{n}{lls}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{d}\PYG{p}{]} \PYG{o}{=} \PYG{n}{logpdf}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{],} \PYG{n}{observation}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{lls}
+                \PYG{k}{end}
+\end{Verbatim}

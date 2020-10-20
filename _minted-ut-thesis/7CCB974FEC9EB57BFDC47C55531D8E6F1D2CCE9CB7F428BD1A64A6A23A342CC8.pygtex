@@ -1,0 +1,59 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    BHMM([a::AbstractVector\PYGZob{}T\PYGZcb{}, ]A::AbstractMatrix\PYGZob{}T\PYGZcb{}, B::AbstractVector\PYGZob{}\PYGZlt{}:Categorical\PYGZcb{}) where F where T}
+\PYG{l+s}{Build an BHMM with transition matrix `A` and observations distributions `B`.  }
+\PYG{l+s}{If the initial state distribution `a` is not specified, a uniform distribution is assumed. }
+\PYG{l+s}{Observations distributions can be of different types (for example `Normal` and `Exponential`).  }
+\PYG{l+s}{However they must be of the same dimension (all scalars or all multivariates).}
+\PYG{l+s}{\PYGZsh{} Example}
+\PYG{l+s}{```julia}
+\PYG{l+s}{hmm = BHMM([0.9 0.1; 0.1 0.9], [Normal(0,1), Normal(10,1)])}
+\PYG{l+s}{```}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{n}{struct} \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{\PYGZlt{}:} \PYG{n}{AbstractHMM}\PYG{p}{\PYGZob{}}\PYG{n}{Univariate}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{a}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{B}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{partition}\PYG{o}{::}\PYG{n}{String}
+    \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{partition}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)} \PYG{n}{where} \PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{=} \PYG{n}{assert\PYGZus{}BHMM}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{)} 
+\PYG{k}{end}
+
+\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{a}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{},} \PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{},} \PYG{n}{B}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{},} \PYG{n}{partition} \PYG{o}{...}\PYG{p}{)} \PYG{n}{where} \PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{partition} \PYG{o}{...}\PYG{p}{)}
+\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{},} \PYG{n}{B}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{},} \PYG{n}{partition}\PYG{o}{...}\PYG{p}{)} \PYG{n}{where} \PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}(}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{])}\PYG{o}{/}\PYG{n}{size}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{partition}\PYG{o}{...}\PYG{p}{)}
+
+\PYG{n}{copy}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{)} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{),} \PYG{n}{copy}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{),} \PYG{n}{copy}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{),} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{partition}\PYG{p}{)}
+\PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{)} \PYG{o}{=} \PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{),} \PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{))}
+
+
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    assert\PYGZus{}BHMM(a, A, B)}
+\PYG{l+s}{Throw an `ArgumentError` if the initial state distribution and the transition matrix rows does not sum to 1,}
+\PYG{l+s}{and if the observations distributions does not have the same dimensions.}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{function} \PYG{n}{assert\PYGZus{}BHMM}\PYG{p}{(}\PYG{n}{a}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{,} 
+                    \PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{,} 
+                    \PYG{n}{B}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{})}
+    \PYG{o}{!}\PYG{n}{isprobvec}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Initial state vector a is not a valid probability vector!\PYGZdq{}}\PYG{p}{))} 
+    \PYG{o}{!}\PYG{n}{istransmat}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Transition matrix A is not valid!\PYGZdq{}}\PYG{p}{))} 
+
+    \PYG{o}{!}\PYG{n}{all}\PYG{p}{([}\PYG{n}{length}\PYG{p}{(}\PYG{n}{d}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)} \PYG{k}{for} \PYG{n}{d} \PYG{k+kp}{in} \PYG{n}{B}\PYG{p}{]} \PYG{o}{.==} \PYG{n}{length}\PYG{p}{(}\PYG{n}{B}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}All distributions must have the same dimensions\PYGZdq{}}\PYG{p}{))}
+    \PYG{o}{!}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{==} \PYG{n}{length}\PYG{p}{(}\PYG{n}{B}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Length of initial state vector a, dimension of transition matrix A, and number of distributions B are not the same!\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{return} \PYG{k+kc}{true}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{Base}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Background BHMM\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}State Initial and Transition Probabilities\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{print}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}a: \PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{)}
+    \PYG{n}{print}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}A: \PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{display}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}INFORMATIVE SYMBOLS BY STATE\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{n}\PYG{p}{,}\PYG{n}{d}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{n}{print}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}K}\PYG{l+s+si}{\PYGZdl{}n}\PYG{l+s}{ \PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{print\PYGZus{}emitters}\PYG{p}{(}\PYG{n}{d}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+\end{Verbatim}

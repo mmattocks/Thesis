@@ -1,0 +1,174 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{mutable} \PYG{n}{struct} \PYG{n}{Permute\PYGZus{}Instruct}
+    \PYG{n}{funcs}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Function}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{weights}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{args}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Symbol}\PYG{p}{,}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Any}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}}
+    \PYG{n}{model\PYGZus{}limit}\PYG{o}{::}\PYG{k+kt}{Integer}
+    \PYG{n}{func\PYGZus{}limit}\PYG{o}{::}\PYG{k+kt}{Integer}
+    \PYG{n}{min\PYGZus{}clmps}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{max\PYGZus{}clmps}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{override\PYGZus{}time}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+    \PYG{n}{override\PYGZus{}weights}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{Permute\PYGZus{}Instruct}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{,}
+                    \PYG{n}{weights}\PYG{p}{,}
+                    \PYG{n}{model\PYGZus{}limit}\PYG{p}{,}
+                    \PYG{n}{func\PYGZus{}limit}\PYG{p}{;}
+                    \PYG{n}{min\PYGZus{}clmps}\PYG{o}{=}\PYG{n}{fill}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{01}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{)),}
+                    \PYG{n}{max\PYGZus{}clmps}\PYG{o}{=}\PYG{n}{fill}\PYG{p}{(}\PYG{l+m+mf}{1.}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{)),}
+                    \PYG{n}{override\PYGZus{}time}\PYG{o}{=}\PYG{l+m+mf}{0.}\PYG{p}{,} 
+                    \PYG{n}{override\PYGZus{}weights}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{)),}
+                    \PYG{n}{args}\PYG{o}{=}\PYG{p}{[}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Symbol}\PYG{p}{,}\PYG{k+kt}{Any}\PYG{p}{\PYGZcb{}\PYGZcb{}()} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{)])}\PYG{o}{=}\PYG{n}{assert\PYGZus{}permute\PYGZus{}instruct}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{,}\PYG{n}{weights}\PYG{p}{,}\PYG{n}{args}\PYG{p}{,}\PYG{n}{model\PYGZus{}limit}\PYG{p}{,}\PYG{n}{func\PYGZus{}limit}\PYG{p}{,}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{,}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{,}\PYG{n}{override\PYGZus{}time}\PYG{p}{,}\PYG{n}{override\PYGZus{}weights}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{,}\PYG{n}{weights}\PYG{p}{,}\PYG{n}{args}\PYG{p}{,}\PYG{n}{model\PYGZus{}limit}\PYG{p}{,}\PYG{n}{func\PYGZus{}limit}\PYG{p}{,}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{,}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{,}\PYG{n}{override\PYGZus{}time}\PYG{p}{,}\PYG{n}{override\PYGZus{}weights}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{assert\PYGZus{}permute\PYGZus{}instruct}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{,}\PYG{n}{weights}\PYG{p}{,}\PYG{n}{args}\PYG{p}{,}\PYG{n}{model\PYGZus{}limit}\PYG{p}{,}\PYG{n}{func\PYGZus{}limit}\PYG{p}{,}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{,} \PYG{n}{max\PYGZus{}clmps}\PYG{p}{,} \PYG{n}{override\PYGZus{}time}\PYG{p}{,} \PYG{n}{override\PYGZus{}weights}\PYG{p}{)}
+    \PYG{o}{!}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{funcs}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{args}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}A valid Permute\PYGZus{}Instruct must have as many tuning weights and argument vectors as functions!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{model\PYGZus{}limit}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Instruct limit on models to permute must be positive Integer!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{func\PYGZus{}limit}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Instruct limit on fuction calls per model permtued must be positive Integer!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{any}\PYG{p}{(}\PYG{n}{min\PYGZus{}clmps}\PYG{o}{.\PYGZgt{}=}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Instruct max\PYGZus{}clmps must all be greater than corresponding min\PYGZus{}clmps!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{sum}\PYG{p}{(}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{)}\PYG{o}{\PYGZgt{}}\PYG{l+m+mf}{1.} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sum of minimum clamps must be \PYGZlt{}1.0 to maintain a valid probability vector!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{any}\PYG{p}{(}\PYG{n}{max\PYGZus{}clmps}\PYG{o}{.\PYGZgt{}}\PYG{l+m+mf}{1.}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Tuner maximum clamps cannot be \PYGZgt{}1.0!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{override\PYGZus{}time}\PYG{o}{\PYGZlt{}}\PYG{l+m+mf}{0.} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Instruct override\PYGZus{}time must be 0 (disabled) or positive float!\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{override\PYGZus{}time}\PYG{o}{\PYGZgt{}}\PYG{l+m+mf}{0.} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{o}{!}\PYG{n}{isprobvec}\PYG{p}{(}\PYG{n}{override\PYGZus{}weights}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Permute\PYGZus{}Instruct override\PYGZus{}weights must be valid probvec!\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{return} \PYG{k+kc}{true}
+\PYG{k}{end}
+
+
+\PYG{c}{\PYGZsh{}permutation routine function\PYGZhy{} }
+\PYG{c}{\PYGZsh{}general logic: receive array of permutation parameters, until a model more likely than the least is found:}
+\PYG{c}{\PYGZsh{}randomly select a model from the ensemble (the least likely having been removed by this point), then sample new models by permuting with each of hte given parameter sets until a model more likely than the current contour is found}
+\PYG{c}{\PYGZsh{}if none is found for the candidate model, move on to another candidate until the models\PYGZus{}to\PYGZus{}permute iterate is reached, after which return nothing for an error code}
+
+\PYG{c}{\PYGZsh{}four permutation modes: source (iterative random changes to sources until model lh\PYGZgt{}contour or iterate limit reached)}
+\PYG{c}{\PYGZsh{}						\PYGZhy{}(iterates, weight shift freq per source base, length change freq per source, weight\PYGZus{}shift\PYGZus{}dist (a ContinuousUnivariateDistribution)) for permute params}
+\PYG{c}{\PYGZsh{}						mix (iterative random changes to mix matrix as above)}
+\PYG{c}{\PYGZsh{}						\PYGZhy{}(iterates, unitrange of \PYGZsh{} of moves)}
+\PYG{c}{\PYGZsh{}						init (iteratively reinitialize sources from priors)}
+\PYG{c}{\PYGZsh{}						\PYGZhy{}(iterates) for init params}
+\PYG{c}{\PYGZsh{}						merge (iteratively copy a source + mix matrix row from another model in the ensemble until lh\PYGZgt{}contour or iterate						limit reached)}
+\PYG{c}{\PYGZsh{}						\PYGZhy{}(iterates) for merpge params}
+
+
+\PYG{k}{function} \PYG{n}{permute\PYGZus{}IPM}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{::}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{,} \PYG{n}{instruction}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Instruct}\PYG{p}{)}
+    \PYG{n}{call\PYGZus{}report}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+	\PYG{k}{for} \PYG{n}{model} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{model\PYGZus{}limit}
+		\PYG{n}{m\PYGZus{}record} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{)}
+        \PYG{n}{m} \PYG{o}{=} \PYG{n}{deserialize}\PYG{p}{(}\PYG{n}{m\PYGZus{}record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)}
+
+        \PYG{n}{model\PYGZus{}blacklist}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)}
+        \PYG{n}{filteridxs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}weights}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}args} \PYG{o}{=} \PYG{n}{filter\PYGZus{}permutes}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,} \PYG{n}{model\PYGZus{}blacklist}\PYG{p}{)}
+
+        \PYG{k}{for} \PYG{n}{call} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{func\PYGZus{}limit}
+            \PYG{n}{start}\PYG{o}{=}\PYG{n}{time}\PYG{p}{()}
+            \PYG{n}{funcidx}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{filtered\PYGZus{}weights}\PYG{p}{)}
+            \PYG{n}{permute\PYGZus{}func}\PYG{o}{=}\PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{]}
+            \PYG{n}{pos\PYGZus{}args}\PYG{p}{,}\PYG{n}{kw\PYGZus{}args}\PYG{o}{=}\PYG{n}{get\PYGZus{}permfunc\PYGZus{}args}\PYG{p}{(}\PYG{n}{permute\PYGZus{}func}\PYG{p}{,}\PYG{n+nb}{e}\PYG{p}{,}\PYG{n}{m}\PYG{p}{,}\PYG{n}{filtered\PYGZus{}args}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{])}
+            \PYG{n}{new\PYGZus{}m}\PYG{o}{=}\PYG{n}{permute\PYGZus{}func}\PYG{p}{(}\PYG{n}{pos\PYGZus{}args}\PYG{o}{...}\PYG{p}{;}\PYG{n}{kw\PYGZus{}args}\PYG{o}{...}\PYG{p}{)}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{call\PYGZus{}report}\PYG{p}{,(}\PYG{n}{filteridxs}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{],}\PYG{n}{time}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{n}{start}\PYG{p}{,}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{\PYGZhy{}} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{contour}\PYG{p}{))}
+
+            \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}in this case the blacklisted function will not work on this model at all; it should be removed from the functions to use}
+                \PYG{n}{vcat}\PYG{p}{(}\PYG{n}{model\PYGZus{}blacklist}\PYG{p}{,}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)}
+                \PYG{n}{filteridxs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}weights}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}args} \PYG{o}{=} \PYG{n}{filter\PYGZus{}permutes}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,} \PYG{n}{model\PYGZus{}blacklist}\PYG{p}{)}
+            \PYG{k}{end}
+
+			\PYG{n}{dupecheck}\PYG{p}{(}\PYG{n}{new\PYGZus{}m}\PYG{p}{,}\PYG{n}{m}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{\PYGZgt{}} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{contour} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{return} \PYG{n}{new\PYGZus{}m}\PYG{p}{,} \PYG{n}{call\PYGZus{}report}
+		\PYG{k}{end}
+	\PYG{k}{end}
+	\PYG{k}{return} \PYG{n+nb}{nothing}\PYG{p}{,} \PYG{n}{call\PYGZus{}report}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{permute\PYGZus{}IPM}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{::}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{,} \PYG{n}{job\PYGZus{}chan}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{models\PYGZus{}chan}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{comms\PYGZus{}chan}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{)} \PYG{c}{\PYGZsh{}ensemble.models is partially updated on the worker to populate arguments for permute funcs}
+	\PYG{n}{persist}\PYG{o}{=}\PYG{k+kc}{true}
+    \PYG{n}{id}\PYG{o}{=}\PYG{n}{myid}\PYG{p}{()}
+    \PYG{n}{model\PYGZus{}ctr}\PYG{o}{=}\PYG{l+m+mi}{1}
+    \PYG{n}{put!}\PYG{p}{(}\PYG{n}{comms\PYGZus{}chan}\PYG{p}{,}\PYG{n}{id}\PYG{p}{)}
+    \PYG{k}{while} \PYG{n}{persist}
+        \PYG{n}{wait}\PYG{p}{(}\PYG{n}{job\PYGZus{}chan}\PYG{p}{)}
+        \PYG{n}{start}\PYG{o}{=}\PYG{n}{time}\PYG{p}{()}
+        \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{,} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{contour}\PYG{p}{,} \PYG{n}{instruction} \PYG{o}{=} \PYG{n}{fetch}\PYG{p}{(}\PYG{n}{job\PYGZus{}chan}\PYG{p}{)}
+        \PYG{n}{instruction} \PYG{o}{===} \PYG{n+nb}{nothing} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{persist}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{break}
+
+        \PYG{n}{call\PYGZus{}report}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+        \PYG{k}{for} \PYG{n}{model}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{model\PYGZus{}limit}
+			\PYG{n}{found}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}
+            \PYG{n}{m\PYGZus{}record} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models}\PYG{p}{)}
+            
+            \PYG{n}{remotecall\PYGZus{}fetch}\PYG{p}{(}\PYG{n}{isfile}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{m\PYGZus{}record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)} \PYG{o}{?} \PYG{n}{m} \PYG{o}{=} \PYG{p}{(}\PYG{n}{remotecall\PYGZus{}fetch}\PYG{p}{(}\PYG{n}{deserialize}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{m\PYGZus{}record}\PYG{o}{.}\PYG{n}{path}\PYG{p}{))} \PYG{o}{:} \PYG{p}{(}\PYG{k}{break}\PYG{p}{)}
+
+            \PYG{n}{model\PYGZus{}blacklist}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)}
+            \PYG{n}{filteridxs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}weights}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}args} \PYG{o}{=} \PYG{n}{filter\PYGZus{}permutes}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,} \PYG{n}{model\PYGZus{}blacklist}\PYG{p}{)}
+
+            \PYG{k}{for} \PYG{n}{call} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{func\PYGZus{}limit}
+                \PYG{n}{start}\PYG{o}{=}\PYG{n}{time}\PYG{p}{()}
+                \PYG{n}{funcidx}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{filtered\PYGZus{}weights}\PYG{p}{)}
+                \PYG{n}{permute\PYGZus{}func}\PYG{o}{=}\PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{]}
+                \PYG{n}{pos\PYGZus{}args}\PYG{p}{,}\PYG{n}{kw\PYGZus{}args}\PYG{o}{=}\PYG{n}{get\PYGZus{}permfunc\PYGZus{}args}\PYG{p}{(}\PYG{n}{permute\PYGZus{}func}\PYG{p}{,}\PYG{n+nb}{e}\PYG{p}{,}\PYG{n}{m}\PYG{p}{,}\PYG{n}{filtered\PYGZus{}args}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{])}
+                \PYG{n}{new\PYGZus{}m}\PYG{o}{=}\PYG{n}{permute\PYGZus{}func}\PYG{p}{(}\PYG{n}{pos\PYGZus{}args}\PYG{o}{...}\PYG{p}{;}\PYG{n}{kw\PYGZus{}args}\PYG{o}{...}\PYG{p}{)}
+                \PYG{n}{push!}\PYG{p}{(}\PYG{n}{call\PYGZus{}report}\PYG{p}{,(}\PYG{n}{filteridxs}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{],}\PYG{n}{time}\PYG{p}{()}\PYG{o}{\PYGZhy{}}\PYG{n}{start}\PYG{p}{,}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{\PYGZhy{}} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{contour}\PYG{p}{))}
+
+                \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}in this case the blacklisted function will not work on this model at all; it should be removed from the functions to use}
+                    \PYG{n}{vcat}\PYG{p}{(}\PYG{n}{model\PYGZus{}blacklist}\PYG{p}{,}\PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)}
+                    \PYG{n}{filteridxs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}weights}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}args} \PYG{o}{=} \PYG{n}{filter\PYGZus{}permutes}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,} \PYG{n}{model\PYGZus{}blacklist}\PYG{p}{)}
+                \PYG{k}{end}
+
+                \PYG{n}{dupecheck}\PYG{p}{(}\PYG{n}{new\PYGZus{}m}\PYG{p}{,}\PYG{n}{m}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new\PYGZus{}m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li} \PYG{o}{\PYGZgt{}} \PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{contour} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{((}\PYG{n}{put!}\PYG{p}{(}\PYG{n}{models\PYGZus{}chan}\PYG{p}{,} \PYG{p}{(}\PYG{n}{new\PYGZus{}m} \PYG{p}{,}\PYG{n}{id}\PYG{p}{,} \PYG{n}{call\PYGZus{}report}\PYG{p}{)));} \PYG{n}{found}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{;} \PYG{n}{model\PYGZus{}ctr}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{;} \PYG{k}{break}\PYG{p}{)}
+                
+			\PYG{k}{end}
+            \PYG{n}{found}\PYG{o}{==}\PYG{k+kc}{true} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{break}\PYG{p}{;}
+            \PYG{n}{model\PYGZus{}ctr}\PYG{o}{+=}\PYG{l+m+mi}{1}
+            \PYG{n}{wait}\PYG{p}{(}\PYG{n}{job\PYGZus{}chan}\PYG{p}{)}
+            \PYG{n}{fetch}\PYG{p}{(}\PYG{n}{job\PYGZus{}chan}\PYG{p}{)}\PYG{o}{!=}\PYG{n+nb}{e}\PYG{o}{.}\PYG{n}{models} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{k}{break}\PYG{p}{)} \PYG{c}{\PYGZsh{}if the ensemble has changed during the search, update it}
+			\PYG{n}{model}\PYG{o}{==}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{model\PYGZus{}limit} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{put!}\PYG{p}{(}\PYG{n}{models\PYGZus{}chan}\PYG{p}{,} \PYG{p}{(}\PYG{n+nb}{nothing}\PYG{p}{,} \PYG{n}{id}\PYG{p}{,} \PYG{n}{call\PYGZus{}report}\PYG{p}{));}\PYG{n}{persist}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}\PYG{c}{\PYGZsh{}worker to put nothing on channel if it fails to find a model more likely than contour}
+		\PYG{k}{end}
+	\PYG{k}{end}
+\PYG{k}{end}
+                \PYG{k}{function} \PYG{n}{filter\PYGZus{}permutes}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,} \PYG{n}{model\PYGZus{}blacklist}\PYG{p}{)}
+                    \PYG{n}{filteridxs}\PYG{o}{=}\PYG{n}{findall}\PYG{p}{(}\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}!}\PYG{k+kp}{in}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,}\PYG{n}{model\PYGZus{}blacklist}\PYG{p}{),}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{)}
+                    \PYG{n}{filtered\PYGZus{}funcs}\PYG{o}{=}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{[}\PYG{n}{filteridxs}\PYG{p}{]}
+                    \PYG{n}{filtered\PYGZus{}weights}\PYG{o}{=}\PYG{n}{filter\PYGZus{}weights}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{filteridxs}\PYG{p}{)}
+                    \PYG{n}{filtered\PYGZus{}args}\PYG{o}{=}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{n}{filteridxs}\PYG{p}{]}
+                    \PYG{k}{return} \PYG{n}{filteridxs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}funcs}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}weights}\PYG{p}{,} \PYG{n}{filtered\PYGZus{}args}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{filter\PYGZus{}weights}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{idxs}\PYG{p}{)}
+                    \PYG{n}{deplete}\PYG{o}{=}\PYG{l+m+mf}{0.}
+                    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{weight}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{)}
+                        \PYG{o}{!}\PYG{k+kp}{in}\PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{idxs}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{deplete}\PYG{o}{+=}\PYG{n}{weight}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{n}{weights}\PYG{p}{[}\PYG{n}{idxs}\PYG{p}{]}\PYG{o}{.+=}\PYG{n}{deplete}\PYG{o}{/}\PYG{n}{length}\PYG{p}{(}\PYG{n}{idxs}\PYG{p}{)}
+                    \PYG{n}{new\PYGZus{}weights}\PYG{o}{=}\PYG{n}{weights}\PYG{p}{[}\PYG{n}{idxs}\PYG{p}{]}\PYG{o}{./}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{[}\PYG{n}{idxs}\PYG{p}{])}
+                    \PYG{k}{return} \PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{new\PYGZus{}weights}\PYG{p}{)}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{get\PYGZus{}permfunc\PYGZus{}args}\PYG{p}{(}\PYG{n}{func}\PYG{o}{::}\PYG{k+kt}{Function}\PYG{p}{,}\PYG{n+nb}{e}\PYG{o}{::}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{,} \PYG{n}{m}\PYG{o}{::}\PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{,} \PYG{n}{args}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Symbol}\PYG{p}{,}\PYG{k+kt}{Any}\PYG{p}{\PYGZcb{}\PYGZcb{})}
+                    \PYG{n}{pos\PYGZus{}args}\PYG{o}{=}\PYG{p}{[]}
+                    \PYG{n}{argparts}\PYG{o}{=}\PYG{n}{Base}\PYG{o}{.}\PYG{n}{arg\PYGZus{}decl\PYGZus{}parts}\PYG{p}{(}\PYG{n}{methods}\PYG{p}{(}\PYG{n}{func}\PYG{p}{)}\PYG{o}{.}\PYG{n}{ms}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])}
+                    \PYG{n}{argnames}\PYG{o}{=}\PYG{p}{[}\PYG{k+kt}{Symbol}\PYG{p}{(}\PYG{n}{argparts}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{][}\PYG{n}{n}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{2}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{argparts}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])]}
+                    \PYG{k}{for} \PYG{n}{argname} \PYG{k+kp}{in} \PYG{n}{argnames} \PYG{c}{\PYGZsh{}assemble basic positional arguments from ensemble and model fields}
+                        \PYG{k}{if} \PYG{n}{argname} \PYG{o}{==} \PYG{k+kt}{Symbol}\PYG{p}{(}\PYG{l+s+sc}{\PYGZsq{}m\PYGZsq{}}\PYG{p}{)}
+                            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{pos\PYGZus{}args}\PYG{p}{,}\PYG{n}{m}\PYG{p}{)}
+                        \PYG{k}{elseif} \PYG{n}{argname} \PYG{k+kp}{in} \PYG{n}{fieldnames}\PYG{p}{(}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{)}
+                            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{pos\PYGZus{}args}\PYG{p}{,}\PYG{n}{getfield}\PYG{p}{(}\PYG{n+nb}{e}\PYG{p}{,}\PYG{n}{argname}\PYG{p}{))}
+                        \PYG{k}{elseif} \PYG{n}{argname} \PYG{k+kp}{in} \PYG{n}{fieldnames}\PYG{p}{(}\PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{)}
+                            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{pos\PYGZus{}args}\PYG{p}{,}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,}\PYG{n}{argname}\PYG{p}{))}
+                        \PYG{k}{else}
+                            \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Positional argument }\PYG{l+s+si}{\PYGZdl{}argname}\PYG{l+s}{ of }\PYG{l+s+si}{\PYGZdl{}func}\PYG{l+s}{ not available in the ensemble or model!\PYGZdq{}}\PYG{p}{))}
+                        \PYG{k}{end}
+                    \PYG{k}{end}
+            
+                    \PYG{n}{kw\PYGZus{}args} \PYG{o}{=} \PYG{n}{NamedTuple}\PYG{p}{()}
+                    \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{args}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{c}{\PYGZsh{}if there are any keyword arguments to pass}
+                        \PYG{n}{sym}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Symbol}\PYG{p}{\PYGZcb{}()}
+                        \PYG{n}{val}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Any}\PYG{p}{\PYGZcb{}()}
+                        \PYG{k}{for} \PYG{n}{arg} \PYG{k+kp}{in} \PYG{n}{args}
+                            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{sym}\PYG{p}{,} \PYG{n}{arg}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]);} \PYG{n}{push!}\PYG{p}{(}\PYG{n}{val}\PYG{p}{,} \PYG{n}{arg}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}
+                        \PYG{k}{end}
+                        \PYG{n}{kw\PYGZus{}args} \PYG{o}{=} \PYG{p}{(;}\PYG{n}{zip}\PYG{p}{(}\PYG{n}{sym}\PYG{p}{,}\PYG{n}{val}\PYG{p}{)}\PYG{o}{...}\PYG{p}{)}
+                    \PYG{k}{end}
+
+                    \PYG{k}{return} \PYG{n}{pos\PYGZus{}args}\PYG{p}{,} \PYG{n}{kw\PYGZus{}args}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{dupecheck}\PYG{p}{(}\PYG{n}{new\PYGZus{}model}\PYG{p}{,} \PYG{n}{model}\PYG{p}{)}
+                    \PYG{p}{(}\PYG{n}{new\PYGZus{}model}\PYG{o}{.}\PYG{n}{sources}\PYG{o}{==}\PYG{n}{model}\PYG{o}{.}\PYG{n}{sources} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{new\PYGZus{}model}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{o}{==}\PYG{n}{model}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{k}{return} \PYG{k+kc}{false}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{k}{return} \PYG{k+kc}{true}\PYG{p}{)}
+                \PYG{k}{end}
+\end{Verbatim}

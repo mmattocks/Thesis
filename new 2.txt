@@ -1,0 +1,24 @@
+Questions to structure
+
+What kinds of claims are Cayouette and Harris advancing?
+
+-generally that cell-intrinsic, stochastic processes are responsible for producing the observed variability of clones in in vivo and in vitro contexts.
+
+How seriously are the claims meant to be taken? 
+
+-very seriously, with the important consequence that producing the appropriate number and type of progeny is not affected by explantation, so two important guarantors of retinal functional properties (number and lineage distribution of cells) are stably safeguarded by stable properties of RPCs themselves.
+
+Why should the claims be taken seriously?
+
+-The resolution of this question has fundamental implications for the types of regenerative medecine strategies that should be researched.
+-Fundamental questions of ontology are being posed: what does "random" or "stochastic" mean, and what is the significance of making this claim about an existent? That statistical description of biological phenomena is a successful modeling approach is well known- so the implication may in fact be about the \textit{source} of variability. Indices of biological processes may display continuous variability due to underlying multicausal determinist dynamics.
+-There are clearly good reasons to believe that variability in proliferative and commitment outcomes are products internal dynamics of the cell. This arises from seminal explant studies performed by Cayouette. The extent to which this kind of claim matters depends on its fundamental and practical implications. 
+-It is no longer certain that the implications of claims about the work that is currently being undertaken to support the theory of intrinsic randomness are being fully worked out within the papers themselves. The principal investigators speak in vaguities in media interviews, the actual modelling work appears to be carried out by physics students with an interest in biostatistics. As Jaynes et al. point out:
+
+/begin{longquote}
+
+
+How are the claims supported?
+
+
+

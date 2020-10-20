@@ -1,0 +1,170 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}Testbed for synthetic spike recovery from example background}
+
+\PYG{k}{using} \PYG{n}{nnlearn}\PYG{p}{,} \PYG{n}{BGHMM}\PYG{p}{,} \PYG{n}{HMMBase}\PYG{p}{,} \PYG{n}{Distributions}\PYG{p}{,} \PYG{n}{Random}\PYG{p}{,} \PYG{n}{Serialization}\PYG{p}{,} \PYG{n}{Distributions}
+
+\PYG{n}{Random}\PYG{o}{.}\PYG{n}{seed!}\PYG{p}{(}\PYG{l+m+mi}{786}\PYG{p}{)}
+
+\PYG{c}{\PYGZsh{}CONSTANTS}
+\PYG{n}{no\PYGZus{}obs}\PYG{o}{=}\PYG{l+m+mi}{1000}
+\PYG{n}{obsl}\PYG{o}{=}\PYG{l+m+mi}{140}
+
+\PYG{n}{hmm}\PYG{o}{=}\PYG{n}{HMM}\PYG{p}{\PYGZob{}}\PYG{n}{Univariate}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}([}\PYG{l+m+mf}{0.4016518533961019}\PYG{p}{,} \PYG{l+m+mf}{0.2724399569450827}\PYG{p}{,} \PYG{l+m+mf}{0.3138638675018568}\PYG{p}{,} \PYG{l+m+mf}{0.012044322156962559}\PYG{p}{],} \PYG{p}{[}\PYG{l+m+mf}{3.016523036789942e\PYGZhy{}9} \PYG{l+m+mf}{2.860631288328858e\PYGZhy{}6} \PYG{l+m+mf}{0.2299906524188302} \PYG{l+m+mf}{0.7700064839333549}\PYG{p}{;} \PYG{l+m+mf}{3.0102278323431375e\PYGZhy{}11} \PYG{l+m+mf}{0.7494895424906354} \PYG{l+m+mf}{0.23378615437778671} \PYG{l+m+mf}{0.016724303101477486}\PYG{p}{;} \PYG{l+m+mf}{8.665894321573098e\PYGZhy{}17} \PYG{l+m+mf}{0.2789950381410553} \PYG{l+m+mf}{0.7141355461949104} \PYG{l+m+mf}{0.006869415664033568}\PYG{p}{;} \PYG{l+m+mf}{0.006872526597796038} \PYG{l+m+mf}{0.016052425322133648} \PYG{l+m+mf}{0.017255179541768192} \PYG{l+m+mf}{0.9598198685383041}\PYG{p}{],} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{([}\PYG{l+m+mf}{0.1582723599684065}\PYG{p}{,} \PYG{l+m+mf}{0.031949729618356536}\PYG{p}{,} \PYG{l+m+mf}{0.653113286526948}\PYG{p}{,} \PYG{l+m+mf}{0.15666462388628763}\PYG{p}{]),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{l+m+mf}{0.4610499748798372}\PYG{p}{,} \PYG{l+m+mf}{0.2613013005680122}\PYG{p}{,} \PYG{l+m+mf}{0.15161801872560146}\PYG{p}{,} \PYG{l+m+mf}{0.12603070582654768}\PYG{p}{]),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{l+m+mf}{0.08601960130086236}\PYG{p}{,} \PYG{l+m+mf}{0.13869192872427524}\PYG{p}{,} \PYG{l+m+mf}{0.26945182329686523}\PYG{p}{,} \PYG{l+m+mf}{0.5058366466779973}\PYG{p}{]),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{l+m+mf}{0.3787366527613563}\PYG{p}{,} \PYG{l+m+mf}{0.11034604356978756}\PYG{p}{,} \PYG{l+m+mf}{0.1119586976058099}\PYG{p}{,} \PYG{l+m+mf}{0.3989586060630392}\PYG{p}{])])}
+
+\PYG{n}{struc\PYGZus{}sig}\PYG{o}{=}\PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{7} \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{1}
+           \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{7}
+           \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{7} \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{periodicity}\PYG{o}{=}\PYG{l+m+mi}{8}
+\PYG{n}{struc\PYGZus{}frac\PYGZus{}obs}\PYG{o}{=.}\PYG{l+m+mi}{35}
+
+\PYG{n}{tata\PYGZus{}box}\PYG{o}{=}\PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{85}
+          \PYG{o}{.}\PYG{l+m+mi}{85} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05}
+          \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{85}
+          \PYG{o}{.}\PYG{l+m+mi}{85} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05}
+          \PYG{o}{.}\PYG{l+m+mi}{425} \PYG{o}{.}\PYG{l+m+mi}{075} \PYG{o}{.}\PYG{l+m+mi}{075} \PYG{o}{.}\PYG{l+m+mi}{425}
+          \PYG{o}{.}\PYG{l+m+mi}{85} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05} \PYG{o}{.}\PYG{l+m+mi}{05}
+          \PYG{o}{.}\PYG{l+m+mi}{425} \PYG{o}{.}\PYG{l+m+mi}{075} \PYG{o}{.}\PYG{l+m+mi}{075} \PYG{o}{.}\PYG{l+m+mi}{425}\PYG{p}{]}
+\PYG{n}{tata\PYGZus{}frac\PYGZus{}obs}\PYG{o}{=.}\PYG{l+m+mi}{7}
+\PYG{n}{tata\PYGZus{}recur\PYGZus{}range}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}
+
+\PYG{n}{combined\PYGZus{}ensemble} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}/bench/PhD/NGS\PYGZus{}binaries/nnlearn/combined\PYGZus{}ensemble\PYGZdq{}}
+
+\PYG{c}{\PYGZsh{}JOB CONSTANTS}
+\PYG{k+kd}{const} \PYG{n}{position\PYGZus{}size} \PYG{o}{=} \PYG{l+m+mi}{141}
+\PYG{k+kd}{const} \PYG{n}{ensemble\PYGZus{}size} \PYG{o}{=} \PYG{l+m+mi}{100}
+\PYG{k+kd}{const} \PYG{n}{no\PYGZus{}sources} \PYG{o}{=} \PYG{l+m+mi}{3}
+\PYG{k+kd}{const} \PYG{n}{source\PYGZus{}min\PYGZus{}bases} \PYG{o}{=} \PYG{l+m+mi}{3}
+\PYG{k+kd}{const} \PYG{n}{source\PYGZus{}max\PYGZus{}bases} \PYG{o}{=} \PYG{l+m+mi}{12}
+\PYG{n+nd}{@assert} \PYG{n}{source\PYGZus{}min\PYGZus{}bases} \PYG{o}{\PYGZlt{}} \PYG{n}{source\PYGZus{}max\PYGZus{}bases}
+\PYG{k+kd}{const} \PYG{n}{source\PYGZus{}length\PYGZus{}range}\PYG{o}{=} \PYG{n}{source\PYGZus{}min\PYGZus{}bases}\PYG{o}{:}\PYG{n}{source\PYGZus{}max\PYGZus{}bases}
+\PYG{k+kd}{const} \PYG{n}{mixing\PYGZus{}prior} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{3}
+\PYG{n+nd}{@assert} \PYG{n}{mixing\PYGZus{}prior} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{mixing\PYGZus{}prior} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{1}
+\PYG{k+kd}{const} \PYG{n}{models\PYGZus{}to\PYGZus{}permute} \PYG{o}{=} \PYG{n}{ensemble\PYGZus{}size} \PYG{o}{*} \PYG{l+m+mi}{3}
+
+\PYG{n}{job\PYGZus{}sets}\PYG{o}{=}\PYG{p}{[}
+\PYG{p}{([}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PS\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PSFM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PSFM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{o}{*}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{l+m+mf}{1.}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}FM\PYGZdq{}}\PYG{p}{,} \PYG{p}{()),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}DM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}SM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}RD\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}RI\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{))}
+\PYG{p}{],[}\PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{775}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{025}\PYG{p}{]),}
+\PYG{p}{([}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PS\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PSFM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PSFM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{,} \PYG{l+m+mf}{0.}\PYG{p}{,} \PYG{l+m+mf}{1.}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}PSFM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{,} \PYG{l+m+mf}{0.8}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{0}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}FM\PYGZdq{}}\PYG{p}{,} \PYG{p}{()),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}DM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}SM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}RD\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}RI\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{o}{*}\PYG{l+m+mi}{10}\PYG{p}{)),}
+    \PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{))}
+\PYG{p}{],[}\PYG{o}{.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{20}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.05}\PYG{p}{,} \PYG{l+m+mf}{0.15}\PYG{p}{,} \PYG{l+m+mf}{0.10}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{0}\PYG{p}{]),}
+\PYG{p}{]}
+\PYG{n}{job\PYGZus{}limit}\PYG{o}{=}\PYG{l+m+mi}{4}
+
+\PYG{k+kd}{const} \PYG{n}{prior\PYGZus{}wt}\PYG{o}{=}\PYG{l+m+mf}{1.1}
+
+\PYG{c}{\PYGZsh{}FUNCTIONS}
+\PYG{k}{function} \PYG{n}{setup\PYGZus{}obs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{no\PYGZus{}obs}\PYG{p}{,} \PYG{n}{obsl}\PYG{p}{)}
+    \PYG{n}{obs}\PYG{o}{=}\PYG{n}{vec}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{o}{.}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{obsl}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{p}{]))}
+    \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{2}\PYG{o}{:}\PYG{n}{no\PYGZus{}obs}
+        \PYG{n}{obs}\PYG{o}{=}\PYG{n}{hcat}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{vec}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{o}{.}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{obsl}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{p}{])))}
+    \PYG{k}{end}
+    \PYG{n}{obs}\PYG{o}{=}\PYG{n}{vcat}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{no\PYGZus{}obs}\PYG{p}{))}
+    \PYG{k}{return} \PYG{n}{obs}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{spike\PYGZus{}irreg!}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{source}\PYG{p}{,} \PYG{n}{frac\PYGZus{}obs}\PYG{p}{,} \PYG{n}{recur}\PYG{p}{)}
+    \PYG{n}{truth}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{}()}
+    \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{rand}\PYG{p}{()}\PYG{o}{\PYGZlt{}}\PYG{n}{frac\PYGZus{}obs}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{truth}\PYG{p}{,} \PYG{n}{o}\PYG{p}{)}
+            \PYG{k}{for} \PYG{n}{r} \PYG{k+kp}{in} \PYG{n}{rand}\PYG{p}{(}\PYG{n}{recur}\PYG{p}{)}
+                \PYG{n}{rand}\PYG{p}{()}\PYG{o}{\PYGZlt{}.}\PYG{l+m+mi}{5} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{source}\PYG{o}{=}\PYG{n}{nnlearn}\PYG{o}{.}\PYG{n}{revcomp\PYGZus{}pwm}\PYG{p}{(}\PYG{n}{source}\PYG{p}{))}
+                \PYG{n}{pos}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+                \PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{=}\PYG{l+m+mi}{1}
+                \PYG{k}{while} \PYG{n}{pos}\PYG{o}{\PYGZlt{}=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{\PYGZlt{}=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+                    \PYG{n}{obs}\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{n}{pwm\PYGZus{}ctr}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))}
+                    \PYG{n}{pos}\PYG{o}{+=}\PYG{l+m+mi}{1}
+                    \PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{+=}\PYG{l+m+mi}{1}
+                \PYG{k}{end}
+            \PYG{k}{end}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{truth}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{spike\PYGZus{}struc!}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{source}\PYG{p}{,} \PYG{n}{frac\PYGZus{}obs}\PYG{p}{,} \PYG{n}{periodicity}\PYG{p}{)}
+    \PYG{n}{truth}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{truthpos}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+    \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{rand}\PYG{p}{()}\PYG{o}{\PYGZlt{}}\PYG{n}{frac\PYGZus{}obs}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{truth}\PYG{p}{,} \PYG{n}{o}\PYG{p}{)}
+            \PYG{n}{rand}\PYG{p}{()}\PYG{o}{\PYGZlt{}.}\PYG{l+m+mi}{5} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{source}\PYG{o}{=}\PYG{n}{nnlearn}\PYG{o}{.}\PYG{n}{revcomp\PYGZus{}pwm}\PYG{p}{(}\PYG{n}{source}\PYG{p}{))}
+            \PYG{n}{pos}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{periodicity}\PYG{p}{)}
+            \PYG{n}{posvec}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{}()}
+            \PYG{k}{while} \PYG{n}{pos}\PYG{o}{\PYGZlt{}=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+                \PYG{n}{pos\PYGZus{}ctr}\PYG{o}{=}\PYG{n}{pos}
+                \PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{=}\PYG{l+m+mi}{1}
+                \PYG{k}{while} \PYG{n}{pos\PYGZus{}ctr}\PYG{o}{\PYGZlt{}=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{\PYGZlt{}=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+                    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{posvec}\PYG{p}{,}\PYG{n}{pos\PYGZus{}ctr}\PYG{p}{)}
+                    \PYG{n}{base}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{n}{pwm\PYGZus{}ctr}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))}
+                    \PYG{n}{obs}\PYG{p}{[}\PYG{n}{pos\PYGZus{}ctr}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}\PYG{o}{=}\PYG{n}{base}
+                    \PYG{n}{pos\PYGZus{}ctr}\PYG{o}{+=}\PYG{l+m+mi}{1}
+                    \PYG{n}{pwm\PYGZus{}ctr}\PYG{o}{+=}\PYG{l+m+mi}{1}
+                \PYG{k}{end}
+                \PYG{n}{pos}\PYG{o}{+=}\PYG{n}{periodicity}\PYG{o}{+}\PYG{n}{pwm\PYGZus{}ctr}
+            \PYG{k}{end}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{truthpos}\PYG{p}{,}\PYG{n}{posvec}\PYG{p}{)}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{truth}\PYG{p}{,}\PYG{n}{truthpos}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{get\PYGZus{}BGHMM\PYGZus{}lhs}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)}
+    \PYG{n}{lh\PYGZus{}mat}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{))}
+    \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{n}{obso}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{l+m+mi}{1}\PYG{p}{)}
+        \PYG{n}{obso}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{obs}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}
+        \PYG{n}{lh\PYGZus{}mat}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}\PYG{o}{=}\PYG{n}{BGHMM}\PYG{o}{.}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{k+kt}{Matrix}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obso}\PYG{p}{)),}\PYG{n}{hmm}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{lh\PYGZus{}mat}
+\PYG{k}{end}
+
+\PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Setting up synthetic observation set...\PYGZdq{}}
+\PYG{n}{obs}\PYG{o}{=}\PYG{n}{setup\PYGZus{}obs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{no\PYGZus{}obs}\PYG{p}{,} \PYG{n}{obsl}\PYG{p}{)}
+\PYG{n}{struc\PYGZus{}truth}\PYG{p}{,}\PYG{n}{struc\PYGZus{}postruth}\PYG{o}{=}\PYG{n}{spike\PYGZus{}struc!}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{struc\PYGZus{}sig}\PYG{p}{,} \PYG{n}{struc\PYGZus{}frac\PYGZus{}obs}\PYG{p}{,} \PYG{n}{periodicity}\PYG{p}{)}
+\PYG{n}{irreg\PYGZus{}truth}\PYG{o}{=}\PYG{n}{spike\PYGZus{}irreg!}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{tata\PYGZus{}box}\PYG{p}{,} \PYG{n}{tata\PYGZus{}frac\PYGZus{}obs}\PYG{p}{,} \PYG{n}{tata\PYGZus{}recur\PYGZus{}range}\PYG{p}{)}
+
+\PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Calculating background likelihood matrix...\PYGZdq{}}
+\PYG{n}{bg\PYGZus{}lhs}\PYG{o}{=}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}lhs}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)}
+
+\PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Assembling source priors...\PYGZdq{}}
+\PYG{c}{\PYGZsh{}prior\PYGZus{}array= [struc\PYGZus{}sig, tata\PYGZus{}box]}
+\PYG{n}{prior\PYGZus{}array}\PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+\PYG{n}{source\PYGZus{}priors} \PYG{o}{=} \PYG{n}{nnlearn}\PYG{o}{.}\PYG{n}{assemble\PYGZus{}source\PYGZus{}priors}\PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{p}{,} \PYG{n}{prior\PYGZus{}array}\PYG{p}{,} \PYG{n}{prior\PYGZus{}wt}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}range}\PYG{p}{)}
+
+\PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Assembling ensemble...\PYGZdq{}}
+\PYG{n}{path}\PYG{o}{=}\PYG{n}{randstring}\PYG{p}{()}
+\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{string}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}/\PYGZsq{}}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}ens\PYGZdq{}}\PYG{p}{))} \PYG{o}{?} \PYG{p}{(}\PYG{n}{ens} \PYG{o}{=} \PYG{n}{deserialize}\PYG{p}{(}\PYG{n}{string}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}/\PYGZsq{}}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}ens\PYGZdq{}}\PYG{p}{)))} \PYG{o}{:}
+    \PYG{p}{(}\PYG{n}{ens} \PYG{o}{=} \PYG{n}{nnlearn}\PYG{o}{.}\PYG{n}{IPM\PYGZus{}Ensemble}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,} \PYG{n}{ensemble\PYGZus{}size}\PYG{p}{,} \PYG{n}{source\PYGZus{}priors}\PYG{p}{,} \PYG{p}{(}\PYG{n}{falses}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n}{mixing\PYGZus{}prior}\PYG{p}{),} \PYG{n}{bg\PYGZus{}lhs}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}range}\PYG{p}{))}
+
+
+\PYG{n}{job\PYGZus{}set\PYGZus{}thresh}\PYG{o}{=}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,}\PYG{n}{ens}\PYG{o}{.}\PYG{n}{naive\PYGZus{}lh}\PYG{p}{]}
+\PYG{n}{param\PYGZus{}set}\PYG{o}{=}\PYG{p}{(}\PYG{n}{job\PYGZus{}sets}\PYG{p}{,}\PYG{n}{job\PYGZus{}set\PYGZus{}thresh}\PYG{p}{,}\PYG{n}{job\PYGZus{}limit}\PYG{p}{)}
+    
+\PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Converging ensemble...\PYGZdq{}}
+\PYG{n}{nnlearn}\PYG{o}{.}\PYG{n}{ns\PYGZus{}converge!}\PYG{p}{(}\PYG{n}{ens}\PYG{p}{,} \PYG{n}{param\PYGZus{}set}\PYG{p}{,} \PYG{n}{models\PYGZus{}to\PYGZus{}permute}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{0001}\PYG{p}{,} \PYG{n}{model\PYGZus{}display}\PYG{o}{=}\PYG{n}{no\PYGZus{}sources}\PYG{p}{,} \PYG{n}{backup}\PYG{o}{=}\PYG{p}{(}\PYG{k+kc}{true}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{))}
+
+\PYG{n}{rm}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,}\PYG{n}{recursive}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+
+\PYG{c}{\PYGZsh{}811973}
+\end{Verbatim}

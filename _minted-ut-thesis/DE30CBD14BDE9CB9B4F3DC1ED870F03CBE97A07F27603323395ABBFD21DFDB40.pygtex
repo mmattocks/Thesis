@@ -1,0 +1,84 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{function} \PYG{n}{read\PYGZus{}fa\PYGZus{}wms\PYGZus{}tr}\PYG{p}{(}\PYG{n}{path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{)}
+    \PYG{n}{wms}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+    \PYG{n}{wm}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{f}\PYG{o}{=}\PYG{n}{open}\PYG{p}{(}\PYG{n}{path}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{line} \PYG{k+kp}{in} \PYG{n}{eachline}\PYG{p}{(}\PYG{n}{f}\PYG{p}{)}
+        \PYG{n}{prefix}\PYG{o}{=}\PYG{n}{line}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{]}
+        \PYG{n}{prefix} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}01\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{wm}\PYG{o}{=}\PYG{n}{transpose}\PYG{p}{([}\PYG{n}{parse}\PYG{p}{(}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{n}{i}\PYG{p}{)} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{n}{split}\PYG{p}{(}\PYG{n}{line}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{]]))}
+        \PYG{n}{prefix} \PYG{o}{!=} \PYG{l+s}{\PYGZdq{}01\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{prefix} \PYG{o}{!=} \PYG{l+s}{\PYGZdq{}NA\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{prefix} \PYG{o}{!=} \PYG{l+s}{\PYGZdq{}PO\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{prefix} \PYG{o}{!=} \PYG{l+s}{\PYGZdq{}//\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{wm}\PYG{o}{=}\PYG{n}{vcat}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{,} \PYG{n}{transpose}\PYG{p}{([}\PYG{n}{parse}\PYG{p}{(}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{n}{i}\PYG{p}{)} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{n}{split}\PYG{p}{(}\PYG{n}{line}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{]])))}
+        \PYG{n}{prefix} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}//\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{push!}\PYG{p}{(}\PYG{n}{wms}\PYG{p}{,} \PYG{n}{wm}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{wms}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}wm\PYGZus{}samples are in decimal probability space, not log space}
+\PYG{k}{function} \PYG{n}{assemble\PYGZus{}source\PYGZus{}priors}\PYG{p}{(}\PYG{n}{no\PYGZus{}sources}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{wm\PYGZus{}samples}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{prior\PYGZus{}wt}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}\PYG{o}{=}\PYG{n}{PRIOR\PYGZus{}WT}\PYG{p}{)} \PYG{c}{\PYGZsh{}estimate a dirichlet prior on wm\PYGZus{}samples inputs; if the number of samples is lower than the number of sources, return a false bool for init and permutation functions}
+    \PYG{n}{source\PYGZus{}priors} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{Bool}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+    \PYG{k}{for} \PYG{n}{source} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{no\PYGZus{}sources}
+        \PYG{k}{if} \PYG{n}{source} \PYG{o}{\PYGZlt{}=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{wm\PYGZus{}samples}\PYG{p}{)}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{source\PYGZus{}priors}\PYG{p}{,} \PYG{n}{estimate\PYGZus{}dirichlet\PYGZus{}prior\PYGZus{}on\PYGZus{}wm}\PYG{p}{(}\PYG{n}{wm\PYGZus{}samples}\PYG{p}{[}\PYG{n}{source}\PYG{p}{],} \PYG{n}{prior\PYGZus{}wt}\PYG{p}{))}
+        \PYG{k}{else}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{source\PYGZus{}priors}\PYG{p}{,} \PYG{k+kc}{false}\PYG{p}{)}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{source\PYGZus{}priors}
+\PYG{k}{end}
+
+            \PYG{k}{function} \PYG{n}{estimate\PYGZus{}dirichlet\PYGZus{}prior\PYGZus{}on\PYGZus{}wm}\PYG{p}{(}\PYG{n}{wm}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{wt}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}\PYG{o}{=}\PYG{n}{PRIOR\PYGZus{}WT}\PYG{p}{)}
+                \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                    \PYG{o}{!}\PYG{p}{(}\PYG{n}{isprobvec}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad weight vec supplied to estimate\PYGZus{}dirichlet\PYGZus{}prior\PYGZus{}on\PYGZus{}wm! }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])}\PYG{l+s}{\PYGZdq{}}\PYG{p}{))}
+                \PYG{k}{end}
+                \PYG{n}{prior} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+                \PYG{k}{for} \PYG{n}{position} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                    \PYG{n}{normvec}\PYG{o}{=}\PYG{n}{wm}\PYG{p}{[}\PYG{n}{position}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]}
+                    \PYG{n}{zero\PYGZus{}idxs}\PYG{o}{=}\PYG{n}{findall}\PYG{p}{(}\PYG{n}{isequal}\PYG{p}{(}\PYG{l+m+mf}{0.}\PYG{p}{),}\PYG{n}{wm}\PYG{p}{[}\PYG{n}{position}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])}
+                    \PYG{n}{normvec}\PYG{p}{[}\PYG{n}{zero\PYGZus{}idxs}\PYG{p}{]}\PYG{o}{.+=}\PYG{l+m+mi}{10}\PYG{o}{\PYGZca{}\PYGZhy{}}\PYG{l+m+mi}{99}
+                    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{,} \PYG{n}{Dirichlet}\PYG{p}{(}\PYG{n}{normvec}\PYG{o}{.*}\PYG{n}{wt}\PYG{p}{))}
+                \PYG{k}{end}
+                \PYG{k}{return} \PYG{n}{prior}
+            \PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{cluster\PYGZus{}mix\PYGZus{}prior!}\PYG{p}{(}\PYG{n}{df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{wms}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{})}
+    \PYG{n}{mix}\PYG{o}{=}\PYG{n}{falses}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{length}\PYG{p}{(}\PYG{n}{wms}\PYG{p}{))}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{o}\PYG{p}{,} \PYG{n}{row}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{df}\PYG{p}{))}
+        \PYG{n}{row}\PYG{o}{.}\PYG{n}{cluster} \PYG{o}{!=} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{mix}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{n}{row}\PYG{o}{.}\PYG{n}{cluster}\PYG{p}{]}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{k}{end}
+    
+    \PYG{n}{represented\PYGZus{}sources}\PYG{o}{=}\PYG{n}{unique}\PYG{p}{(}\PYG{n}{df}\PYG{o}{.}\PYG{n}{cluster}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{mix}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{represented\PYGZus{}sources}\PYG{p}{]}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{infocenter\PYGZus{}wms\PYGZus{}trim}\PYG{p}{(}\PYG{n}{wm}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{trimsize}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+    \PYG{o}{!}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{==}\PYG{l+m+mi}{4}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad wm! 2nd dimension should be size 4\PYGZdq{}}\PYG{p}{))}
+    \PYG{n}{infovec}\PYG{o}{=}\PYG{n}{get\PYGZus{}pwm\PYGZus{}info}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{,} \PYG{n}{logsw}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{maxval}\PYG{p}{,} \PYG{n}{maxidx}\PYG{o}{=}\PYG{n}{findmax}\PYG{p}{(}\PYG{n}{infovec}\PYG{p}{)}
+    \PYG{n}{upstream\PYGZus{}extension}\PYG{o}{=}\PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{floor}\PYG{p}{((}\PYG{n}{trimsize}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{))}
+    \PYG{n}{downstream\PYGZus{}extension}\PYG{o}{=}\PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{ceil}\PYG{p}{((}\PYG{n}{trimsize}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{))}
+    \PYG{l+m+mi}{1}\PYG{o}{+}\PYG{n}{upstream\PYGZus{}extension}\PYG{o}{+}\PYG{n}{downstream\PYGZus{}extension} \PYG{o}{\PYGZgt{}} \PYG{n}{size}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Src too short for trim! }\PYG{l+s+si}{\PYGZdl{}upstream\PYGZus{}extension}\PYG{l+s}{ }\PYG{l+s+si}{\PYGZdl{}downstream\PYGZus{}extension}\PYG{l+s}{\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{return} \PYG{n}{wm}\PYG{p}{[}\PYG{n}{max}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{maxidx}\PYG{o}{\PYGZhy{}}\PYG{n}{upstream\PYGZus{}extension}\PYG{p}{)}\PYG{o}{:}\PYG{n}{min}\PYG{p}{(}\PYG{n}{maxidx}\PYG{o}{+}\PYG{n}{downstream\PYGZus{}extension}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{wm}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)),}\PYG{o}{:}\PYG{p}{]}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{filter\PYGZus{}priors}\PYG{p}{(}\PYG{n}{target\PYGZus{}src\PYGZus{}no}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{target\PYGZus{}src\PYGZus{}size}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{prior\PYGZus{}wms}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{prior\PYGZus{}mix}\PYG{o}{::}\PYG{k+kt}{BitMatrix}\PYG{p}{)}
+    \PYG{n}{wms}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{undef}\PYG{p}{,} \PYG{n}{target\PYGZus{}src\PYGZus{}no}\PYG{p}{)}
+    \PYG{n}{freqsort\PYGZus{}idxs}\PYG{o}{=}\PYG{n}{sortperm}\PYG{p}{([}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{prior\PYGZus{}mix}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{s}\PYG{p}{])} \PYG{k}{for} \PYG{n}{s} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{)])}
+    \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{target\PYGZus{}src\PYGZus{}no}
+        \PYG{n}{target\PYGZus{}src\PYGZus{}idx}\PYG{o}{=}\PYG{n}{freqsort\PYGZus{}idxs}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{wms}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n}{infocenter\PYGZus{}wms\PYGZus{}trim}\PYG{p}{(}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{[}\PYG{n}{target\PYGZus{}src\PYGZus{}idx}\PYG{p}{],} \PYG{n}{target\PYGZus{}src\PYGZus{}size}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{wms}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{combine\PYGZus{}filter\PYGZus{}priors}\PYG{p}{(}\PYG{n}{target\PYGZus{}src\PYGZus{}no}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{target\PYGZus{}src\PYGZus{}size}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{prior\PYGZus{}wms}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{},} \PYG{n}{prior\PYGZus{}mix}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{BitMatrix}\PYG{p}{,}\PYG{k+kt}{BitMatrix}\PYG{p}{\PYGZcb{})}
+    \PYG{n}{wms}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{undef}\PYG{p}{,} \PYG{n}{target\PYGZus{}src\PYGZus{}no}\PYG{p}{)}
+    \PYG{n}{cat\PYGZus{}wms}\PYG{o}{=}\PYG{n}{vcat}\PYG{p}{(}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}
+    \PYG{n}{first\PYGZus{}freq}\PYG{o}{=}\PYG{p}{[}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{prior\PYGZus{}mix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{o}{:}\PYG{p}{,}\PYG{n}{s}\PYG{p}{])} \PYG{k}{for} \PYG{n}{s} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])]}
+    \PYG{n}{second\PYGZus{}freq}\PYG{o}{=}\PYG{p}{[}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{prior\PYGZus{}mix}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{][}\PYG{o}{:}\PYG{p}{,}\PYG{n}{s}\PYG{p}{])} \PYG{k}{for} \PYG{n}{s} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior\PYGZus{}wms}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])]}
+    \PYG{n}{freqsort\PYGZus{}idxs}\PYG{o}{=}\PYG{n}{sortperm}\PYG{p}{(}\PYG{n}{vcat}\PYG{p}{(}\PYG{n}{first\PYGZus{}freq}\PYG{p}{,}\PYG{n}{second\PYGZus{}freq}\PYG{p}{))}
+    \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{target\PYGZus{}src\PYGZus{}no}
+        \PYG{n}{target\PYGZus{}src\PYGZus{}idx}\PYG{o}{=}\PYG{n}{freqsort\PYGZus{}idxs}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{wms}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n}{infocenter\PYGZus{}wms\PYGZus{}trim}\PYG{p}{(}\PYG{n}{cat\PYGZus{}wms}\PYG{p}{[}\PYG{n}{target\PYGZus{}src\PYGZus{}idx}\PYG{p}{],} \PYG{n}{target\PYGZus{}src\PYGZus{}size}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{wms}
+\PYG{k}{end}
+\end{Verbatim}

@@ -1,0 +1,22 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}../../../../projects/ISP/src/HeAth5Mo.hpp\PYGZdq{}}
+
+\PYG{n}{Ath5Mo}\PYG{o}{::}\PYG{n}{Ath5Mo}\PYG{p}{(}\PYG{k+kt}{unsigned} \PYG{n}{colour}\PYG{p}{)}
+    \PYG{o}{:} \PYG{n}{AbstractCellProperty}\PYG{p}{(),}
+      \PYG{n}{mColour}\PYG{p}{(}\PYG{n}{colour}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{Ath5Mo}\PYG{o}{::\PYGZti{}}\PYG{n}{Ath5Mo}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{unsigned} \PYG{n}{Ath5Mo}\PYG{o}{::}\PYG{n}{GetColour}\PYG{p}{()} \PYG{k}{const}
+\PYG{p}{\PYGZob{}}
+    \PYG{k}{return} \PYG{n}{mColour}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}SerializationExportWrapperForCpp.hpp\PYGZdq{}}
+\PYG{c+c1}{// Declare identifier for the serializer}
+\PYG{n}{CHASTE\PYGZus{}CLASS\PYGZus{}EXPORT}\PYG{p}{(}\PYG{n}{Ath5Mo}\PYG{p}{)}
+\end{Verbatim}
