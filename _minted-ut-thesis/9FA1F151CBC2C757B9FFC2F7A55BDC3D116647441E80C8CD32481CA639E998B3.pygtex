@@ -1,0 +1,156 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}THIS CODE BASED ON N. REDDY\PYGZsq{}S THICWEED.JL DISPLAY SCRIPT}
+
+\PYG{c}{\PYGZsh{}CONSTANTS}
+\PYG{c}{\PYGZsh{} each tuple specifies the x, y, fontsize, xscale to print the character}
+\PYG{c}{\PYGZsh{} in a 100x100 box at position 100,100.}
+\PYG{n}{charvals\PYGZus{}dict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Char}\PYG{p}{,}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+s+sc}{\PYGZsq{}A\PYGZsq{}}\PYG{o}{=\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mf}{88.5}\PYG{p}{,}\PYG{l+m+mf}{199.}\PYG{p}{,}\PYG{l+m+mf}{135.}\PYG{p}{,}\PYG{l+m+mf}{1.09}\PYG{p}{),}
+                 \PYG{l+s+sc}{\PYGZsq{}C\PYGZsq{}}\PYG{o}{=\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mf}{79.}\PYG{p}{,}\PYG{l+m+mf}{196.}\PYG{p}{,}\PYG{l+m+mf}{129.}\PYG{p}{,}\PYG{l+m+mf}{1.19}\PYG{p}{),}
+                 \PYG{l+s+sc}{\PYGZsq{}G\PYGZsq{}}\PYG{o}{=\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mf}{83.}\PYG{p}{,}\PYG{l+m+mf}{196.}\PYG{p}{,}\PYG{l+m+mf}{129.}\PYG{p}{,}\PYG{l+m+mf}{1.14}\PYG{p}{),}
+                 \PYG{l+s+sc}{\PYGZsq{}T\PYGZsq{}}\PYG{o}{=\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mf}{80.}\PYG{p}{,}\PYG{l+m+mf}{199.}\PYG{p}{,}\PYG{l+m+mf}{135.}\PYG{p}{,}\PYG{l+m+mf}{1.24}\PYG{p}{))}
+
+\PYG{n}{colour\PYGZus{}dict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Char}\PYG{p}{,}\PYG{n}{String}\PYG{p}{\PYGZcb{}(}\PYG{l+s+sc}{\PYGZsq{}A\PYGZsq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}(0,128,0)\PYGZdq{}}\PYG{p}{,} \PYG{c}{\PYGZsh{}green}
+                 \PYG{l+s+sc}{\PYGZsq{}C\PYGZsq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}(0,0,128)\PYGZdq{}}\PYG{p}{,} \PYG{c}{\PYGZsh{}blue }
+                 \PYG{l+s+sc}{\PYGZsq{}G\PYGZsq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}(255,69,0)\PYGZdq{}}\PYG{p}{,} \PYG{c}{\PYGZsh{}yellow\PYGZhy{}brown}
+                 \PYG{l+s+sc}{\PYGZsq{}T\PYGZsq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+s}{\PYGZdq{}(150,0,0)\PYGZdq{}}\PYG{p}{)}  \PYG{c}{\PYGZsh{}red}
+
+\PYG{c}{\PYGZsh{}char output params for string display of PWMs in nested sampler instrumentation}
+\PYG{n}{lwcs\PYGZus{}vec}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+sc}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}c\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}g\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{]}
+\PYG{n}{upcs\PYGZus{}vec}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+sc}{\PYGZsq{}A\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}C\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}G\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{]}
+\PYG{n}{cs\PYGZus{}vec}\PYG{o}{=}\PYG{p}{[}\PYG{o}{:}\PYG{n}{green}\PYG{p}{,}\PYG{o}{:}\PYG{n}{blue}\PYG{p}{,}\PYG{o}{:}\PYG{n}{yellow}\PYG{p}{,}\PYG{o}{:}\PYG{n}{red}\PYG{p}{]}
+\PYG{n}{thresh\PYGZus{}dict}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{([(}\PYG{l+m+mf}{0.}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{),(}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}.\PYGZsq{}}\PYG{p}{),(}\PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}lwcs\PYGZdq{}}\PYG{p}{),(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}upcs\PYGZdq{}}\PYG{p}{)])}
+
+\PYG{n}{source\PYGZus{}left\PYGZus{}x} \PYG{o}{=} \PYG{l+m+mi}{10}
+\PYG{n}{xlen} \PYG{o}{=} \PYG{l+m+mi}{20}
+\PYG{n}{yscale} \PYG{o}{=} \PYG{l+m+mi}{250}
+\PYG{n}{scale\PYGZus{}factor} \PYG{o}{=} \PYG{l+m+mf}{0.9}
+\PYG{n}{ypixels\PYGZus{}per\PYGZus{}source} \PYG{o}{=} \PYG{l+m+mi}{250}
+\PYG{n}{ypad} \PYG{o}{=} \PYG{l+m+mi}{10}
+\PYG{n}{xpad} \PYG{o}{=} \PYG{l+m+mi}{20}
+\PYG{n}{xpixels\PYGZus{}per\PYGZus{}position} \PYG{o}{=} \PYG{l+m+mi}{40}
+\PYG{n}{fontsize1}\PYG{o}{=}\PYG{l+m+mi}{60}
+\PYG{n}{fontsize2}\PYG{o}{=}\PYG{l+m+mi}{40}
+
+\PYG{c}{\PYGZsh{}function to convert ICA\PYGZus{}PWM\PYGZus{}Model sources lists to PWM sequence logo diagrams}
+\PYG{k}{function} \PYG{n}{logo\PYGZus{}from\PYGZus{}model}\PYG{p}{(}\PYG{n}{model}\PYG{o}{::}\PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{,}\PYG{n}{svg\PYGZus{}output}\PYG{o}{::}\PYG{n}{String}\PYG{p}{;}\PYG{n}{freq\PYGZus{}sort}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{source\PYGZus{}tups} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{AbstractFloat}\PYG{p}{,} \PYG{k+kt}{Integer}\PYG{p}{,} \PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}()} \PYG{c}{\PYGZsh{}(\PYGZpc{}of sequences w/ source, prior index, weight matrix)}
+    \PYG{n}{mix} \PYG{o}{=} \PYG{n}{model}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix} \PYG{c}{\PYGZsh{}o x s}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{prior}\PYG{p}{,} \PYG{n}{source}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{model}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{)}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{source\PYGZus{}tups}\PYG{p}{,} \PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{model}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{prior}\PYG{p}{])}\PYG{o}{/}\PYG{n}{size}\PYG{p}{(}\PYG{n}{model}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{prior}\PYG{p}{,} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])))}
+    \PYG{k}{end}
+
+    \PYG{n}{freq\PYGZus{}sort} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{sort}\PYG{p}{(}\PYG{n}{source\PYGZus{}tups}\PYG{p}{)}
+
+    \PYG{n}{file} \PYG{o}{=} \PYG{n}{open}\PYG{p}{(}\PYG{n}{svg\PYGZus{}output}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}w\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{write}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{n}{svg\PYGZus{}header}\PYG{p}{(}\PYG{n}{xpad}\PYG{o}{+}\PYG{n}{xpixels\PYGZus{}per\PYGZus{}position}\PYG{o}{*}\PYG{n}{maximum}\PYG{p}{([}\PYG{n}{length}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{k}{for} \PYG{n}{source} \PYG{k+kp}{in} \PYG{n}{model}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{]),}\PYG{n}{ypixels\PYGZus{}per\PYGZus{}source}\PYG{o}{*}\PYG{n}{length}\PYG{p}{(}\PYG{n}{model}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{)}\PYG{o}{+}\PYG{n}{ypad}\PYG{p}{))}
+
+    \PYG{n}{curry} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{frequency}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{source}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{source\PYGZus{}tups}
+        \PYG{n}{curry} \PYG{o}{+=} \PYG{n}{yscale}
+        \PYG{n}{font1y} \PYG{o}{=} \PYG{n}{curry}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{190}
+        \PYG{n}{ndig} \PYG{o}{=} \PYG{n}{ndigits}\PYG{p}{(}\PYG{n}{index}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)}
+        \PYG{n}{write}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{n}{pwm\PYGZus{}to\PYGZus{}logo}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{n}{source\PYGZus{}left\PYGZus{}x}\PYG{p}{,}\PYG{n}{curry}\PYG{p}{,}\PYG{n}{xlen}\PYG{p}{,}\PYG{n}{yscale}\PYG{o}{*}\PYG{n}{scale\PYGZus{}factor}\PYG{p}{))}
+        \PYG{n}{write}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}\PYGZlt{}text x=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{10}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ y=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}font1y}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}family=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{Helvetica}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}size=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}fontsize1}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}weight=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{bold}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ \PYGZgt{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{index}\PYG{p}{)}\PYG{l+s}{\PYGZlt{}/text\PYGZgt{}\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{write}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}\PYGZlt{}text x=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{l+m+mi}{20}\PYG{o}{+}\PYG{n}{fontsize1}\PYG{o}{*}\PYG{l+m+mf}{0.6}\PYG{o}{*}\PYG{n}{ndig}\PYG{p}{)}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ y=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{font1y}\PYG{o}{\PYGZhy{}}\PYG{n}{fontsize1}\PYG{o}{+}\PYG{l+m+mf}{1.5}\PYG{o}{*}\PYG{n}{fontsize2}\PYG{p}{)}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}family=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{Helvetica}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}size=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}fontsize2}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}weight=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{bold}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ \PYGZgt{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{frequency}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{p}{)}\PYG{l+s}{ }\PYG{l+s+si}{\PYGZpc{} o}\PYG{l+s}{f sequences\PYGZlt{}/text\PYGZgt{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}   
+    \PYG{k}{end}
+
+    \PYG{n}{write}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{n}{svg\PYGZus{}footer}\PYG{p}{())}
+    \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Logo written.\PYGZdq{}}
+    \PYG{n}{close}\PYG{p}{(}\PYG{n}{file}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{svg\PYGZus{}header}\PYG{p}{(}\PYG{n}{canvas\PYGZus{}size\PYGZus{}x}\PYG{p}{,} \PYG{n}{canvas\PYGZus{}size\PYGZus{}y}\PYG{p}{)}
+    \PYG{k}{return} \PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    \PYGZlt{}?xml version=\PYGZdq{}1.0\PYGZdq{} standalone=\PYGZdq{}no\PYGZdq{}?\PYGZgt{}}
+\PYG{l+s}{    \PYGZlt{}!DOCTYPE svg PUBLIC \PYGZdq{}\PYGZhy{}//W3C//DTD SVG 1.1//EN\PYGZdq{}}
+\PYG{l+s}{    \PYGZdq{}http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\PYGZdq{}\PYGZgt{}}
+\PYG{l+s}{    \PYGZlt{}svg width=\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}canvas\PYGZus{}size\PYGZus{}x}\PYG{l+s}{\PYGZdq{} height=\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}canvas\PYGZus{}size\PYGZus{}y}\PYG{l+s}{\PYGZdq{}}
+\PYG{l+s}{     version=\PYGZdq{}1.1\PYGZdq{} xmlns=\PYGZdq{}http://www.w3.org/2000/svg\PYGZdq{}\PYGZgt{}}
+\PYG{l+s}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{pwm\PYGZus{}to\PYGZus{}logo}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{n}{xpos}\PYG{p}{,}\PYG{n}{ypos}\PYG{p}{,}\PYG{n}{xlen}\PYG{p}{,}\PYG{n}{yscale}\PYG{p}{)}
+    \PYG{n}{outstr} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+        \PYG{n}{outstr} \PYG{o}{*=} \PYG{n}{print\PYGZus{}weightvec\PYGZus{}at\PYGZus{}x\PYGZus{}y}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{n}{n}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],}\PYG{n}{xpos}\PYG{o}{+}\PYG{n}{xlen}\PYG{o}{*}\PYG{n}{n}\PYG{p}{,}\PYG{n}{ypos}\PYG{p}{,}\PYG{n}{xlen}\PYG{p}{,}\PYG{n}{yscale}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{outstr} \PYG{o}{*=} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{outstr}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{pwmstr\PYGZus{}to\PYGZus{}io}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{n}{source}\PYG{p}{;}\PYG{n}{log}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{log} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{source}\PYG{o}{=}\PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{source}\PYG{p}{))}
+    \PYG{k}{for} \PYG{n}{pos} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{source}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+        \PYG{n}{char}\PYG{p}{,}\PYG{n}{color}\PYG{o}{=}\PYG{n}{uni\PYGZus{}wvec\PYGZus{}params}\PYG{p}{(}\PYG{n}{source}\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])}
+        \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{char}\PYG{p}{;} \PYG{n}{color}\PYG{o}{=}\PYG{n}{color}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{uni\PYGZus{}wvec\PYGZus{}params}\PYG{p}{(}\PYG{n}{wvec}\PYG{p}{)} \PYG{c}{\PYGZsh{}assign a single unicode char and color symbol for the most informational position in a position weight vector}
+    \PYG{n}{wvec}\PYG{o}{.+=}\PYG{l+m+mi}{10}\PYG{o}{\PYGZca{}\PYGZhy{}}\PYG{l+m+mi}{99}
+    \PYG{n}{infoscore}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mf}{2.0} \PYG{o}{+} \PYG{n}{sum}\PYG{p}{([}\PYG{n}{x}\PYG{o}{*}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{n}{x}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{k+kp}{in} \PYG{n}{wvec}\PYG{p}{]))}
+    \PYG{n}{infovec} \PYG{o}{=} \PYG{p}{[}\PYG{n}{x}\PYG{o}{*}\PYG{n}{infoscore} \PYG{k}{for} \PYG{n}{x} \PYG{k+kp}{in} \PYG{n}{wvec}\PYG{p}{]}
+    \PYG{n}{val}\PYG{p}{,}\PYG{n}{idx}\PYG{o}{=}\PYG{n}{findmax}\PYG{p}{(}\PYG{n}{infovec}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{char}\PYG{p}{,}\PYG{n}{color}\PYG{o}{=}\PYG{n}{get\PYGZus{}char\PYGZus{}by\PYGZus{}thresh}\PYG{p}{(}\PYG{n}{idx}\PYG{p}{,}\PYG{n}{val}\PYG{p}{)}
+\PYG{k}{end}
+                \PYG{k}{function} \PYG{n}{get\PYGZus{}char\PYGZus{}by\PYGZus{}thresh}\PYG{p}{(}\PYG{n}{idx}\PYG{p}{,}\PYG{n}{val}\PYG{p}{)}
+                    \PYG{n}{char} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}?\PYGZsq{}}\PYG{p}{;} \PYG{n}{seen\PYGZus{}thresh}\PYG{o}{=}\PYG{l+m+mf}{0.}
+                    \PYG{k}{for} \PYG{p}{(}\PYG{n}{thresh}\PYG{p}{,}\PYG{n}{threshchar}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{thresh\PYGZus{}dict}
+                        \PYG{n}{val} \PYG{o}{\PYGZgt{}=} \PYG{n}{thresh} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{thresh} \PYG{o}{\PYGZgt{}=} \PYG{n}{seen\PYGZus{}thresh} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{char}\PYG{o}{=}\PYG{n}{threshchar}\PYG{p}{;} \PYG{n}{seen\PYGZus{}thresh}\PYG{o}{=}\PYG{n}{thresh}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{n}{char}\PYG{o}{==}\PYG{l+s+sc}{\PYGZsq{}?\PYGZsq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{println}\PYG{p}{(}\PYG{n}{val}\PYG{p}{)}
+                    \PYG{n}{char}\PYG{o}{==}\PYG{l+s}{\PYGZdq{}lwcs\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{char}\PYG{o}{=}\PYG{n}{lwcs\PYGZus{}vec}\PYG{p}{[}\PYG{n}{idx}\PYG{p}{])}
+                    \PYG{n}{char}\PYG{o}{==}\PYG{l+s}{\PYGZdq{}upcs\PYGZdq{}} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{char}\PYG{o}{=}\PYG{n}{upcs\PYGZus{}vec}\PYG{p}{[}\PYG{n}{idx}\PYG{p}{])}
+                    \PYG{n}{color}\PYG{o}{=}\PYG{n}{cs\PYGZus{}vec}\PYG{p}{[}\PYG{n}{idx}\PYG{p}{]}
+
+                    \PYG{k}{return} \PYG{n}{char}\PYG{p}{,}\PYG{n}{color}
+                \PYG{k}{end}
+
+
+
+
+
+\PYG{k}{function} \PYG{n}{print\PYGZus{}weightvec\PYGZus{}at\PYGZus{}x\PYGZus{}y}\PYG{p}{(}\PYG{n}{wvec}\PYG{p}{,} \PYG{n}{xpos}\PYG{p}{,} \PYG{n}{ypos}\PYG{p}{,} \PYG{n}{xlen}\PYG{p}{,} \PYG{n}{yscale}\PYG{p}{)}
+    \PYG{c}{\PYGZsh{} xlen is the length occupied by that column}
+    \PYG{c}{\PYGZsh{} yscale is the total height for 2 information bits i.e. the}
+    \PYG{c}{\PYGZsh{} maximum height available for a \PYGZdq{}perfect\PYGZdq{} nucleotide}
+    \PYG{n}{outstr} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{basestr} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}ACGT\PYGZdq{}}
+    \PYG{n}{wvec}\PYG{o}{.+=}\PYG{l+m+mi}{10}\PYG{o}{\PYGZca{}\PYGZhy{}}\PYG{l+m+mi}{99}  \PYG{c}{\PYGZsh{}prevent log(0) = \PYGZhy{}Inf}
+    \PYG{n}{wvec} \PYG{o}{=} \PYG{p}{[}\PYG{n}{x}\PYG{o}{/}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{wvec}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{k+kp}{in} \PYG{n}{wvec}\PYG{p}{]} \PYG{c}{\PYGZsh{}renorm}
+    \PYG{n}{infscore} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mf}{2.0} \PYG{o}{+} \PYG{n}{sum}\PYG{p}{([}\PYG{n}{x}\PYG{o}{*}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{n}{x}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{k+kp}{in} \PYG{n}{wvec}\PYG{p}{]))}
+    \PYG{k}{if} \PYG{n}{infscore}\PYG{o}{==}\PYG{l+m+mf}{0.0}
+        \PYG{k}{return} \PYG{l+s}{\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{end}
+    \PYG{n}{wvec} \PYG{o}{=} \PYG{p}{[}\PYG{n}{x}\PYG{o}{*}\PYG{n}{infscore}\PYG{o}{*}\PYG{n}{yscale}\PYG{o}{/}\PYG{l+m+mf}{2.0} \PYG{k}{for} \PYG{n}{x} \PYG{k+kp}{in} \PYG{n}{wvec}\PYG{p}{]}
+    \PYG{c}{\PYGZsh{} at this point, the sum of all wvec is a maximum of yscale}
+    \PYG{n}{wveclist} \PYG{o}{=} \PYG{p}{[(}\PYG{n}{wvec}\PYG{p}{[}\PYG{n}{n}\PYG{p}{],}\PYG{n}{basestr}\PYG{p}{[}\PYG{n}{n}\PYG{p}{])} \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{]}
+    \PYG{n}{wveclist} \PYG{o}{=} \PYG{n}{sort}\PYG{p}{(}\PYG{n}{wveclist}\PYG{p}{)}
+    \PYG{n}{curr\PYGZus{}ypos} \PYG{o}{=} \PYG{n}{ypos}
+    \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}
+        \PYG{n}{curr\PYGZus{}ypos} \PYG{o}{\PYGZhy{}=} \PYG{n}{wveclist}\PYG{p}{[}\PYG{n}{n}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{outstr} \PYG{o}{*=} \PYG{n}{print\PYGZus{}char\PYGZus{}in\PYGZus{}rect}\PYG{p}{(}\PYG{n}{wveclist}\PYG{p}{[}\PYG{n}{n}\PYG{p}{][}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{n}{xpos}\PYG{p}{,}\PYG{n}{curr\PYGZus{}ypos}\PYG{p}{,}\PYG{n}{xlen}\PYG{p}{,}\PYG{n}{wveclist}\PYG{p}{[}\PYG{n}{n}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{outstr}
+\PYG{k}{end}
+
+\PYG{n}{blo} \PYG{o}{=} \PYG{l+m+mi}{1}
+
+\PYG{k}{function} \PYG{n}{print\PYGZus{}char\PYGZus{}in\PYGZus{}rect}\PYG{p}{(}\PYG{n}{c}\PYG{p}{,}\PYG{n}{x}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{width}\PYG{p}{,}\PYG{n}{height}\PYG{p}{)}
+    \PYG{n}{raw\PYGZus{}x}\PYG{p}{,} \PYG{n}{raw\PYGZus{}y}\PYG{p}{,} \PYG{n}{raw\PYGZus{}fontsize}\PYG{p}{,} \PYG{n}{raw\PYGZus{}xscale} \PYG{o}{=} \PYG{n}{charvals\PYGZus{}dict}\PYG{p}{[}\PYG{n}{c}\PYG{p}{]}
+    \PYG{n}{raw\PYGZus{}x} \PYG{o}{=} \PYG{p}{(}\PYG{n}{raw\PYGZus{}x}\PYG{o}{*}\PYG{n}{raw\PYGZus{}xscale}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{100}\PYG{p}{)}\PYG{o}{/}\PYG{n}{raw\PYGZus{}xscale}
+    \PYG{n}{raw\PYGZus{}y} \PYG{o}{=} \PYG{n}{raw\PYGZus{}y}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{100}
+    
+    \PYG{n}{xscale} \PYG{o}{=} \PYG{n}{width}\PYG{o}{/}\PYG{l+m+mf}{100.0} \PYG{o}{*} \PYG{n}{raw\PYGZus{}xscale}
+    \PYG{n}{yscale} \PYG{o}{=} \PYG{n}{height}\PYG{o}{/}\PYG{l+m+mf}{100.0}
+
+    \PYG{n}{scaled\PYGZus{}x} \PYG{o}{=} \PYG{n}{x}\PYG{o}{/}\PYG{n}{xscale} \PYG{o}{+} \PYG{n}{raw\PYGZus{}x}
+    \PYG{n}{scaled\PYGZus{}y} \PYG{o}{=} \PYG{n}{y}\PYG{o}{/}\PYG{n}{yscale} \PYG{o}{+} \PYG{n}{raw\PYGZus{}y}
+    
+    \PYG{k}{return} \PYG{l+s}{\PYGZdq{}\PYGZlt{}text x=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}scaled\PYGZus{}x}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ y=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}scaled\PYGZus{}y}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}size=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}raw\PYGZus{}fontsize}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}weight=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{bold}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ font\PYGZhy{}family=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{Helvetica}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ fill=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{rgb\PYGZdq{}}\PYG{o}{*}\PYG{n}{colour\PYGZus{}dict}\PYG{p}{[}\PYG{n}{c}\PYG{p}{]}\PYG{o}{*}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{ transform=}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{scale(}\PYG{l+s+si}{\PYGZdl{}xscale}\PYG{l+s}{,}\PYG{l+s+si}{\PYGZdl{}yscale}\PYG{l+s}{)}\PYG{l+s+se}{\PYGZbs{}\PYGZdq{}}\PYG{l+s}{\PYGZgt{}}\PYG{l+s+si}{\PYGZdl{}c}\PYG{l+s}{\PYGZlt{}/text\PYGZgt{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{svg\PYGZus{}footer}\PYG{p}{()}
+    \PYG{k}{return} \PYG{l+s}{\PYGZdq{}\PYGZlt{}/svg\PYGZgt{}\PYGZdq{}}
+\PYG{k}{end}
+\end{Verbatim}

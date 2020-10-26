@@ -1,0 +1,151 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{struct} \PYG{n}{Model\PYGZus{}Record} \PYG{c}{\PYGZsh{}record struct to associate a log\PYGZus{}Li with a saved, calculated model}
+    \PYG{n}{path}\PYG{o}{::}\PYG{n}{String}
+    \PYG{n}{log\PYGZus{}Li}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+\PYG{k}{end}
+
+\PYG{n}{struct} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model} \PYG{c}{\PYGZsh{}Independent component analysis position weight matrix model}
+    \PYG{n}{name}\PYG{o}{::}\PYG{n}{String} \PYG{c}{\PYGZsh{}designator for saving model to posterior}
+    \PYG{n}{origin}\PYG{o}{::}\PYG{n}{String} \PYG{c}{\PYGZsh{}functions instantiating IPMs should give an informative desc of the means by which the model was generated}
+    \PYG{n}{sources}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}\PYGZcb{}} \PYG{c}{\PYGZsh{}vector of PWM signal sources (LOG PROBABILITY!!!) tupled with an index denoting the position of the first PWM base on the prior matrix\PYGZhy{} allows us to permute length and redraw from the appropriate prior position}
+    \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{::}\PYG{k+kt}{UnitRange}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}} \PYG{c}{\PYGZsh{}min/max source lengths for init and permutation}
+    \PYG{n}{mix\PYGZus{}matrix}\PYG{o}{::}\PYG{k+kt}{BitMatrix} \PYG{c}{\PYGZsh{} obs x sources bool matrix}
+    \PYG{n}{log\PYGZus{}Li}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
+    \PYG{n}{permute\PYGZus{}blacklist}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Function}\PYG{p}{\PYGZcb{}} \PYG{c}{\PYGZsh{}blacklist of functions that ought not be used to permute this model (eg. because to do so would not generate a different model for IPMs produced from fitting the mix matrix)}
+    \PYG{k}{function} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{origin}\PYG{p}{,} \PYG{n}{sources}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{,} \PYG{n}{mix\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{log\PYGZus{}Li}\PYG{p}{,} \PYG{n}{permute\PYGZus{}blacklist}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Function}\PYG{p}{\PYGZcb{}())}
+        \PYG{n}{verify\PYGZus{}srcs}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{origin}\PYG{p}{,} \PYG{n}{sources}\PYG{p}{)}
+        \PYG{n}{new}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{origin}\PYG{p}{,} \PYG{n}{sources}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{,} \PYG{n}{mix\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{log\PYGZus{}Li}\PYG{p}{,} \PYG{n}{permute\PYGZus{}blacklist}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}ICA\PYGZus{}PWM\PYGZus{}Model FUNCTIONS}
+\PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{(}\PYG{n}{name}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{source\PYGZus{}priors}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Bool}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{mix\PYGZus{}prior}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{BitMatrix}\PYG{p}{,}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{bg\PYGZus{}scores}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{observations}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{},} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{::}\PYG{k+kt}{UnitRange}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{})} \PYG{o}{=} \PYG{n}{init\PYGZus{}IPM}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{source\PYGZus{}priors}\PYG{p}{,}\PYG{n}{mix\PYGZus{}prior}\PYG{p}{,}\PYG{n}{bg\PYGZus{}scores}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{,}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{)}
+
+\PYG{k}{function} \PYG{n}{verify\PYGZus{}srcs}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{ori}\PYG{p}{,} \PYG{n}{sources}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}\PYGZcb{})}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{n}\PYG{p}{,(}\PYG{n}{pwm}\PYG{p}{,}\PYG{n+nb}{pi}\PYG{p}{))} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{sources}\PYG{p}{)}
+        \PYG{o}{!}\PYG{n}{all}\PYG{p}{(}\PYG{n}{isprobvec}\PYG{p}{(}\PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{pwm}\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))} \PYG{k}{for} \PYG{n}{pos} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{pwm}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad probvec in model }\PYG{l+s+si}{\PYGZdl{}name}\PYG{l+s}{, source }\PYG{l+s+si}{\PYGZdl{}n}\PYG{l+s}{, origin }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{ori}\PYG{p}{)}\PYG{l+s}{:}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{pwm}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}MODEL INIT}
+\PYG{k}{function} \PYG{n}{init\PYGZus{}IPM}\PYG{p}{(}\PYG{n}{name}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{source\PYGZus{}priors}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Bool}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{mix\PYGZus{}prior}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{BitMatrix}\PYG{p}{,}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{bg\PYGZus{}scores}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{observations}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{},} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{::}\PYG{k+kt}{UnitRange}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{})}
+    \PYG{n}{assert\PYGZus{}obs\PYGZus{}bg\PYGZus{}compatibility}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{,}\PYG{n}{bg\PYGZus{}scores}\PYG{p}{)}
+    \PYG{n}{T}\PYG{p}{,}\PYG{n}{O} \PYG{o}{=} \PYG{n}{size}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{)}
+    \PYG{n}{S}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{source\PYGZus{}priors}\PYG{p}{)}
+    \PYG{n}{obs\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{iszero}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{o}\PYG{p}{])}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{p}{]]}
+    \PYG{n}{sources}\PYG{o}{=}\PYG{n}{init\PYGZus{}logPWM\PYGZus{}sources}\PYG{p}{(}\PYG{n}{source\PYGZus{}priors}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{)}
+    \PYG{n}{mix}\PYG{o}{=}\PYG{n}{init\PYGZus{}mix\PYGZus{}matrix}\PYG{p}{(}\PYG{n}{mix\PYGZus{}prior}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{S}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}lh} \PYG{o}{=} \PYG{n}{IPM\PYGZus{}likelihood}\PYG{p}{(}\PYG{n}{sources}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{,} \PYG{n}{bg\PYGZus{}scores}\PYG{p}{,} \PYG{n}{mix}\PYG{p}{)}
+
+   \PYG{k}{return} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}init\PYGZus{}IPM\PYGZdq{}}\PYG{p}{,} \PYG{n}{sources}\PYG{p}{,} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{,} \PYG{n}{mix}\PYG{p}{,} \PYG{n}{log\PYGZus{}lh}\PYG{p}{)}
+\PYG{k}{end}
+                \PYG{c}{\PYGZsh{}init\PYGZus{}IPM SUBFUNCS}
+                \PYG{k}{function} \PYG{n}{assert\PYGZus{}obs\PYGZus{}bg\PYGZus{}compatibility}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{bg\PYGZus{}scores}\PYG{p}{)}
+                    \PYG{n}{T}\PYG{p}{,}\PYG{n}{O}\PYG{o}{=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)}
+                    \PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{o}{=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{bg\PYGZus{}scores}\PYG{p}{)}
+                    \PYG{n}{O!}\PYG{o}{=}\PYG{n}{o} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Background scores and observations must have same number of observation columns!\PYGZdq{}}\PYG{p}{))}
+                    \PYG{n}{T!}\PYG{o}{=}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Background score array must have the same observation lengths as observations!\PYGZdq{}}\PYG{p}{))}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{init\PYGZus{}logPWM\PYGZus{}sources}\PYG{p}{(}\PYG{n}{prior\PYGZus{}vector}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Bool}\PYG{p}{\PYGZcb{}\PYGZcb{},} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{::}\PYG{k+kt}{UnitRange}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{})}
+                    \PYG{n}{srcvec} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{},}\PYG{k+kt}{Int64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+                        \PYG{k}{for} \PYG{n}{prior} \PYG{k+kp}{in} \PYG{n}{prior\PYGZus{}vector}
+                            \PYG{k}{if} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Dirichlet}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{}\PYGZcb{}}
+                                \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                                    \PYG{n}{length\PYGZus{}dist}\PYG{o}{=}\PYG{n}{DiscreteNonParametric}\PYG{p}{(}
+                                        \PYG{p}{[}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{...}\PYG{p}{],}
+                                        \PYG{p}{[}\PYG{n}{PRIOR\PYGZus{}LENGTH\PYGZus{}MASS}\PYG{p}{,}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{]))}\PYG{o}{/}\PYG{n}{length}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{o}{:}\PYG{k}{end}\PYG{p}{])}\PYG{o}{.*}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{\PYGZhy{}}\PYG{n}{PRIOR\PYGZus{}LENGTH\PYGZus{}MASS}\PYG{p}{)])}
+                                    \PYG{n}{PWM\PYGZus{}length}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{length\PYGZus{}dist}\PYG{p}{)}
+                                \PYG{k}{elseif} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}
+                                    \PYG{n}{length\PYGZus{}dist}\PYG{o}{=}\PYG{n}{DiscreteNonParametric}\PYG{p}{(}
+                                        \PYG{p}{[}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{o}{...}\PYG{p}{],}
+                                        \PYG{p}{[}
+                                            \PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{/}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{.*}\PYG{n}{PRIOR\PYGZus{}LENGTH\PYGZus{}MASS}\PYG{p}{)}\PYG{o}{...}\PYG{p}{,}
+                                            \PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{))}\PYG{o}{/}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{))}\PYG{o}{.*}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{\PYGZhy{}}\PYG{n}{PRIOR\PYGZus{}LENGTH\PYGZus{}MASS}\PYG{p}{))}\PYG{o}{...}
+                                        \PYG{p}{]}
+                                    \PYG{p}{)}
+                                    \PYG{n}{PWM\PYGZus{}length}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{length\PYGZus{}dist}\PYG{p}{)}
+                                \PYG{k}{else}
+                                    \PYG{n}{PWM\PYGZus{}length}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{)}
+                                \PYG{k}{end}
+
+                                \PYG{k}{if} \PYG{n}{PWM\PYGZus{}length}\PYG{o}{\PYGZgt{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)}
+                                    \PYG{n}{prior\PYGZus{}coord}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{p}{(}\PYG{n}{PWM\PYGZus{}length}\PYG{o}{\PYGZhy{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{))}\PYG{o}{:}\PYG{l+m+mi}{1}\PYG{p}{)}
+                                \PYG{k}{else}
+                                    \PYG{n}{prior\PYGZus{}coord}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{n}{PWM\PYGZus{}length}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)}
+                                \PYG{k}{end}
+
+                                \PYG{n}{PWM} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{PWM\PYGZus{}length}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+
+                                \PYG{n}{curr\PYGZus{}pos}\PYG{o}{=}\PYG{n}{prior\PYGZus{}coord}
+                                \PYG{k}{for} \PYG{n}{pos} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{PWM\PYGZus{}length}
+                                    \PYG{n}{curr\PYGZus{}pos} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1} \PYG{o}{||} \PYG{n}{curr\PYGZus{}pos} \PYG{o}{\PYGZgt{}} \PYG{n}{length}\PYG{p}{(}\PYG{n}{prior}\PYG{p}{)} \PYG{o}{?} \PYG{n}{dirichlet}\PYG{o}{=}\PYG{n}{Dirichlet}\PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)} \PYG{o}{:}
+                                        \PYG{n}{dirichlet}\PYG{o}{=}\PYG{n}{prior}\PYG{p}{[}\PYG{n}{curr\PYGZus{}pos}\PYG{p}{]}
+                                    \PYG{n}{PWM}\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,} \PYG{o}{:}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{n}{dirichlet}\PYG{p}{)}
+                                \PYG{k}{end}
+                                \PYG{n}{push!}\PYG{p}{(}\PYG{n}{srcvec}\PYG{p}{,} \PYG{p}{(}\PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{PWM}\PYG{p}{),} \PYG{n}{prior\PYGZus{}coord}\PYG{p}{))} \PYG{c}{\PYGZsh{}push the source PWM to the source vector with the prior coord idx to allow drawing from the appropriate prior dirichlets on permuting source length}
+                            \PYG{k}{elseif} \PYG{n}{prior}\PYG{o}{==}\PYG{k+kc}{false}
+                                \PYG{n}{PWM\PYGZus{}length}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{source\PYGZus{}length\PYGZus{}limits}\PYG{p}{)}
+                                \PYG{n}{PWM}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{PWM\PYGZus{}length}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+                                \PYG{n}{dirichlet}\PYG{o}{=}\PYG{n}{Dirichlet}\PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}
+                                \PYG{k}{for} \PYG{n}{pos} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{PWM\PYGZus{}length}
+                                    \PYG{n}{PWM}\PYG{p}{[}\PYG{n}{pos}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{n}{dirichlet}\PYG{p}{)}
+                                \PYG{k}{end}
+                                \PYG{n}{push!}\PYG{p}{(}\PYG{n}{srcvec}\PYG{p}{,} \PYG{p}{(}\PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{PWM}\PYG{p}{),} \PYG{l+m+mi}{1}\PYG{p}{))}
+                            \PYG{k}{else}
+                                \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Bad prior supplied for ICA\PYGZus{}PWM\PYGZus{}Model!\PYGZdq{}}\PYG{p}{))}
+                            \PYG{k}{end}
+                        \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{srcvec}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{init\PYGZus{}mix\PYGZus{}matrix}\PYG{p}{(}\PYG{n}{mix\PYGZus{}prior}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{BitMatrix}\PYG{p}{,}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},} \PYG{n}{no\PYGZus{}observations}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{no\PYGZus{}sources}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+                    \PYG{n}{inform}\PYG{p}{,}\PYG{n}{uninform}\PYG{o}{=}\PYG{n}{mix\PYGZus{}prior}
+                    \PYG{k}{if} \PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+                        \PYG{n+nd}{@assert} \PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{==}\PYG{n}{no\PYGZus{}observations} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{\PYGZlt{}=}\PYG{n}{no\PYGZus{}sources} \PYG{l+s}{\PYGZdq{}Bad informative mix prior dimensions!\PYGZdq{}}
+                    \PYG{k}{end}
+                    \PYG{n+nd}{@assert} \PYG{l+m+mf}{0.0} \PYG{o}{\PYGZlt{}=} \PYG{n}{uninform} \PYG{o}{\PYGZlt{}=}\PYG{l+m+mf}{1.0} \PYG{l+s}{\PYGZdq{}Uninformative mix prior not between 0.0 and 1.0!\PYGZdq{}}
+                    \PYG{n}{mix\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{falses}\PYG{p}{(}\PYG{n}{no\PYGZus{}observations}\PYG{p}{,} \PYG{n}{no\PYGZus{}sources}\PYG{p}{)}
+                    \PYG{k}{if} \PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{\PYGZgt{}}\PYG{l+m+mi}{0}
+                        \PYG{n}{mix\PYGZus{}matrix}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)]}\PYG{o}{=}\PYG{n}{inform}
+                    \PYG{k}{end}
+                    \PYG{k}{for} \PYG{n}{index} \PYG{k+kp}{in} \PYG{n}{CartesianIndices}\PYG{p}{((}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{no\PYGZus{}observations}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{inform}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{no\PYGZus{}sources}\PYG{p}{))}
+                        \PYG{n}{rand}\PYG{p}{()} \PYG{o}{\PYGZlt{}=} \PYG{n}{uninform} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]} \PYG{o}{=} \PYG{k+kc}{true}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{mix\PYGZus{}matrix}
+                \PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{Base}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{,} \PYG{n}{m}\PYG{o}{::}\PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model}\PYG{p}{;} \PYG{n}{nsrc}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{),} \PYG{n}{progress}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{nsrc} \PYG{o}{==} \PYG{l+m+mi}{0} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{nsrc}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{))}
+    \PYG{n}{nsrc}\PYG{o}{\PYGZgt{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{nsrc}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{))}
+    \PYG{n}{nsrc}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{n}{srcstr}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}All\PYGZdq{}}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{srcstr}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}Top }\PYG{l+s+si}{\PYGZdl{}nsrc}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{printidxs}\PYG{p}{,}\PYG{n}{printsrcs}\PYG{p}{,}\PYG{n}{printfreqs}\PYG{o}{=}\PYG{n}{sort\PYGZus{}sources}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,}\PYG{n}{nsrc}\PYG{p}{)}
+
+    \PYG{n}{printstyled}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}ICA PWM Model }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{name}\PYG{p}{)}\PYG{l+s}{ w/ logLi }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{log\PYGZus{}Li}\PYG{p}{)}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{bold}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{srcstr}\PYG{o}{*}\PYG{l+s}{\PYGZdq{} sources:\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{src} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{nsrc}
+        \PYG{n}{print}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}S}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{printidxs}\PYG{p}{[}\PYG{n}{src}\PYG{p}{])}\PYG{l+s}{, }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{printfreqs}\PYG{p}{[}\PYG{n}{src}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{p}{)}\PYG{l+s}{\PYGZpc{}: \PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{pwmstr\PYGZus{}to\PYGZus{}io}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{printsrcs}\PYG{p}{[}\PYG{n}{src}\PYG{p}{])}
+        \PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{println}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{origin}\PYG{p}{)}
+    
+    \PYG{n}{progress} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{return}\PYG{p}{(}\PYG{n}{nsrc}\PYG{o}{+}\PYG{l+m+mi}{4}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{sort\PYGZus{}sources}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{n}{nsrc}\PYG{p}{)}
+    \PYG{n}{printidxs}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{printsrcs}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+    \PYG{n}{printfreqs}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}()}
+
+    \PYG{n}{freqs}\PYG{o}{=}\PYG{n}{vec}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{,}\PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{));} \PYG{n}{total}\PYG{o}{=}\PYG{n}{size}\PYG{p}{(}\PYG{n}{m}\PYG{o}{.}\PYG{n}{mix\PYGZus{}matrix}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{sortfreqs}\PYG{o}{=}\PYG{n}{sort}\PYG{p}{(}\PYG{n}{freqs}\PYG{p}{,}\PYG{n}{rev}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{);} \PYG{n}{sortidxs}\PYG{o}{=}\PYG{n}{sortperm}\PYG{p}{(}\PYG{n}{freqs}\PYG{p}{,}\PYG{n}{rev}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{srcidx} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{nsrc}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{printidxs}\PYG{p}{,} \PYG{n}{sortidxs}\PYG{p}{[}\PYG{n}{srcidx}\PYG{p}{])}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{printsrcs}\PYG{p}{,} \PYG{n}{m}\PYG{o}{.}\PYG{n}{sources}\PYG{p}{[}\PYG{n}{sortidxs}\PYG{p}{[}\PYG{n}{srcidx}\PYG{p}{]][}\PYG{l+m+mi}{1}\PYG{p}{])}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{printfreqs}\PYG{p}{,} \PYG{n}{sortfreqs}\PYG{p}{[}\PYG{n}{srcidx}\PYG{p}{]}\PYG{o}{/}\PYG{n}{total}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{printidxs}\PYG{p}{,}\PYG{n}{printsrcs}\PYG{p}{,}\PYG{n}{printfreqs}
+\PYG{k}{end}
+\end{Verbatim}
