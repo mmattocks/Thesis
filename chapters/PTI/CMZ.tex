@@ -1,26 +1,116 @@
-\chapter{Bayesian survey and periodization of postembryonic CMZ activity}
+\chapter{Bayesian periodization of postembryonic CMZ activity}
 \label{chap:CMZ}
 
+\section{Preliminaries: Calculation of Bayesian evidence militates for independent log-Normal modelling of CMZ parameters}
+To take up the question of how CMZ RPC activity evolves over time, we have collected observations of a variety of CMZ and retinal parameters derived from histological studies of, primarily, coronal cryosections of zebrafish eyes harvested over the first year of the animal's life. We wish to extract as much information as possible about the structure and time-evolution of the CMZ population as a whole, in order to know how to best model its constituent RPCs. The general approach here will be to estimate parameters of the whole-eye CMZ from sample cryosections, and to use these estimates as the dataset which will inform our selection of appropriate models.
 
-\section{Postembryonic activity of the zebrafish CMZ}
-It is useful to begin with a broad survey the population history of proliferative CMZ progenitors alongside a general measure of the increase in the volume of the cellular retina over time.  Fig. \ref{CMZoverall} presents estimates, calculated from sectional measurements as described in , of the overall population of the CMZ (Panel A), and the volume of the cellular retina (Panel B). Given the marginal posterior distributions of the mean population sizes, the probability of the mean population size at 60dpf being at least 3 times larger than the same parameter at 3 dpf is 
+While it remains common to assume that population data are normally distributed, and so simply to calculate means and standard deviations as the statistical representation of the underlying population, it has been known for decades \cite{Heath1967} that log-normal distributions are usually better models of the outcomes produced by variable additive processes (like population sizes or income distributions). We therefore start with the selection of appropriate models for the CMZ- and retina-level population measurements critical to the inferences that follow.
 
-The overall picture is somewhat surprising; it seems that the CMZ undergoes a massive population buildup in the first month of life, a period of intense contribution to the neural retina in the second month of life, and a collapse in population during the third month, after which a modestly populated CMZ continues to make slow 
+As a first pass at this question, we calculate the likelihood ratio for the hypothesis that the parameter measurements, and the calculated quantities derived from them, are log-normally distributed against the the one that they are simply normally distributed. These results are displayed in Table \ref{PLHRtable}
+
+\begin{table}[!ht]
+    \centering
+    \caption{
+    {\bf Likelihood ratio comparison between normal and log-normal models of retinal population parameters}}
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    {\bf Parameter} & {\bf $\mathcal{N}$ logLH} & {\bf Log-$\mathcal{N}$ logLH} & {\bf logLR} \\ \hline
+    Sectional PCNA+ve & -285.611 & {\bf -283.214} & 2.397\\ \hline
+    Lens diameter & {\bf -203.102} & -203.854 & -0.752\\ \hline
+    CMZ annular pop.($\dagger$)  & -484.768 & {\bf -482.733} & 2.035\\ \hline
+    RPE length & {\bf -368.232} & -368.609 & -0.377\\ \hline
+    CR thickness & {\bf -240.858} & -241.032 & -0.174\\ \hline
+    CR volume ($\dagger$) & -712.256 & {\bf -711.766} & 0.491\\ \hline
+    \end{tabular}
+    \begin{flushleft} $\mathcal{N}$: Normal distribution. logLH: logarithm of p(D|M), the likelihood of the data given the model. logLR: logarithm of the likelihood ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Superior likelihoods are bolded. $\dagger$: Calculated quantities. Sectional PCNA+ve: population of PCNA-positive CMZ RPCs per 14$\mu$m cryosection. CMZ annular pop: population of annular CMZ. RPE: retinal pigmented epithelium. CR: cellular retina.
+    \end{flushleft}
+    \label{PLHRtable}
+\end{table}
+
+These results suggest that the organism-level population distribution of eye-level CMZ population counts, as assayed by PCNA immunostaining, is better modelled log-normally than normally. This is true whether we test the primary per-section count meaurements, or the estimated whole-annulus population, calculated as described in \autoref{sec:lenspopest}, even though this quantity is calculated using the normally-distributed lens diameter\footnote{The apparent superiority of the normal model for lens diameter may be due to the paucity of data at later time points; as described in INSERT METHODS AUTOREF, lenses are difficult to retain in this histological context.}. The most likely log-Normal representations of the CMZ populations are about two orders of magnitude more likely than the Normal alternative. Additionally, although normal models are slightly favoured for describing the population-level distributions of RPE length and cellular retina thickness, the derived cellular retina volume quantity is better modeled by a log-Normal distribution. As the two calculated quantities will be the primary ones used in our inferences about population-level CMZ dynamics, we are most concerned with these measures; at this point, the log-Normal distribution looks to be more informative for both.
+
+We have emphasized the danger of relying overmuch on the parameterisation of single most-likely model fits in \autoref{chap:SMMEoutro}, which is what the simple likelihood ratios above represent: the joint likelihood of the MAP distribution fitted to the measurements taken from each age cohort. Since the model selected for describing the estimated annular population and retinal volume is critical to the success of later inferences, we used Galilean Monte Carlo-Nested Sampling (GMC-NS) to estimate the Bayesian evidence (the marginal probability of the data over all model parameterisations) for these hypotheses. Although it is very unlikely that GMC-NS will result in conclusions from the likelihood ratio, this simple test serves to prove the function of the \path{GMC_NS.jl} package, and demonstrate the inferential logic. Evidence estimates and ratios are presented in Table \ref{PZRtable}.
+
+\begin{table}[!ht]
+    \centering
+    \caption{
+    {\bf Evidence favours log-normal models of retinal population parameters}}
+    \begin{tabular}{|l|l|l|l|l|}
+    \hline
+    {\bf Parameter} & {\bf $\mathcal{N}$ logZ} & {\bf Log-$\mathcal{N}$ logZ} & {\bf logZR} & {\bf $\sigma$ significance}\\ \hline
+    CMZ annular pop. & -744.649 $\pm$ 0.012 & {\bf -629.957 $\pm$ 0.013} & 114.691 $\pm$ 0.018 & 6518.5\\ \hline
+    CR Volume & -1287.372 $\pm$ 0.018 & {\bf -959.578 $\pm$ 0.012} & 327.794 $\pm$ 0.021 & 15421.1\\ \hline
+    \end{tabular}
+    \begin{flushleft} $\mathcal{N}$: Normal distribution. logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest evidence values bolded. CR: cellular retina.
+    \end{flushleft}
+    \label{PZRtable}
+\end{table}
+
+Unsurprisingly, full estimation of the Bayesian evidence for the Normal vs. log-Normal hypotheses for our calculated parameters produces the same basic story as the rough calculation of likelihood ratio from the single-fit MAP models. However, the numerical results reveal the sense in which model comparison based on these simpler methods can be misleading. There are approximately 115 orders of magnitude more evidence for the log-Normal model of intraindividual variation in estimated CMZ annulus RPC population over time. This result has greater than 6500 standard deviations of significance\footnote{The typical standard for a "discovery" in particle physics is >5$\sigma$ \cite{Lyons2013}. Assuming Normally distributed error, the probability that the models were, in fact, equally good at 3 standard deviations of significance would be about a tenth of a percent (i.e. .001). At 10 standard deviations the figure is \num{7.62e-24}. Assuming the sample is representative, we have nigh certainty about these results and no reason to pursue the matter further.}. However, there are 327 orders of magnitude more evidence for the log-Normal model for the variability in the cellular retinal volume estimate, with over 15400 standard deviations of significance. Given the likelihood ratios alone, we might have suspected that the log-Normal model was more justified for modelling the population data than for the volume data. In fact, with the full estimation of the evidence, it becomes clear that the converse is true. In any case, we need not have any compunction about modelling population outcomes for these parameters with log-Normal distributions, as the evidence supplied by our observations plainly supports it.
+
+If between-individual variation in retinal CMZ population and retinal volume are both well-modelled log-normally, the question of their independence immediately arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, upon central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these cluster vs the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that either the retinal growth rate is well correlated with the size of the CMZ. Since both of these questions bear upon the manner in which we model the CMZ, we performed Bayesian model selection by the so-called Empirical Bayes method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
+
+Interestingly, we find that CMZ population and retinal volume estimates are better described by uncorrelated models at all in ages, with approximately 1-8 orders of magnitude of evidence in favour of the uncorrelated model at each age. These data are displayed in \autoref{corrtable}. It is interesting to note that the evidence in favour of non-correlation is weakest at 30dpf, which will be discussed below. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Evidence favours uncorrelated linear models of CMZ-population and retinal volume over time}}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        {\bf Age (dpf)} & {\bf Uncorrelated logZ} & {\bf Correlated logZ} & {\bf logZR}\\ \hline
+        3.0 & {\bf -60.089} & -65.078 & 4.989\\ \hline
+        5.0 & {\bf -61.349} & -64.873 & 3.524\\ \hline
+        8.0 & {\bf -60.181} & -67.639 & 7.458\\ \hline
+        12.0 & {\bf -60.768} & -68.041 & 7.273\\ \hline
+        17.0 & {\bf -63.503} & -67.344 & 3.841\\ \hline
+        23.0 & {\bf -69.24} & -76.044 & 6.804\\ \hline
+        30.0 & {\bf -68.858} & -70.278 & 1.42\\ \hline
+        60.0 & {\bf -75.769} & -79.67 & 3.901\\ \hline
+        90.0 & {\bf -74.973} & -83.883 & 8.91\\ \hline
+        180.0 & {\bf -76.244} & -83.948 & 7.704\\ \hline
+        360.0 & {\bf -79.822} & -87.628 & 7.805\\ \hline
+        \end{tabular}
+    \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the uncorrelated model. Largest evidence values bolded.
+    \end{flushleft}
+    \label{corrtable}
+\end{table}
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/CMZoverall.png}}    
+    \makebox[\textwidth][c]{\includegraphics[width=.75\textwidth]{cmz/3dcorr.png}}    
+    \caption{{\bf CMZ population and retinal volume estimates are uncorrelated at 3dpf}}
+    Individual CMZ population estimate vs retinal volume estimate for 3dpf animals. Uncorrelated and correlated linear models of these variables are plotted as the mean$\pm$95\% CI of the predictive distribution of the fitted model.
+    \label{gausscorrelation}
+\end{figure}
+
+From these analyses, we conclude that variability in the CMZ population and retinal volume estimates are best described by independent log-Normal distributions. Because log-Normal distributions are simply transformed Normal Gaussian distributions, we may model our uncertainty about their parameters with Normal-Gamma distributions over the mean and variance of the underlying Normal distribution of the log-Normal population model ("the underlying"). That is, our prior and posterior belief about the relative likelihood of values of the mean of the underlying may be modelled with a Normal distribution, our beliefs about its variance with and a Gamma, such that our joint uncertainty is the product of the two distributions. This is explained in more detail in \autoref{sec:NormalGamma}. A useful analytic feature of the Normal-Gamma prior is that the marginal posterior distribution of the mean, assuming an uninformative (ignorance) prior, is a location-scaled T distribution; this is so because the weighted sum of an infinite series of Normal distributions (ie the sum of all the Normal distributions that could underly the log-Normal models, weighted by their likelihood given the data), is a T distribution. T distributions are notably more resistent to outlier distortion than Normal distributions themselves are, and may be estimated with as few as two observations, making them highly flexible. Most of the descriptive statistics in the next section, therefore, calculate the credible interval for the posterior mean of the underlying by T distributions (exponentiated to produce the features of the correct log-Normal distribution). Unfortunately, differences of T distributions are not, themselves, T-distributed, so we have relied on Monte Carlo estimation of rates of change of the these posterior means over time. With our log-Normal models selected, and the descriptive tool of the posterior mean T distribution in hand, we turn now to a survey of the zebrafish CMZ in the first year of life.
+
+\section{Survey of CMZ population and gross retinal contribution}
+
+If it is true that the majority of zebrafish retinogenesis occurs postembryonically, and that models trained on embryonic data do not describe this period well, what characterises this CMZ-driven phase of retinogenesis? We begin by presenting our estimates of individual CMZ annulus population and retinal volume over the first year of life, in \autoref{CMZoverall}, panels A and C.
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/CMZoverall.png}}    
     \caption{{\bf Population and activity of the CMZ over the first year of \textit{D.rerio} life}}
     Panel A: Marginal posterior mean CMZ annulus population. Panel B: Marginal posterior mean retinal volume estimate. Insets in Panels A \& B display data from 3-17 dpf. Panel C: Marginal posterior mean of the proliferative index of the CMZ annulus, assayed by specified retinal neurons with incorporated thymidine from an 8hr pulse at the indicated ages. Panel D: Mean daily rate of volumetric increase of the neural retina, calculated as the difference in volumes between two ages over the number of elapsed days. All means are displayed in a band representing the $\pm 95 \%$ credible interval for the marginal posterior distribution of the mean.
     \label{CMZoverall}
 \end{figure}
 
-\subsection{Population survey of the CMZ}
+An initial, relatively quiescent period in the population history of the CMZ can be inferred from the lack of growth observed in the first week of life, as well as the observations presented in \autoref{rysCycle}, which demonstrate that CMZ RPCs are proliferating too slowly to be labelled by a day's pulse of a thymidine analogue at 5dpf in the wild-type and heterozygote siblings of npat mutants. Interestingly, we have good confidence that retinal volume continues to grow over this time; 99.56\% of the marginal posterior mass of the mean 5dpf estimate is above the 3dpf mean, suggesting that this proliferative pause is too short to appear in the retinal volume data.
 
-Before delving into the regional variation apparent in the population history of the CMZ's annulus, it will be useful to produce an overall estimate of the population of the CMZ annulus and an index of its overall proliferative activity. Because the analyses of population and activity data broken down by dorso-ventral and naso-temporal location refer to counts of cells in fixed-width sections, these figures do not account for the growing diameter of the CMZ. The individual population and activity datapoints presented in are derived from the lens diameter as detailed in \autoref{sec:lenspopest}. I calculated the marginal posterior distribution of the mean population size and activity index at each timepoint, assuming an uninformative normal-gamma prior distribution on the unknown mean and unknown variance of the normal gaussian models of these parameters. 
+In any case, the first two to three weeks of life (magnified in lens insets in panels A and C) appear to mark a relatively slow build in both estimated CMZ annulus population and retinal volume compared to the explosion which follows immediately thereafter. While zebrafish are better staged by size than age \cite{Parichy2009}, the onset of this explosive growth seems to come somewhat earlier than the typical metamorphic transition from larval to juvenile stages at ~45dpf \cite{Singleman2014}. This raises the question of the manner in which the CMZ contributes to the retina during the critical period of exponential growth of the organism, between about 45 and 90dpf. It is plausible, for instance, that the growth of the CMZ population mainly reflects the increased output of stem cells, with RPCs specifying at some steady rate, or that the CMZ builds itself up for a wave of specification somewhat later, similarly to the sequence of events in the embryonic central retina.
+
+In order to get a better sense of this timing, we simulated the mean daily rate of CMZ annulus population and retinal volume change, by performing Monte Carlo difference operations between samples from the marginal posterior means of subsequent timepoints. These simulated mean rates and their associated confidence intervals are plotted in \autoref{CMZoverall} panels B and D. These show the basic time-structure of the phenomenon; the large increase in simulated daily CMZ population growth rate occurs before the large increase in retinal volume, but the CMZ population estimate does not begin to drop off until 60dpf, by which time the majority of volumetric growth is complete. This seems to substantiate some combination of the scenarios outlined above: there is an early buildup of CMZ population around 18-30dpf, before CMZ RPCs begin to make their primary contribution to the retina between 30-60dpf, which is characterised by much slower population growth and more rapid volumetric growth, implying steady and elevated specification of RPCs. The greater uncertainty associated with our population estimates, relative to their magnitude, results in correspondingly less certainty about the size of the population growth rate spike. For instance, we calculate a >99\% probability that the mean retinal volumetric rate growth peak at 60 dpf is at least 6-fold greater than the mean at 30dpf. By contrast, only about 97\% of the posterior mean density of  the population growth rate at the 23d peak (230.2 $\frac{cells}{d}$) is greater than the mean at 3dpf, which is a small negative value (-5.5 $\frac{cells}{d}$). 
+
+Subsequent to the bulk of the CMZ buildup and contribution to the retina, the population of the CMZ declines at about half the rate of its peak ascent, with an estimated -90.1$\frac{cells}{d}$ by 90dpf. This process thins out the CMZ population to below its size immediately after embryogenesis, spread out over a much larger peripheral annulus. Interestingly, the 95\% CI on the marginal posterior mean of estimated retinal volume at 180 dpf (\SI{1.10(4)E9}{\cubic\micro\metre}) completely encompasses the 95\% CI on volume at 90dpf (\SI{1.11(3)E9}{\cubic\micro\metre}), while we assess a 99.6\% probability of the 360dpf mean (\SI{1.73(10)E9}{\cubic\micro\metre}) being greater than 180dpf. This suggests a possible second period of quiescence from approximately 90-180dpf, followed by steady contribution to the retina without a buildup in the CMZ population subsequently.
+
+Given this rough description, it seems obvious that the ontogeny of the CMZ as a stem cell niche is characterised by different phases of activity, with different rates of proliferation and specification. It is not immediately clear what sort of periodization is justified by the data. It seems plausible that as few as two phases could explain the data well enough: an initial phase with short cell cycle time and lower exit rate of RPCs from the CMZ into the specified neural retina, followed by a second phase of longer cycle time and higher exit rate. On the other hand, perhaps some of the data features noted above justify a more bespoke model that captures, for instance, the initial quiescent period, or the post-180dpf growth of the retina. Because this is straightforwardly a question of how much model structure is justified by our data, we may address it as a model selection problem, using the system of Bayesian inference provided by nested sampling, and it is to this we now turn.
+
+\section{Periodization of postembryonic CMZ activity by Galilean Monte Carlo Nested Sampling}
 
 
+\section{Characterisation of asymmetrical CMZ population and retinal contribution dynamics}
 
-I first examined the mean size of dorsal and ventral populations of the CMZ, as ascertained by average counts of PCNA-positive cells at the retinal periphery in 14 $\mu$m central coronal sections of the eye. I calculated the marginal posterior distribution of the mean population size at the dorsal and ventral sides of for each timepoint, as described above. These data are presented in Fig. \ref{DVontology}.
+In the course of the preceding investigations, it became apparent that the population asymmetry mentioned in \autoref{chap:SMMEoutro} was not a static phenomenon, with the dorsal lobe of the CMZ annulus being consistently more populous than the ventral lobe. 
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/DVontology.png}}    
@@ -37,4 +127,4 @@ I first examined the mean size of dorsal and ventral populations of the CMZ, as 
 \end{figure}
 
 
-\section{Toward computational models of the CMZ}
+% \section{Toward computational models of the CMZ}

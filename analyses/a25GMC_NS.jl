@@ -98,5 +98,5 @@ lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display]])
 
 evidence=zeros(length(ensembles))
 for (ne,e) in enumerate(ensembles)
-    evidence[ne]=converge_ensemble!(e, τ0=.01, backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.139)
+    evidence[ne]=converge_ensemble!(e, τ0=.03, backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.139)
 end

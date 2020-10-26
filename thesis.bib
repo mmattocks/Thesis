@@ -7297,6 +7297,61 @@
   number = {5795}
 }
 
+@article{Feroz2008,
+  title = {Multimodal Nested Sampling: An Efficient and Robust Alternative to {{MCMC}} Methods for Astronomical Data Analysis},
+  shorttitle = {Multimodal Nested Sampling},
+  author = {Feroz, Farhan and Hobson, M. P.},
+  year = {2008},
+  month = jan,
+  volume = {384},
+  pages = {449--463},
+  issn = {00358711, 13652966},
+  doi = {10.1111/j.1365-2966.2007.12353.x},
+  abstract = {In performing a Bayesian analysis of astronomical data, two difficult problems often emerge. First, in estimating the parameters of some model for the data, the resulting posterior distribution may be multimodal or exhibit pronounced (curving) degeneracies, which can cause problems for traditional Markov Chain Monte Carlo (MCMC) sampling methods. Second, in selecting between a set of competing models, calculation of the Bayesian evidence for each model is computationally expensive using existing methods such as thermodynamic integration. The nested sampling method introduced by Skilling (2004), has greatly reduced the computational expense of calculating evidences and also produces posterior inferences as a by-product. This method has been applied successfully in cosmological applications by Mukherjee et al. (2006), but their implementation was efficient only for unimodal distributions without pronounced degeneracies. Shaw et al. (2007) recently introduced a clustered nested sampling method which is significantly more efficient in sampling from multimodal posteriors and also determines the expectation and variance of the final evidence from a single run of the algorithm, hence providing a further increase in efficiency. In this paper, we build on the work of Shaw et al. and present three new methods for sampling and evidence evaluation from distributions that may contain multiple modes and significant degeneracies in very high dimensions; we also present an even more efficient technique for estimating the uncertainty on the evaluated evidence. These methods lead to a further substantial improvement in sampling efficiency and robustness, and are applied to two toy problems to demonstrate the accuracy and economy of the evidence calculation and parameter estimation. Finally, we discuss the use of these methods in performing Bayesian object detection in astronomical datasets, and show that they significantly outperform existing MCMC techniques. An implementation of our methods will be publicly released shortly.},
+  archivePrefix = {arXiv},
+  eprint = {0704.3704},
+  eprinttype = {arxiv},
+  file = {/bench/Library/Zotero Data/storage/ZHCIKN4D/Feroz and Hobson - 2008 - Multimodal nested sampling an efficient and robus.pdf},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  keywords = {Astrophysics},
+  language = {en},
+  number = {2}
+}
+
+@article{Feroz2009,
+  title = {{{MultiNest}}: An Efficient and Robust {{Bayesian}} Inference Tool for Cosmology and Particle Physics},
+  shorttitle = {{{MultiNest}}},
+  author = {Feroz, F. and Hobson, M. P. and Bridges, M.},
+  year = {2009},
+  month = oct,
+  volume = {398},
+  pages = {1601--1614},
+  issn = {00358711, 13652966},
+  doi = {10.1111/j.1365-2966.2009.14548.x},
+  abstract = {We present further development and the first public release of our multimodal nested sampling algorithm, called MULTINEST. This Bayesian inference tool calculates the evidence, with an associated error estimate, and produces posterior samples from distributions that may contain multiple modes and pronounced (curving) degeneracies in high dimensions. The developments presented here lead to further substantial improvements in sampling efficiency and robustness, as compared to the original algorithm presented in Feroz \& Hobson, which itself significantly outperformed existing Markov chain Monte Carlo techniques in a wide range of astrophysical inference problems. The accuracy and economy of the MULTINEST algorithm are demonstrated by application to two toy problems and to a cosmological inference problem focusing on the extension of the vanilla cold dark matter model to include spatial curvature and a varying equation of state for dark energy. The MULTINEST software, which is fully parallelized using MPI and includes an interface to COSMOMC, is available at http://www.mrao.cam.ac.uk/software/multinest/. It will also be released as part of the SUPERBAYES package, for the analysis of supersymmetric theories of particle physics, at http://www.superbayes.org.},
+  file = {/bench/Library/Zotero Data/storage/JSEXMYMJ/Feroz et al. - 2009 - MultiNest an efficient and robust Bayesian infere.pdf},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  language = {en},
+  number = {4}
+}
+
+@article{Feroz2013,
+  title = {Exploring {{Multi}}-{{Modal Distributions}} with {{Nested Sampling}}},
+  author = {Feroz, F. and Skilling, J.},
+  year = {2013},
+  pages = {106--113},
+  doi = {10.1063/1.4819989},
+  abstract = {In performing a Bayesian analysis, two difficult problems often emerge. First, in estimating the parameters of some model for the data, the resulting posterior distribution may be multi-modal or exhibit pronounced (curving) degeneracies. Secondly, in selecting between a set of competing models, calculation of the Bayesian evidence for each model is computationally expensive using existing methods such as thermodynamic integration. Nested Sampling is a Monte Carlo method targeted at the efficient calculation of the evidence, but also produces posterior inferences as a by-product and therefore provides means to carry out parameter estimation as well as model selection. The main challenge in implementing Nested Sampling is to sample from a constrained probability distribution. One possible solution to this problem is provided by the Galilean Monte Carlo (GMC) algorithm. We show results of applying Nested Sampling with GMC to some problems which have proven very difficult for standard Markov Chain Monte Carlo (MCMC) and down-hill methods, due to the presence of large number of local minima and/or pronounced (curving) degeneracies between the parameters. We also discuss the use of Nested Sampling with GMC in Bayesian object detection problems, which are inherently multi-modal and require the evaluation of Bayesian evidence for distinguishing between true and spurious detections.},
+  archivePrefix = {arXiv},
+  eprint = {1312.5638},
+  eprinttype = {arxiv},
+  file = {/bench/Library/Zotero Data/storage/Z4WY3HS5/Feroz and Skilling - 2013 - Exploring Multi-Modal Distributions with Nested Sa.pdf},
+  journal = {arXiv:1312.5638 [astro-ph, physics:physics, stat]},
+  keywords = {Astrophysics - Instrumentation and Methods for Astrophysics,Physics - Data Analysis; Statistics and Probability,Statistics - Computation},
+  language = {en},
+  primaryClass = {astro-ph, physics:physics, stat}
+}
+
 @article{Ferroni2017,
   title = {Further Considerations to: {{Energy Return}} on {{Energy Invested}} ({{ERoEI}}) for Photovoltaic Solar Systems in Regions of Moderate Insolation},
   shorttitle = {Further Considerations To},
@@ -9654,6 +9709,17 @@
   number = {5}
 }
 
+@article{Heath1967,
+  title = {Normal or {{Log}}-Normal: {{Appropriate Distributions}}},
+  author = {Heath, D.F.},
+  year = {1967},
+  month = mar,
+  volume = {213},
+  pages = {1159--1160},
+  file = {/bench/Library/Zotero Data/storage/DAYVRKNT/heath1967.pdf},
+  journal = {Nature}
+}
+
 @article{Heavey2008,
   title = {The Phenomena of Inner Experience},
   author = {Heavey, Christopher L. and Hurlburt, Russell T.},
@@ -9857,6 +9923,23 @@
   keywords = {Astrophysics - Instrumentation and Methods for Astrophysics,Statistics - Applications,Statistics - Methodology},
   language = {en},
   number = {3}
+}
+
+@article{Higson2019,
+  title = {Dynamic Nested Sampling: An Improved Algorithm for Parameter Estimation and Evidence Calculation},
+  shorttitle = {Dynamic Nested Sampling},
+  author = {Higson, Edward and Handley, Will and Hobson, Michael and Lasenby, Anthony},
+  year = {2019},
+  month = sep,
+  volume = {29},
+  pages = {891--913},
+  issn = {0960-3174, 1573-1375},
+  doi = {10.1007/s11222-018-9844-0},
+  abstract = {We introduce dynamic nested sampling: a generalisation of the nested sampling algorithm in which the number of ``live points'' varies to allocate samples more efficiently. In empirical tests the new method significantly improves calculation accuracy compared to standard nested sampling with the same number of samples; this increase in accuracy is equivalent to speeding up the computation by factors of up to {$\sim$} 72 for parameter estimation and {$\sim$} 7 for evidence calculations. We also show that the accuracy of both parameter estimation and evidence calculations can be improved simultaneously. In addition, unlike in standard nested sampling, more accurate results can be obtained by continuing the calculation for longer. Popular standard nested sampling implementations can be easily adapted to perform dynamic nested sampling, and several dynamic nested sampling software packages are now publicly available.},
+  file = {/bench/Library/Zotero Data/storage/ILVYPZNN/Higson et al. - 2019 - Dynamic nested sampling an improved algorithm for.pdf},
+  journal = {Statistics and Computing},
+  language = {en},
+  number = {5}
 }
 
 @article{Hirabayashi2010,
@@ -12643,6 +12726,18 @@
   number = {2}
 }
 
+@book{Langtangen2012,
+  title = {A {{Primer}} on {{Scientific Programming}} with {{Python}}},
+  author = {Langtangen, Hans Petter},
+  year = {2012},
+  edition = {Third},
+  publisher = {{Springer Berlin Heidelberg}},
+  address = {{Berlin, Heidelberg}},
+  file = {/bench/Library/Zotero Data/storage/Z4NZ9X92/A Primer on Scientific Programming with Python by Hans Petter Langtangen (auth.) (z-lib.org).pdf},
+  number = {6},
+  series = {Texts in {{Computational Science}} and {{Engineering}}}
+}
+
 @article{Laplace1986,
   title = {Memoir on the {{Probability}} of the {{Causes}} of {{Events}}},
   author = {Laplace, Pierre Simon},
@@ -12777,6 +12872,21 @@
   journal = {FOXBusiness},
   language = {en-US},
   type = {Text.{{Article}}}
+}
+
+@article{Leibovich2017,
+  title = {From ``Sense of Number'' to ``Sense of Magnitude'': {{The}} Role of Continuous Magnitudes in Numerical Cognition},
+  shorttitle = {From ``Sense of Number'' to ``Sense of Magnitude''},
+  author = {Leibovich, Tali and Katzin, Naama and Harel, Maayan and Henik, Avishai},
+  year = {2017},
+  volume = {40},
+  pages = {e164},
+  issn = {0140-525X, 1469-1825},
+  doi = {10.1017/S0140525X16000960},
+  abstract = {In this review, we are pitting two theories against each other: the more accepted theory, the number sense theory, suggesting that a sense of number is innate and non-symbolic numerosity is being processed independently of continuous magnitudes (e.g., size, area, and density); and the newly emerging theory suggesting that (1) both numerosities and continuous magnitudes are processed holistically when comparing numerosities and (2) a sense of number might not be innate. In the first part of this review, we discuss the number sense theory. Against this background, we demonstrate how the natural correlation between numerosities and continuous magnitudes makes it nearly impossible to study non-symbolic numerosity processing in isolation from continuous magnitudes, and therefore, the results of behavioral and imaging studies with infants, adults, and animals can be explained, at least in part, by relying on continuous magnitudes. In the second part, we explain the sense of magnitude theory and review studies that directly demonstrate that continuous magnitudes are more automatic and basic than numerosities. Finally, we present outstanding questions. Our conclusion is that there is not enough convincing evidence to support the number sense theory anymore. Therefore, we encourage researchers not to assume that number sense is simply innate, but to put this hypothesis to the test and consider whether such an assumption is even testable in the light of the correlation of numerosity and continuous magnitudes.},
+  file = {/bench/Library/Zotero Data/storage/Z3FHMC62/Leibovich et al. - 2017 - From “sense of number” to “sense of magnitude” Th.pdf},
+  journal = {Behavioral and Brain Sciences},
+  language = {en}
 }
 
 @article{Lennox2010,
@@ -13345,6 +13455,22 @@
   pages = {6},
   file = {/bench/Library/Lstiburek_2010_We Need to do it Different This Time.pdf},
   language = {en}
+}
+
+@article{Lyons2013,
+  title = {Discovering the {{Significance}} of 5 Sigma},
+  author = {Lyons, Louis},
+  year = {2013},
+  month = oct,
+  abstract = {We discuss the traditional criterion for discovery of requiring a significance corresponding to 5{$\sigma$}; and whether a more nuanced criterion might be better.},
+  archivePrefix = {arXiv},
+  eprint = {1310.1284},
+  eprinttype = {arxiv},
+  file = {/bench/Library/Zotero Data/storage/83D9F899/Lyons - 2013 - Discovering the Significance of 5 sigma.pdf},
+  journal = {arXiv:1310.1284 [hep-ex, physics:hep-ph, physics:physics]},
+  keywords = {High Energy Physics - Experiment,High Energy Physics - Phenomenology,Physics - Data Analysis; Statistics and Probability},
+  language = {en},
+  primaryClass = {hep-ex, physics:hep-ph, physics:physics}
 }
 
 @article{Lysen,
@@ -15030,12 +15156,16 @@
   number = {2}
 }
 
-@article{Murphy,
+@techreport{Murphy2007,
   title = {Conjugate {{Bayesian}} Analysis of the {{Gaussian}} Distribution},
   author = {Murphy, Kevin P},
+  year = {2007},
+  month = oct,
   pages = {29},
+  institution = {{University of British Columbia}},
   file = {/bench/Library/Zotero Data/storage/RRBEPUWU/Murphy - Conjugate Bayesian analysis of the Gaussian distri.pdf},
-  language = {en}
+  language = {en},
+  type = {Technical {{Report}}}
 }
 
 @article{Nace,
@@ -18593,6 +18723,23 @@
   journal = {Cell Cycle},
   language = {en},
   number = {20}
+}
+
+@article{Singleman2014,
+  title = {Growth and {{Maturation}} in the {{Zebrafish}}, {{{\emph{Danio Rerio}}}} : {{A Staging Tool}} for {{Teaching}} and {{Research}}},
+  shorttitle = {Growth and {{Maturation}} in the {{Zebrafish}}, {{{\emph{Danio Rerio}}}}},
+  author = {Singleman, Corinna and Holtzman, Nathalia G.},
+  year = {2014},
+  month = aug,
+  volume = {11},
+  pages = {396--406},
+  issn = {1545-8547, 1557-8542},
+  doi = {10.1089/zeb.2014.0976},
+  abstract = {Zebrafish have been increasingly used as a teaching tool to enhance the learning of many biological concepts from genetics, development, and behavior to the understanding of the local watershed. Traditionally, in both research and teaching, zebrafish work has focused on embryonic stages; however, later stages, from larval through adulthood, are increasingly being examined. Defining developmental stages based on age is a problematic way to assess maturity, because many environmental factors, such as temperature, population density, and water quality, impact growth and maturation. Fish length and characterization of key external morphological traits are considered better markers for maturation state. While a number of staging series exist for zebrafish, here we present a simplified normalization table of post-embryonic maturation well suited to both educational and research use. Specifically, we utilize fish size and four easily identified external morphological traits (pigment pattern, tail fin, anal fin, and dorsal fin morphology) to describe three larval stages, a juvenile stage, and an adult stage. These simplified maturation standards will be a useful tool for both educational and research protocols.},
+  file = {/bench/Library/Zotero Data/storage/4KTVVFS4/Singleman and Holtzman - 2014 - Growth and Maturation in the Zebrafish, Danio R.pdf},
+  journal = {Zebrafish},
+  language = {en},
+  number = {4}
 }
 
 @article{Sinn,
