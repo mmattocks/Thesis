@@ -1,6 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{g+gu}{\PYGZsh{}\PYGZsh{}} BioBackgroundModels
-[\PYG{n+nt}{![Build Status}](\PYG{n+na}{https://travis\PYGZhy{}ci.org/mmattocks/BioBackgroundModels.jl.svg?branch=master})](https://travis\PYGZhy{}ci.org/mmattocks/BioBackgroundModels.jl)
-[\PYG{n+nt}{![codecov}](\PYG{n+na}{https://codecov.io/gh/mmattocks/BioBackgroundModels.jl/branch/master/graph/badge.svg})](https://codecov.io/gh/mmattocks/BioBackgroundModels.jl)
-[\PYG{n+nt}{![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.}](\PYG{n+na}{https://www.repostatus.org/badges/latest/wip.svg})](https://www.repostatus.org/\PYGZsh{}wip)
-\end{Verbatim}

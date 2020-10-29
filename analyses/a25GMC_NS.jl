@@ -1,8 +1,5 @@
 using GMC_NS, BioSimpleStochastic, ConjugatePriors, CSV, DataFrames, Distributed, Distributions, NGRefTools, ProgressMeter, Serialization
 
-# worker_pool=addprocs(2)
-# @everywhere using GMC_NS, BioSimpleStochastic
-
 a10path="/bench/PhD/datasets/A10 measurements 2018update.csv"
 a10df=DataFrame(CSV.File(a10path))
 
