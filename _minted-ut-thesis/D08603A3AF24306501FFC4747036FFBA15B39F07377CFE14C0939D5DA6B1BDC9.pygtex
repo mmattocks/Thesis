@@ -1,0 +1,929 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{using} \PYG{n}{BioBackgroundModels}\PYG{p}{,}\PYG{n}{BioSequences}\PYG{p}{,}\PYG{n}{DataFrames}\PYG{p}{,}\PYG{n}{Distributed}\PYG{p}{,}\PYG{n}{Distributions}\PYG{p}{,}\PYG{n}{FASTX}\PYG{p}{,}\PYG{n}{ProgressMeter}\PYG{p}{,}\PYG{n}{Random}\PYG{p}{,}\PYG{n}{StatsFuns}\PYG{p}{,}\PYG{n}{Test}
+\PYG{k}{import} \PYG{n}{BioBackgroundModels}\PYG{o}{:} \PYG{n}{autotransition\PYGZus{}init}\PYG{p}{,} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{,} \PYG{n}{CompoundAlphabet}\PYG{p}{,} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{,} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{,} \PYG{n}{code\PYGZus{}job\PYGZus{}obs}\PYG{p}{,} \PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{,} \PYG{n}{add\PYGZus{}partition\PYGZus{}masks!}\PYG{p}{,} \PYG{n}{partition\PYGZus{}genome\PYGZus{}coordinates}\PYG{p}{,} \PYG{n}{divide\PYGZus{}partitions\PYGZus{}by\PYGZus{}scaffold}\PYG{p}{,} \PYG{n}{mask\PYGZus{}sequence\PYGZus{}by\PYGZus{}partition}\PYG{p}{,} \PYG{n}{find\PYGZus{}position\PYGZus{}partition}\PYG{p}{,} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,} \PYG{n}{rectify\PYGZus{}identifier}\PYG{p}{,} \PYG{n}{add\PYGZus{}metacoordinates!}\PYG{p}{,} \PYG{n}{meta\PYGZus{}to\PYGZus{}feature\PYGZus{}coord}\PYG{p}{,} \PYG{n}{get\PYGZus{}feature\PYGZus{}row\PYGZus{}index}\PYG{p}{,} \PYG{n}{get\PYGZus{}strand\PYGZus{}dict}\PYG{p}{,} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{,} \PYG{n}{get\PYGZus{}feature\PYGZus{}params\PYGZus{}from\PYGZus{}metacoord}\PYG{p}{,} \PYG{n}{determine\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{fetch\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{get\PYGZus{}sample\PYGZus{}set}\PYG{p}{,} \PYG{n}{get\PYGZus{}sample}\PYG{p}{,} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{,} \PYG{n}{linear\PYGZus{}step}\PYG{p}{,} \PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{,}\PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{,}\PYG{n}{add\PYGZus{}partition\PYGZus{}masks!}\PYG{p}{,}\PYG{n}{BGHMM\PYGZus{}likelihood\PYGZus{}calc}\PYG{p}{,}\PYG{n}{linear\PYGZus{}likelihood}\PYG{p}{,} \PYG{n}{t\PYGZus{}add\PYGZus{}categorical\PYGZus{}counts!}
+\PYG{k}{import} \PYG{n}{Serialization}\PYG{o}{:} \PYG{n}{deserialize}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}synthetic\PYGZus{}sequence\PYGZus{}gen.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}ref\PYGZus{}fns.jl\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c}{\PYGZsh{}JOB FILEPATHS}
+\PYG{c}{\PYGZsh{}GFF3 feature database, FASTA genome and index paths}
+\PYG{n}{Sys}\PYG{o}{.}\PYG{n}{islinux}\PYG{p}{()} \PYG{o}{?} \PYG{n}{genome} \PYG{o}{=}  \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}/synthetic.fna\PYGZdq{}} \PYG{o}{:} \PYG{n}{genome} \PYG{o}{=} \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}\PYGZbs{}}\PYG{l+s}{synthetic.fna\PYGZdq{}}
+\PYG{n}{Sys}\PYG{o}{.}\PYG{n}{islinux}\PYG{p}{()} \PYG{o}{?} \PYG{n}{index} \PYG{o}{=}  \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}/synthetic.fna.fai\PYGZdq{}} \PYG{o}{:} \PYG{n}{index} \PYG{o}{=} \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}\PYGZbs{}}\PYG{l+s}{synthetic.fna.fai\PYGZdq{}}
+\PYG{n}{Sys}\PYG{o}{.}\PYG{n}{islinux}\PYG{p}{()} \PYG{o}{?} \PYG{n}{gff} \PYG{o}{=}  \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}/synthetic.gff3\PYGZdq{}} \PYG{o}{:} \PYG{n}{gff} \PYG{o}{=} \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}\PYGZbs{}}\PYG{l+s}{synthetic.gff3\PYGZdq{}}
+\PYG{n}{Sys}\PYG{o}{.}\PYG{n}{islinux}\PYG{p}{()} \PYG{o}{?} \PYG{n}{posfasta} \PYG{o}{=}  \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}/syntheticpos.fa\PYGZdq{}} \PYG{o}{:} \PYG{n}{posfasta} \PYG{o}{=} \PYG{p}{(}\PYG{n+nd}{@\PYGZus{}\PYGZus{}DIR\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o}{*} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}\PYGZbs{}}\PYG{l+s}{syntheticpos.fa\PYGZdq{}}
+
+\PYG{o}{!}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}fasta}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{)}
+\PYG{o}{!}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{index}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}index}\PYG{p}{(}\PYG{n}{index}\PYG{p}{)}
+\PYG{o}{!}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}gff}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{)}
+\PYG{o}{!}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}position}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{)}
+
+\PYG{n}{Random}\PYG{o}{.}\PYG{n}{seed!}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}BHMM/BHMM.jl constructors\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{good\PYGZus{}a} \PYG{o}{=} \PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{20}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{30}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{20}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{30}\PYG{p}{]}
+    \PYG{n}{bad\PYGZus{}probvec\PYGZus{}a} \PYG{o}{=} \PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{27}\PYG{p}{]}
+    \PYG{n}{good\PYGZus{}A} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{bad\PYGZus{}probvec\PYGZus{}A} \PYG{o}{=} \PYG{n}{deepcopy}\PYG{p}{(}\PYG{n}{good\PYGZus{}A}\PYG{p}{)}
+    \PYG{n}{bad\PYGZus{}probvec\PYGZus{}A}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{o}{.=.}\PYG{l+m+mi}{27}
+    \PYG{n}{bad\PYGZus{}size\PYGZus{}A} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{good\PYGZus{}D} \PYG{o}{=} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{])}
+    \PYG{n}{bad\PYGZus{}size\PYGZus{}D} \PYG{o}{=} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{])}
+    \PYG{n}{good\PYGZus{}Dvec} \PYG{o}{=} \PYG{p}{[}\PYG{n}{good\PYGZus{}D} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{]}
+    \PYG{n}{bad\PYGZus{}size\PYGZus{}Dvec} \PYG{o}{=}\PYG{p}{[}\PYG{n}{good\PYGZus{}D}\PYG{p}{,} \PYG{n}{good\PYGZus{}D}\PYG{p}{,} \PYG{n}{good\PYGZus{}D}\PYG{p}{,} \PYG{n}{bad\PYGZus{}size\PYGZus{}D}\PYG{p}{]}
+    \PYG{n}{bad\PYGZus{}length\PYGZus{}Dvec}\PYG{o}{=}\PYG{p}{[}\PYG{n}{good\PYGZus{}D} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{5}\PYG{p}{]}
+
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{bad\PYGZus{}probvec\PYGZus{}a}\PYG{p}{,} \PYG{n}{good\PYGZus{}A}\PYG{p}{,} \PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}a}\PYG{p}{,} \PYG{n}{bad\PYGZus{}probvec\PYGZus{}A}\PYG{p}{,} \PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}a}\PYG{p}{,} \PYG{n}{bad\PYGZus{}size\PYGZus{}A}\PYG{p}{,} \PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}a}\PYG{p}{,} \PYG{n}{good\PYGZus{}A}\PYG{p}{,} \PYG{n}{bad\PYGZus{}size\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}a}\PYG{p}{,} \PYG{n}{good\PYGZus{}A}\PYG{p}{,} \PYG{n}{bad\PYGZus{}length\PYGZus{}Dvec}\PYG{p}{)}
+
+    \PYG{n}{hmm}\PYG{o}{=}\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}a}\PYG{p}{,} \PYG{n}{good\PYGZus{}A}\PYG{p}{,} \PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{o}{==}\PYG{n}{good\PYGZus{}a}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{o}{==}\PYG{n}{good\PYGZus{}A}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{o}{==}\PYG{n}{good\PYGZus{}Dvec} 
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+
+    \PYG{n}{hmm\PYGZus{}copy}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{o}{==}\PYG{n}{hmm\PYGZus{}copy}\PYG{o}{.}\PYG{n}{a}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{o}{==}\PYG{n}{hmm\PYGZus{}copy}\PYG{o}{.}\PYG{n}{A}
+    \PYG{n+nd}{@test} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{o}{==}\PYG{n}{hmm\PYGZus{}copy}\PYG{o}{.}\PYG{n}{B}
+
+    \PYG{n}{hmm2}\PYG{o}{=}\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}A}\PYG{p}{,} \PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{hmm2}\PYG{o}{.}\PYG{n}{a}\PYG{o}{==}\PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{hmm2}\PYG{o}{.}\PYG{n}{A}\PYG{o}{==}\PYG{n}{good\PYGZus{}A}
+    \PYG{n+nd}{@test} \PYG{n}{hmm2}\PYG{o}{.}\PYG{n}{B}\PYG{o}{==}\PYG{n}{good\PYGZus{}Dvec}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}BHMM/chain.jl Chain\PYGZus{}ID and EM\PYGZus{}step constructors\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{obs\PYGZus{}id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}
+    \PYG{n}{K}\PYG{p}{,}\PYG{n}{zero\PYGZus{}k}\PYG{p}{,}\PYG{n}{neg\PYGZus{}K}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+    \PYG{n}{order}\PYG{p}{,}\PYG{n}{badorder}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+    \PYG{n}{replicate}\PYG{p}{,}\PYG{n}{zero\PYGZus{}rep}\PYG{p}{,}\PYG{n}{neg\PYGZus{}rep}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+    
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{zero\PYGZus{}k}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{replicate}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{neg\PYGZus{}K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{replicate}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{badorder}\PYG{p}{,} \PYG{n}{replicate}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{zero\PYGZus{}rep}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{neg\PYGZus{}rep}\PYG{p}{)}
+
+    \PYG{n}{id}\PYG{o}{=}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{replicate}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{id}\PYG{p}{)}\PYG{o}{==}\PYG{n}{Chain\PYGZus{}ID}
+    \PYG{n+nd}{@test} \PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id}\PYG{o}{==}\PYG{n}{obs\PYGZus{}id}
+    \PYG{n+nd}{@test} \PYG{n}{id}\PYG{o}{.}\PYG{n}{K}\PYG{o}{==}\PYG{n}{K}
+    \PYG{n+nd}{@test} \PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{o}{==}\PYG{n}{order}
+    \PYG{n+nd}{@test} \PYG{n}{id}\PYG{o}{.}\PYG{n}{replicate}\PYG{o}{==}\PYG{n}{replicate}
+
+    \PYG{n}{good\PYGZus{}A} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{good\PYGZus{}D} \PYG{o}{=} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{])}
+    \PYG{n}{good\PYGZus{}Dvec} \PYG{o}{=} \PYG{p}{[}\PYG{n}{good\PYGZus{}D} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{]}
+    \PYG{n}{hmm}\PYG{o}{=}\PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{good\PYGZus{}A}\PYG{p}{,}\PYG{n}{good\PYGZus{}Dvec}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}p}\PYG{o}{=\PYGZhy{}.}\PYG{l+m+mi}{001}
+
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{EM\PYGZus{}step}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{EM\PYGZus{}step}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{EM\PYGZus{}step}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{l+m+mf}{1.0}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{k+kc}{true}\PYG{p}{)}
+
+    \PYG{n}{steppe}\PYG{o}{=}\PYG{n}{EM\PYGZus{}step}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{log\PYGZus{}p}\PYG{p}{,}\PYG{l+m+mf}{0.0}\PYG{p}{,}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{steppe}\PYG{p}{)}\PYG{o}{==}\PYG{n}{EM\PYGZus{}step}
+    \PYG{n+nd}{@test} \PYG{n}{steppe}\PYG{o}{.}\PYG{n}{iterate}\PYG{o}{==}\PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{steppe}\PYG{o}{.}\PYG{n}{hmm}\PYG{o}{==}\PYG{n}{hmm}
+    \PYG{n+nd}{@test} \PYG{n}{steppe}\PYG{o}{.}\PYG{n}{log\PYGZus{}p}\PYG{o}{==}\PYG{n}{log\PYGZus{}p}
+    \PYG{n+nd}{@test} \PYG{n}{steppe}\PYG{o}{.}\PYG{n}{delta}\PYG{o}{==}\PYG{l+m+mf}{0.0}
+    \PYG{n+nd}{@test} \PYG{n}{steppe}\PYG{o}{.}\PYG{n}{converged}\PYG{o}{==}\PYG{k+kc}{false}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}utilities/log\PYGZus{}prob\PYGZus{}sum.jl Log probability summation functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{lps}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]),} \PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{lps}\PYG{p}{([}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{lps}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{),} \PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{lps}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}
+    \PYG{n+nd}{@test} \PYG{n}{lps}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}utilities/HMM\PYGZus{}init.jl initialization functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{K}\PYG{o}{=}\PYG{l+m+mi}{4}
+    \PYG{n}{order}\PYG{o}{=}\PYG{l+m+mi}{2}
+    \PYG{n}{hmm}\PYG{o}{=}\PYG{n}{autotransition\PYGZus{}init}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,}\PYG{n}{order}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)}\PYG{o}{==}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{64}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}utilities/load\PYGZus{}balancer.jl EM\PYGZus{}converge load balancing structs and functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{5}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{5}\PYG{p}{)}
+
+    \PYG{n}{job\PYGZus{}ids}\PYG{o}{=}\PYG{p}{[}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)]}
+    \PYG{n}{obs\PYGZus{}sets}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{p}{[}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}AAAAAAAAAAAAAA\PYGZdq{}}\PYG{p}{)])}
+
+    \PYG{n}{K\PYGZus{}exclusive\PYGZus{}config}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{O\PYGZus{}exclusive\PYGZus{}config}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{blacklist\PYGZus{}config}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{n}{blacklist}\PYG{o}{=}\PYG{n}{job\PYGZus{}ids}\PYG{p}{)}
+    \PYG{n}{whitelist\PYGZus{}config}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{n}{whitelist}\PYG{o}{=}\PYG{p}{[}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)])}
+    \PYG{n}{high\PYGZus{}config}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{o}{:}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{n}{whitelist}\PYG{o}{=}\PYG{n}{job\PYGZus{}ids}\PYG{p}{)}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{output\PYGZus{}channel} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{K\PYGZus{}exclusive\PYGZus{}config}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{output\PYGZus{}channel} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{O\PYGZus{}exclusive\PYGZus{}config}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{output\PYGZus{}channel} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{blacklist\PYGZus{}config}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{output\PYGZus{}channel} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{whitelist\PYGZus{}config}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{output\PYGZus{}channel} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n}{high\PYGZus{}set}\PYG{o}{=}\PYG{n}{load\PYGZus{}balancer}\PYG{p}{(}\PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{input\PYGZus{}channel}\PYG{p}{,} \PYG{n}{high\PYGZus{}config}\PYG{p}{)} 
+    
+    \PYG{n+nd}{@test} \PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{o}{==}\PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+    \PYG{n+nd}{@test} \PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]}\PYG{o}{==}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{],}\PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{],}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{high\PYGZus{}set}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])}\PYG{o}{==}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{UInt8}\PYG{p}{\PYGZcb{}}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}utilities/observation\PYGZus{}coding.jl Order coding structs and functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{compound\PYGZus{}alphabet}\PYG{o}{=}\PYG{n}{CompoundAlphabet}\PYG{p}{(}\PYG{n}{ACGT}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{compound\PYGZus{}alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{)}\PYG{o}{==}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
+    \PYG{n+nd}{@test} \PYG{n}{length}\PYG{p}{(}\PYG{n}{compound\PYGZus{}alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{)}\PYG{o}{==}\PYG{l+m+mi}{64}
+    \PYG{n+nd}{@test} \PYG{n}{compound\PYGZus{}alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{[}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}AAA\PYGZdq{}}\PYG{p}{)]}\PYG{o}{==}\PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{compound\PYGZus{}alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{[}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}TTT\PYGZdq{}}\PYG{p}{)]}\PYG{o}{==}\PYG{l+m+mi}{64}
+    
+    \PYG{n}{test\PYGZus{}seqs} \PYG{o}{=} \PYG{p}{[}\PYG{n}{BioSequences}\PYG{o}{.}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}ACGTACGTACGTACGT\PYGZdq{}}\PYG{p}{),}\PYG{n}{BioSequences}\PYG{o}{.}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}TTTTTTT\PYGZdq{}}\PYG{p}{)]}
+    \PYG{n}{target0}\PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{1} \PYG{l+m+mi}{2} \PYG{l+m+mi}{3} \PYG{l+m+mi}{4} \PYG{l+m+mi}{1} \PYG{l+m+mi}{2} \PYG{l+m+mi}{3} \PYG{l+m+mi}{4} \PYG{l+m+mi}{1} \PYG{l+m+mi}{2} \PYG{l+m+mi}{3} \PYG{l+m+mi}{4} \PYG{l+m+mi}{1} \PYG{l+m+mi}{2} \PYG{l+m+mi}{3} \PYG{l+m+mi}{4} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{4} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0}\PYG{p}{]}
+    \PYG{n}{target2}\PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{37} \PYG{l+m+mi}{58} \PYG{l+m+mi}{15} \PYG{l+m+mi}{20} \PYG{l+m+mi}{37} \PYG{l+m+mi}{58} \PYG{l+m+mi}{15} \PYG{l+m+mi}{20} \PYG{l+m+mi}{37} \PYG{l+m+mi}{58} \PYG{l+m+mi}{15} \PYG{l+m+mi}{20} \PYG{l+m+mi}{37} \PYG{l+m+mi}{58} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{l+m+mi}{64} \PYG{l+m+mi}{64} \PYG{l+m+mi}{64} \PYG{l+m+mi}{64} \PYG{l+m+mi}{64} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0} \PYG{l+m+mi}{0}\PYG{p}{]}
+
+    \PYG{n}{order0\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{order0\PYGZus{}seqs}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{mer}\PYG{p}{,} \PYG{n}{code}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{CompoundAlphabet}\PYG{p}{(}\PYG{n}{ACGT}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{o}{.}\PYG{n}{symbols}
+        \PYG{n+nd}{@test} \PYG{n}{order0\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{[}\PYG{n}{mer}\PYG{p}{]}\PYG{o}{==}\PYG{n}{code}
+    \PYG{k}{end}
+    \PYG{n+nd}{@test} \PYG{n}{order0\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{seq\PYGZus{}lengths}\PYG{o}{==}\PYG{p}{[}\PYG{l+m+mi}{16}\PYG{p}{,}\PYG{l+m+mi}{7}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{order0\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}A\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{code0\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{order0\PYGZus{}seqs}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{target0} \PYG{o}{==} \PYG{n}{code0\PYGZus{}seqs}
+
+    \PYG{n}{order2\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{order2\PYGZus{}seqs}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{mer}\PYG{p}{,} \PYG{n}{code}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{CompoundAlphabet}\PYG{p}{(}\PYG{n}{ACGT}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{.}\PYG{n}{symbols}
+        \PYG{n+nd}{@test} \PYG{n}{order2\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{[}\PYG{n}{mer}\PYG{p}{]}\PYG{o}{==}\PYG{n}{code}
+    \PYG{k}{end}
+    \PYG{n+nd}{@test} \PYG{n}{order2\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{seq\PYGZus{}lengths}\PYG{o}{==}\PYG{p}{[}\PYG{l+m+mi}{16}\PYG{p}{,}\PYG{l+m+mi}{7}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{order2\PYGZus{}seqs}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}ACG\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{code2\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{order2\PYGZus{}seqs}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{target2} \PYG{o}{==} \PYG{n}{code2\PYGZus{}seqs}
+
+    \PYG{n}{bw\PYGZus{}o0\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{[}\PYG{k}{end}\PYG{o}{:\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{sorted\PYGZus{}code\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{bw\PYGZus{}o0\PYGZus{}seqs}\PYG{p}{,} \PYG{n}{sorted}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{target0} \PYG{o}{==} \PYG{n}{sorted\PYGZus{}code\PYGZus{}seqs}
+
+    \PYG{n}{obs\PYGZus{}sets}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{,}
+                    \PYG{l+s}{\PYGZdq{}test2\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{)}
+    \PYG{n}{job\PYGZus{}ids}\PYG{o}{=}\PYG{p}{[}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test2\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)]}
+
+    \PYG{n}{code\PYGZus{}dict}\PYG{o}{=}\PYG{n}{code\PYGZus{}job\PYGZus{}obs}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{p}{(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{keys}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{p}{(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{keys}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{p}{(}\PYG{l+s}{\PYGZdq{}test2\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{keys}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{o}{!}\PYG{p}{((}\PYG{l+s}{\PYGZdq{}test2\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{keys}\PYG{p}{(}\PYG{n}{code\PYGZus{}dict}\PYG{p}{))}
+    \PYG{n+nd}{@test} \PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)]}\PYG{o}{==}\PYG{n}{target0}
+    \PYG{n+nd}{@test} \PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{l+s}{\PYGZdq{}test1\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)]}\PYG{o}{==}\PYG{n}{target2}
+    \PYG{n+nd}{@test} \PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{l+s}{\PYGZdq{}test2\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)]}\PYG{o}{==}\PYG{n}{target0}
+
+    \PYG{c}{\PYGZsh{}test type selection for high order numbers}
+    \PYG{n}{o5\PYGZus{}nos}\PYG{o}{=}\PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{)}
+    \PYG{n}{o5\PYGZus{}codes}\PYG{o}{=}\PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{o5\PYGZus{}nos}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{o5\PYGZus{}codes}\PYG{p}{)}\PYG{o}{==}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{UInt16}\PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{o7\PYGZus{}nos}\PYG{o}{=}\PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{test\PYGZus{}seqs}\PYG{p}{,}\PYG{l+m+mi}{7}\PYG{p}{)}
+    \PYG{n}{o7\PYGZus{}codes}\PYG{o}{=}\PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{o7\PYGZus{}nos}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{o7\PYGZus{}codes}\PYG{p}{)}\PYG{o}{==}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{UInt32}\PYG{p}{\PYGZcb{}}
+
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}genome\PYGZus{}sampling/partition\PYGZus{}masker.jl functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{synthetic\PYGZus{}seq} \PYG{o}{=} \PYG{n}{BioSequences}\PYG{o}{.}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{())}
+    \PYG{n}{position\PYGZus{}start} \PYG{o}{=} \PYG{l+m+mi}{501}
+    \PYG{n}{position\PYGZus{}length}\PYG{o}{=}\PYG{l+m+mi}{141}
+    \PYG{n}{position\PYGZus{}pad}\PYG{o}{=}\PYG{l+m+mi}{350}
+    \PYG{n}{perigenic\PYGZus{}pad} \PYG{o}{=} \PYG{l+m+mi}{250}
+
+    \PYG{n}{position\PYGZus{}df} \PYG{o}{=} \PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{position\PYGZus{}pad}\PYG{p}{)}
+    \PYG{n}{add\PYGZus{}partition\PYGZus{}masks!}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqID}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}
+    \PYG{n+nd}{@test} \PYG{n}{length}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadSeq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{==} \PYG{n}{position\PYGZus{}pad}\PYG{o}{+}\PYG{n}{position\PYGZus{}length} \PYG{o}{==} \PYG{n}{length}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{:}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{n}{position\PYGZus{}length}\PYG{o}{+}\PYG{n}{position\PYGZus{}pad}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{==} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{Start}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{o}{+}\PYG{n}{position\PYGZus{}pad} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])[}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{synthetic\PYGZus{}seq}\PYG{p}{[}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{:}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]}\PYG{o}{==}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadSeq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+
+    \PYG{n}{mm} \PYG{o}{=} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{idx}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{c}{\PYGZsh{}pos 151}
+    \PYG{n+nd}{@test} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{99}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{.==} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{99}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{idx}\PYG{o}{+=}\PYG{l+m+mi}{100}\PYG{c}{\PYGZsh{}pos 251}
+    \PYG{n+nd}{@test} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{259}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{.==} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{259}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{idx}\PYG{o}{+=}\PYG{l+m+mi}{260} \PYG{c}{\PYGZsh{}pos 511}
+    \PYG{n+nd}{@test} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{59}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{.==} \PYG{l+m+mi}{3}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{59}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{idx}\PYG{o}{+=}\PYG{l+m+mi}{60}\PYG{c}{\PYGZsh{}pos 571}
+    \PYG{n+nd}{@test} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{29}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{.==} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{29}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{idx}\PYG{o}{+=}\PYG{l+m+mi}{30}\PYG{c}{\PYGZsh{}pos601}
+    \PYG{n+nd}{@test} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{40}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{.==} \PYG{l+m+mi}{3}\PYG{p}{)}\PYG{o}{==}\PYG{n}{length}\PYG{p}{(}\PYG{n}{mm}\PYG{p}{[}\PYG{n}{idx}\PYG{o}{:}\PYG{n}{idx}\PYG{o}{+}\PYG{l+m+mi}{40}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+
+    \PYG{c}{\PYGZsh{}test exception}
+    \PYG{n}{position\PYGZus{}df} \PYG{o}{=} \PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{position\PYGZus{}pad}\PYG{p}{)}
+
+    \PYG{n}{partition\PYGZus{}coords\PYGZus{}dict}\PYG{o}{=}\PYG{n}{partition\PYGZus{}genome\PYGZus{}coordinates}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+    \PYG{n}{partitioned\PYGZus{}scaffolds}\PYG{o}{=}\PYG{n}{divide\PYGZus{}partitions\PYGZus{}by\PYGZus{}scaffold}\PYG{p}{(}\PYG{n}{partition\PYGZus{}coords\PYGZus{}dict}\PYG{p}{)}
+    \PYG{n}{scaffold\PYGZus{}coords\PYGZus{}dict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{DataFrame}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{scaffold}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}
+    \PYG{k}{for} \PYG{p}{((}\PYG{n}{partition}\PYG{p}{,} \PYG{n}{part\PYGZus{}scaffold}\PYG{p}{),} \PYG{n}{df}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{partitioned\PYGZus{}scaffolds}
+        \PYG{k}{if} \PYG{n}{scaffold} \PYG{o}{==} \PYG{n}{part\PYGZus{}scaffold}
+            \PYG{n}{scaffold\PYGZus{}coords\PYGZus{}dict}\PYG{p}{[}\PYG{n}{partition}\PYG{p}{]} \PYG{o}{=} \PYG{n}{df}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{DomainError} \PYG{n}{mask\PYGZus{}sequence\PYGZus{}by\PYGZus{}partition}\PYG{p}{(}\PYG{l+m+mi}{1001}\PYG{p}{,}\PYG{l+m+mi}{151}\PYG{p}{,}\PYG{n}{scaffold\PYGZus{}coords\PYGZus{}dict}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}genome\PYGZus{}sampling/sequence\PYGZus{}sampler.jl functions \PYGZam{} API/genome\PYGZus{}sampling.jl interface\PYGZdq{}} \PYG{k}{begin}
+    \PYG{c}{\PYGZsh{}rectifier tests}
+    \PYG{n+nd}{@test} \PYG{n}{rectify\PYGZus{}identifier}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}\PYG{p}{)}\PYG{o}{==}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}
+
+    \PYG{n}{partitions} \PYG{o}{=} \PYG{l+m+mi}{3} \PYG{c}{\PYGZsh{}exonic, periexonic, intragenic}
+    \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{o}{=}\PYG{l+m+mi}{100}
+    \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{o}{=}\PYG{l+m+mi}{5}
+    \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{o}{=}\PYG{l+m+mi}{25}
+    \PYG{n}{perigenic\PYGZus{}pad}\PYG{o}{=}\PYG{l+m+mi}{250}
+    \PYG{n}{syn\PYGZus{}intergenic\PYGZus{}starts} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}intergenic\PYGZus{}ends} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{250}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}starts} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{251}\PYG{p}{,}\PYG{l+m+mi}{571}\PYG{p}{,}\PYG{l+m+mi}{661}\PYG{p}{,}\PYG{l+m+mi}{761}\PYG{p}{,}\PYG{l+m+mi}{861}\PYG{p}{,}\PYG{l+m+mi}{961}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}ends} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{510}\PYG{p}{,}\PYG{l+m+mi}{600}\PYG{p}{,}\PYG{l+m+mi}{700}\PYG{p}{,}\PYG{l+m+mi}{800}\PYG{p}{,}\PYG{l+m+mi}{900}\PYG{p}{,}\PYG{l+m+mi}{1000}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}strands} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}exonic\PYGZus{}starts} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{511}\PYG{p}{,}\PYG{l+m+mi}{601}\PYG{p}{,}\PYG{l+m+mi}{701}\PYG{p}{,}\PYG{l+m+mi}{801}\PYG{p}{,}\PYG{l+m+mi}{901}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}exonic\PYGZus{}ends} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{570}\PYG{p}{,}\PYG{l+m+mi}{660}\PYG{p}{,}\PYG{l+m+mi}{760}\PYG{p}{,}\PYG{l+m+mi}{860}\PYG{p}{,}\PYG{l+m+mi}{960}\PYG{p}{]}
+    \PYG{n}{syn\PYGZus{}exonic\PYGZus{}strands} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+sc}{\PYGZsq{}+\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{]}
+    \PYG{n}{partition\PYGZus{}lengths} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+m+mi}{5}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}intergenic\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+m+mi}{250}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{l+m+mi}{450}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing sequence sampler fns...\PYGZdq{}}
+    \PYG{n}{synthetic\PYGZus{}seq} \PYG{o}{=} \PYG{n}{BioSequences}\PYG{o}{.}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{())}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Partitioning synthetic genome coordinates...\PYGZdq{}}
+    \PYG{n}{coordinate\PYGZus{}partitions} \PYG{o}{=} \PYG{n}{partition\PYGZus{}genome\PYGZus{}coordinates}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}intergenic\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{Start} \PYG{o}{==} \PYG{n}{syn\PYGZus{}intergenic\PYGZus{}starts}
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}intergenic\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{End} \PYG{o}{==} \PYG{n}{syn\PYGZus{}intergenic\PYGZus{}ends}
+
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{Start} \PYG{o}{==} \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}starts}
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{End} \PYG{o}{==} \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}ends}
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{Strand} \PYG{o}{==} \PYG{n}{syn\PYGZus{}periexonic\PYGZus{}strands}
+
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{Start} \PYG{o}{==} \PYG{n}{syn\PYGZus{}exonic\PYGZus{}starts}
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{End} \PYG{o}{==} \PYG{n}{syn\PYGZus{}exonic\PYGZus{}ends}
+    \PYG{n+nd}{@test} \PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{p}{]}\PYG{o}{.}\PYG{n}{Strand} \PYG{o}{==} \PYG{n}{syn\PYGZus{}exonic\PYGZus{}strands}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Checking sampling functions at all synthetic indices...\PYGZdq{}}
+
+    \PYG{n}{input\PYGZus{}test\PYGZus{}channel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}test\PYGZus{}channel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{,} \PYG{n}{setlength} \PYG{o}{=} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{k}{while} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{input\PYGZus{}test\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{genome\PYGZus{}path}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{p}{,} \PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{,} \PYG{n}{deterministic} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{input\PYGZus{}test\PYGZus{}channel}\PYG{p}{)}
+
+        \PYG{k}{for} \PYG{n}{feature} \PYG{k+kp}{in} \PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{partition\PYGZus{}df}\PYG{p}{)}
+            \PYG{n}{seqid}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}end} \PYG{o}{=} \PYG{n}{meta\PYGZus{}to\PYGZus{}feature\PYGZus{}coord}\PYG{p}{(}\PYG{n}{feature}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{,} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{scaffold\PYGZus{}start} \PYG{o}{==} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{Start} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{scaffold\PYGZus{}end} \PYG{o}{==} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{End}
+        \PYG{k}{end}
+
+        \PYG{n}{stranded} \PYG{o}{=} \PYG{n}{get\PYGZus{}strand\PYGZus{}dict}\PYG{p}{()[}\PYG{n}{partitionid}\PYG{p}{]}
+        \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{stranded}\PYG{p}{)} \PYG{o}{==} \PYG{k+kt}{Bool}
+
+        \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict} \PYG{o}{=} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}\PYG{p}{]} \PYG{o}{==} \PYG{n}{synthetic\PYGZus{}seq}
+
+        \PYG{n}{partition\PYGZus{}length} \PYG{o}{=} \PYG{n}{partition\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}
+        \PYG{n+nd}{@test} \PYG{n}{partition\PYGZus{}length} \PYG{o}{==} \PYG{n}{partition\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{partitionid}\PYG{p}{]}
+
+        \PYG{n}{metacoordinate\PYGZus{}bitarray} \PYG{o}{=} \PYG{n}{trues}\PYG{p}{(}\PYG{n}{partition\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{k}{end}\PYG{p}{])}
+
+        \PYG{k}{for} \PYG{n}{bitindex} \PYG{k+kp}{in} \PYG{n}{findall}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{)}
+            \PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{strand} \PYG{o}{=} \PYG{n}{get\PYGZus{}feature\PYGZus{}params\PYGZus{}from\PYGZus{}metacoord}\PYG{p}{(}\PYG{n}{bitindex}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{p}{,} \PYG{n}{stranded}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}=} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{\PYGZlt{}} \PYG{n}{feature\PYGZus{}metaEnd} \PYG{o}{\PYGZlt{}=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{feature\PYGZus{}metaStart} \PYG{k+kp}{in} \PYG{n}{partition\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}
+            \PYG{n+nd}{@test} \PYG{n}{feature\PYGZus{}metaEnd} \PYG{k+kp}{in} \PYG{n}{partition\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}
+            \PYG{k}{if} \PYG{n}{partitionid} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}
+                \PYG{n+nd}{@test} \PYG{n}{strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}
+            \PYG{k}{elseif} \PYG{n}{partitionid} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}
+                \PYG{n+nd}{@test} \PYG{n}{strand} \PYG{k+kp}{in} \PYG{p}{[}\PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,}\PYG{l+s+sc}{\PYGZsq{}+\PYGZsq{}}\PYG{p}{]} 
+            \PYG{k}{end}
+            \PYG{n}{feature\PYGZus{}length} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{)}
+            \PYG{n}{window} \PYG{o}{=} \PYG{n}{determine\PYGZus{}sample\PYGZus{}window}\PYG{p}{(}\PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{bitindex}\PYG{p}{,} \PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{)} \PYG{c}{\PYGZsh{}get an appropriate sampling window around the selected index, given the feature boundaries and params}
+            \PYG{n+nd}{@test} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}=} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{\PYGZlt{}=} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{+}\PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{\PYGZlt{}=} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZlt{}=} \PYG{n}{feature\PYGZus{}metaEnd} \PYG{o}{\PYGZlt{}=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{)}
+            \PYG{n}{sample\PYGZus{}scaffoldid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end} \PYG{o}{=} \PYG{n}{meta\PYGZus{}to\PYGZus{}feature\PYGZus{}coord}\PYG{p}{(}\PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{n}{partition\PYGZus{}df}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{sample\PYGZus{}scaffoldid} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}1\PYGZdq{}}
+            \PYG{n+nd}{@test} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}=} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start} \PYG{o}{\PYGZlt{}=} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{o}{+}\PYG{n}{sample\PYGZus{}window\PYGZus{}min} \PYG{o}{\PYGZlt{}=} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end} \PYG{o}{\PYGZlt{}=} \PYG{n}{min}\PYG{p}{(}\PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{o}{+}\PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{,}\PYG{l+m+mi}{1000}\PYG{p}{)} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{1000}
+
+            \PYG{n}{strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}} \PYG{o}{?} \PYG{n}{target\PYGZus{}seq}\PYG{o}{=}\PYG{n}{reverse\PYGZus{}complement}\PYG{p}{(}\PYG{n}{synthetic\PYGZus{}seq}\PYG{p}{[}\PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{o}{:}\PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end}\PYG{p}{])} \PYG{o}{:}
+                \PYG{n}{target\PYGZus{}seq} \PYG{o}{=} \PYG{n}{synthetic\PYGZus{}seq}\PYG{p}{[}\PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{o}{:}\PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end}\PYG{p}{]}
+
+            \PYG{n}{proposal\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{fetch\PYGZus{}sequence}\PYG{p}{(}\PYG{n}{sample\PYGZus{}scaffoldid}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end}\PYG{p}{,} \PYG{n}{strand}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{n}{deterministic}\PYG{p}{)} \PYG{c}{\PYGZsh{}get the sequence associated with the sample window}
+
+            \PYG{n+nd}{@test} \PYG{n}{proposal\PYGZus{}sequence} \PYG{o}{==} \PYG{n}{target\PYGZus{}seq}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Verifying sampling channels...\PYGZdq{}}
+
+    \PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{,} \PYG{n}{setlength} \PYG{o}{=} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{get\PYGZus{}sample\PYGZus{}set}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}channel}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}collect sample dfs by partition id when ready}
+    \PYG{n}{collected\PYGZus{}counter} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{DataFrame}\PYG{p}{\PYGZcb{}()}
+    \PYG{k}{while} \PYG{n}{collected\PYGZus{}counter} \PYG{o}{\PYGZlt{}} \PYG{n}{partitions}
+        \PYG{n}{wait}\PYG{p}{(}\PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{partition\PYGZus{}id}\PYG{p}{,} \PYG{n}{sample\PYGZus{}df} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{completed\PYGZus{}sample\PYGZus{}channel}\PYG{p}{)}
+        \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sample\PYGZus{}df}
+        \PYG{n}{collected\PYGZus{}counter} \PYG{o}{+=} \PYG{l+m+mi}{1}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}get\PYGZus{}sample entire feature selection}
+    \PYG{n}{coordinate\PYGZus{}partitions} \PYG{o}{=} \PYG{n}{partition\PYGZus{}genome\PYGZus{}coordinates}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+    \PYG{n}{partition\PYGZus{}id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}
+    \PYG{n}{partition}\PYG{o}{=}\PYG{n}{coordinate\PYGZus{}partitions}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]}
+    \PYG{n}{add\PYGZus{}metacoordinates!}\PYG{p}{(}\PYG{n}{partition}\PYG{p}{)}
+    \PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{o}{=}\PYG{n}{trues}\PYG{p}{(}\PYG{n}{partition}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{k}{end}\PYG{p}{])}
+    \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict} \PYG{o}{=} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}test fetch\PYGZus{}sequence strand char ArgumentError}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{fetch\PYGZus{}sequence}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}\PYG{p}{,} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{LongSequence}\PYG{p}{\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}1\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}AAAAAAAAAAAAA\PYGZdq{}}\PYG{p}{)),} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+s+sc}{\PYGZsq{}L\PYGZsq{}}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}test get\PYGZus{}feature\PYGZus{}row\PYGZus{}index ArgumentError}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{DomainError} \PYG{n}{get\PYGZus{}feature\PYGZus{}row\PYGZus{}index}\PYG{p}{(}\PYG{n}{partition}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+    \PYG{n+nd}{@test} \PYG{n}{length}\PYG{p}{(}\PYG{n}{get\PYGZus{}sample}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{250}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict}\PYG{p}{)[}\PYG{l+m+mi}{6}\PYG{p}{])}\PYG{o}{==}\PYG{l+m+mi}{60}
+    
+    \PYG{n}{synthetic\PYGZus{}seq} \PYG{o}{=} \PYG{n}{BioSequences}\PYG{o}{.}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{())}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{partid}\PYG{p}{,} \PYG{n}{df}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}
+        \PYG{k}{for} \PYG{n}{sample} \PYG{k+kp}{in} \PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{df}\PYG{p}{)}
+            \PYG{n}{target\PYGZus{}seq} \PYG{o}{=} \PYG{n}{synthetic\PYGZus{}seq}\PYG{p}{[}\PYG{n}{sample}\PYG{o}{.}\PYG{n}{SampleStart}\PYG{o}{:}\PYG{n}{sample}\PYG{o}{.}\PYG{n}{SampleEnd}\PYG{p}{]}
+            \PYG{n}{strand} \PYG{o}{=} \PYG{n}{sample}\PYG{o}{.}\PYG{n}{Strand}
+            \PYG{k}{if} \PYG{n}{sample}\PYG{o}{.}\PYG{n}{Strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}
+                \PYG{n}{target\PYGZus{}seq} \PYG{o}{=} \PYG{n}{reverse\PYGZus{}complement}\PYG{p}{(}\PYG{n}{target\PYGZus{}seq}\PYG{p}{)}
+            \PYG{k}{end}
+            \PYG{n+nd}{@test} \PYG{n}{sample}\PYG{o}{.}\PYG{n}{SampleSequence} \PYG{o}{==} \PYG{n}{target\PYGZus{}seq}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}execute\PYGZus{}sample\PYGZus{}jobs API}
+    \PYG{n}{wkpool}\PYG{o}{=}\PYG{n}{addprocs}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n+nd}{@everywhere} \PYG{k}{using} \PYG{n}{BioBackgroundModels}
+
+    \PYG{n}{channels} \PYG{o}{=} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{records}\PYG{o}{=}\PYG{n}{execute\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{channels}\PYG{p}{,} \PYG{n}{wkpool}\PYG{p}{)}
+
+    \PYG{n}{rmprocs}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}likelihood\PYGZus{}funcs/hmm.jl \PYGZam{} bg\PYGZus{}lh\PYGZus{}matrix.jl functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{pvec} \PYG{o}{=} \PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{trans} \PYG{o}{=} \PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{B} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{)]}
+    \PYG{n}{hmm} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{trans}\PYG{p}{,} \PYG{n}{B}\PYG{p}{)}
+
+    \PYG{n}{testseq}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{)}
+    \PYG{n}{testseq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{),}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{))}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)),} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{))}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)),} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{))}
+
+    \PYG{n}{pvec}\PYG{o}{=}\PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{25}\PYG{p}{]}
+    \PYG{n}{trans} \PYG{o}{=} \PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{9} \PYG{o}{.}\PYG{l+m+mi}{1}
+         \PYG{o}{.}\PYG{l+m+mi}{1} \PYG{o}{.}\PYG{l+m+mi}{9}\PYG{p}{]}
+    \PYG{n}{B} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{),} \PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{)]}
+    \PYG{n}{hmm} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{trans}\PYG{p}{,} \PYG{n}{B}\PYG{p}{)}
+
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{),}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{))}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)),} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{))}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{)),} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{))}
+
+    \PYG{n}{testseq}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1001}\PYG{p}{)}
+    \PYG{n}{testseq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{1000}\PYG{p}{]}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1000}\PYG{p}{)}
+    
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{)),}\PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{testseq}\PYG{p}{,}\PYG{n}{hmm}\PYG{p}{))}
+
+    \PYG{n}{Dex} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{]),}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{])]}
+    \PYG{n}{Dper} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{]),}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{])]}
+    \PYG{n}{Dint} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{]),}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{45}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{45}\PYG{p}{])]}
+    \PYG{n}{BGHMM\PYGZus{}dict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{BHMM}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{trans}\PYG{p}{,} \PYG{n}{Dex}\PYG{p}{)}
+    \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{trans}\PYG{p}{,} \PYG{n}{Dper}\PYG{p}{)}
+    \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}intergenic\PYGZdq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{trans}\PYG{p}{,} \PYG{n}{Dint}\PYG{p}{)}
+
+    \PYG{n}{position\PYGZus{}length}\PYG{o}{=}\PYG{l+m+mi}{141}\PYG{p}{;}\PYG{n}{perigenic\PYGZus{}pad}\PYG{o}{=}\PYG{l+m+mi}{250}\PYG{p}{;}
+    \PYG{n}{position\PYGZus{}df} \PYG{o}{=} \PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{position\PYGZus{}length}\PYG{p}{)}
+
+    \PYG{n}{reader}\PYG{o}{=}\PYG{n}{open}\PYG{p}{(}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{Reader}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{n}{index}\PYG{p}{)}
+    \PYG{n}{seq}\PYG{o}{=}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{sequence}\PYG{p}{(}\PYG{n}{reader}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}CM002885.2.1\PYGZdq{}}\PYG{p}{])}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{Start}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{501}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{641}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadSeq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{seq}\PYG{p}{[}\PYG{l+m+mi}{360}\PYG{o}{:}\PYG{l+m+mi}{641}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{360}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{RelStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{141}
+    \PYG{n+nd}{@test} \PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqOffset}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{0}
+
+    \PYG{n}{offset\PYGZus{}position\PYGZus{}df} \PYG{o}{=} \PYG{n}{make\PYGZus{}padded\PYGZus{}df}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,}\PYG{l+m+mi}{600}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{Start}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{501}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{641}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadSeq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{seq}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{641}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{PadStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{RelStart}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{500}
+    \PYG{n+nd}{@test} \PYG{n}{offset\PYGZus{}position\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqOffset}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{100}
+
+    \PYG{n}{add\PYGZus{}partition\PYGZus{}masks!}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{151}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.==}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{152}\PYG{o}{:}\PYG{l+m+mi}{211}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.==}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{212}\PYG{o}{:}\PYG{l+m+mi}{241}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.==}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{242}\PYG{o}{:}\PYG{k}{end}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.==}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{151}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.==\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{152}\PYG{o}{:}\PYG{l+m+mi}{211}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.==}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{all}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{212}\PYG{o}{:}\PYG{k}{end}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.==\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+    \PYG{n}{lh\PYGZus{}matrix}\PYG{o}{=}\PYG{n}{BGHMM\PYGZus{}likelihood\PYGZus{}calc}\PYG{p}{(}\PYG{n}{position\PYGZus{}df}\PYG{p}{,}\PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{lh\PYGZus{}matrix}\PYG{p}{)}\PYG{o}{==}\PYG{p}{(}\PYG{n}{position\PYGZus{}length}\PYG{o}{*}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+    \PYG{n}{periexonic\PYGZus{}frag}\PYG{o}{=}\PYG{n}{reverse\PYGZus{}complement!}\PYG{p}{(}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{seq}\PYG{p}{[}\PYG{l+m+mi}{360}\PYG{o}{:}\PYG{l+m+mi}{510}\PYG{p}{]))}
+    \PYG{n}{pno}\PYG{o}{=}\PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{([}\PYG{n}{periexonic\PYGZus{}frag}\PYG{p}{],}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{pcode}\PYG{o}{=}\PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{pno}\PYG{p}{)}
+    \PYG{n}{plh}\PYG{o}{=}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{pcode}\PYG{p}{,} \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{p}{])}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{lh\PYGZus{}matrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{151}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{reverse}\PYG{p}{(}\PYG{n}{plh}\PYG{p}{))}
+
+    \PYG{n}{exonic\PYGZus{}frag}\PYG{o}{=}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{seq}\PYG{p}{[}\PYG{l+m+mi}{511}\PYG{o}{:}\PYG{l+m+mi}{570}\PYG{p}{])}
+    \PYG{n}{eno}\PYG{o}{=}\PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{([}\PYG{n}{exonic\PYGZus{}frag}\PYG{p}{],}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{ecode}\PYG{o}{=}\PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{eno}\PYG{p}{)}
+    \PYG{n}{elh}\PYG{o}{=}\PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{ecode}\PYG{p}{,} \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{p}{])}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{lh\PYGZus{}matrix}\PYG{p}{[}\PYG{l+m+mi}{152}\PYG{o}{:}\PYG{l+m+mi}{211}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{elh}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}EM/baum\PYGZhy{}welch.jl MS\PYGZus{}HMMBase equivalency and functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{n}{A} \PYG{o}{=} \PYG{p}{[}\PYG{o}{.}\PYG{l+m+mi}{5} \PYG{o}{.}\PYG{l+m+mi}{5}
+         \PYG{o}{.}\PYG{l+m+mi}{5} \PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{]}
+    \PYG{n}{B} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{7}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{])]}
+    \PYG{n}{hmm} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}A} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{)}
+
+    \PYG{n}{obs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{,} \PYG{l+m+mi}{22}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}
+    \PYG{n}{obs\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{21}\PYG{p}{]}
+
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{obs}\PYG{p}{)}
+    \PYG{n}{m\PYGZus{}lls} \PYG{o}{=} \PYG{n}{mouchet\PYGZus{}log\PYGZus{}likelihoods}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{])}
+
+    \PYG{n}{K}\PYG{p}{,}\PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O} \PYG{o}{=} \PYG{n}{size}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{)}
+    \PYG{n}{T}\PYG{o}{=}\PYG{n}{Tmaxplus1}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+
+    \PYG{c}{\PYGZsh{}TEST LOG LIKELIHOOD FN}
+    \PYG{n+nd}{@test} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{==} \PYG{n}{m\PYGZus{}lls}
+    
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{messages\PYGZus{}forwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,}  \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{m\PYGZus{}log\PYGZus{}α} \PYG{o}{=} \PYG{n}{mouchet\PYGZus{}messages\PYGZus{}forwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{m\PYGZus{}lls}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}TEST FORWARD MESSAGES FN}
+    \PYG{n+nd}{@test} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{==} \PYG{n}{m\PYGZus{}log\PYGZus{}α}
+
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{messages\PYGZus{}backwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,}  \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{m\PYGZus{}log\PYGZus{}β} \PYG{o}{=} \PYG{n}{mouchet\PYGZus{}messages\PYGZus{}backwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{m\PYGZus{}lls}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}TEST BACKWARDS  MESSAGES FN}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]),}  \PYG{n}{m\PYGZus{}log\PYGZus{}β}\PYG{p}{)}
+
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{c}{\PYGZsh{} from (K,T,O) to (T,O,K)}
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}β}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing obs probability calcs...\PYGZdq{}}
+    \PYG{c}{\PYGZsh{}TEST OBSERVATION PROBABILITY CALC}
+    \PYG{n}{normalizer} \PYG{o}{=} \PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{m\PYGZus{}log\PYGZus{}α}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{+} \PYG{n}{m\PYGZus{}log\PYGZus{}β}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])}
+    \PYG{n}{log\PYGZus{}pobs} \PYG{o}{=} \PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))}
+
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{normalizer}\PYG{p}{,} \PYG{n}{log\PYGZus{}pobs}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing ξ, γ calcs...\PYGZdq{}}
+
+    \PYG{n}{log\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{K}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}γ} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+
+    \PYG{n}{m\PYGZus{}log\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{K}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{n}{t} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{T}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}
+        \PYG{n}{m\PYGZus{}log\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{m\PYGZus{}log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{log\PYGZus{}A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{+} \PYG{n}{m\PYGZus{}log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{+} \PYG{n}{m\PYGZus{}lls}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{normalizer}
+    \PYG{k}{end}
+
+    \PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{o} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}
+        \PYG{n}{obsl} \PYG{o}{=} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}
+        \PYG{k}{for} \PYG{n}{t} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obsl}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{c}{\PYGZsh{}log\PYGZus{}ξ \PYGZam{} log\PYGZus{}γ calculated to T\PYGZhy{}1 for each o}
+           \PYG{n}{log\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{n}{lls}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])}
+           \PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])}
+        \PYG{k}{end}
+        \PYG{n}{t}\PYG{o}{=}\PYG{n}{obsl} \PYG{c}{\PYGZsh{}log\PYGZus{}ξ @ T = 0}
+        \PYG{n}{log\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{)}
+    \PYG{k}{end}
+
+    \PYG{n}{ξ} \PYG{o}{=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}ξ}\PYG{p}{)}
+    \PYG{n}{k\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{ξ}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{])}
+    \PYG{n}{nan\PYGZus{}mask} \PYG{o}{=} \PYG{n}{k\PYGZus{}ξ} \PYG{o}{.==} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{k\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{nan\PYGZus{}mask}\PYG{p}{]} \PYG{o}{.=} \PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}prevent NaNs in dummy renorm arising from multiple sequences indexing}
+    \PYG{n}{ξ}  \PYG{o}{./=}  \PYG{n}{k\PYGZus{}ξ} \PYG{c}{\PYGZsh{}dummy renorm across K to keep numerical creep from causing isprobvec to fail on new new\PYGZus{}A during hmm creation}
+
+    \PYG{n}{m\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{m\PYGZus{}log\PYGZus{}ξ}\PYG{p}{)}
+    \PYG{n}{m\PYGZus{}ξ} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{m\PYGZus{}ξ}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{])}
+
+    \PYG{c}{\PYGZsh{}check equivalency of xi calc methods}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{reshape}\PYG{p}{(}\PYG{n}{ξ}\PYG{p}{,}\PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{K}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],}\PYG{n}{m\PYGZus{}ξ}\PYG{p}{)}
+
+    \PYG{n+nb}{γ} \PYG{o}{=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}γ}\PYG{p}{)}
+    \PYG{n}{k\PYGZus{}γ} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{);} \PYG{n}{k\PYGZus{}γ}\PYG{p}{[}\PYG{n}{nan\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]} \PYG{o}{.=} \PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}prevent NaNs in dummy renorm}
+    \PYG{n+nb}{γ} \PYG{o}{./=} \PYG{n}{k\PYGZus{}γ}
+
+    \PYG{n}{m\PYGZus{}γ} \PYG{o}{=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{((}\PYG{n}{m\PYGZus{}log\PYGZus{}α} \PYG{o}{.+} \PYG{n}{m\PYGZus{}log\PYGZus{}β}\PYG{p}{)} \PYG{o}{.\PYGZhy{}} \PYG{n}{normalizer}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{}check equivalency of gamma calculations}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{reshape}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{,}\PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],}\PYG{n}{m\PYGZus{}γ}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing initial and transition matrix calcs...\PYGZdq{}}
+
+    \PYG{n}{m\PYGZus{}new\PYGZus{}A} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{m\PYGZus{}ξ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]}
+    \PYG{n}{m\PYGZus{}new\PYGZus{}A} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{m\PYGZus{}new\PYGZus{}A}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+    \PYG{n}{new\PYGZus{}A} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{j}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}
+        \PYG{n}{∑otξ\PYGZus{}vec} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)}
+        \PYG{n}{∑otγ\PYGZus{}vec} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)}
+        \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}
+            \PYG{n}{∑otξ\PYGZus{}vec}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{ξ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{])}
+            \PYG{n}{∑otγ\PYGZus{}vec}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{])}
+        \PYG{k}{end}
+        \PYG{n}{new\PYGZus{}A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{∑otξ\PYGZus{}vec}\PYG{p}{)} \PYG{o}{/} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{∑otγ\PYGZus{}vec}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{new\PYGZus{}A} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{new\PYGZus{}A}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{c}{\PYGZsh{}dummy renorm}
+
+    \PYG{c}{\PYGZsh{}check equivalency of transition matrix calculations}
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{m\PYGZus{}new\PYGZus{}A}\PYG{p}{,}\PYG{n}{new\PYGZus{}A}\PYG{p}{)}
+
+    \PYG{n}{m\PYGZus{}new\PYGZus{}a} \PYG{o}{=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{((}\PYG{n}{m\PYGZus{}log\PYGZus{}α}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{+} \PYG{n}{m\PYGZus{}log\PYGZus{}β}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])} \PYG{o}{.\PYGZhy{}} \PYG{n}{normalizer}\PYG{p}{)}
+    \PYG{n}{m\PYGZus{}new\PYGZus{}a} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{m\PYGZus{}new\PYGZus{}a}\PYG{p}{)}
+
+    \PYG{n}{new\PYGZus{}a} \PYG{o}{=} \PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{./}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)))[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]}
+    \PYG{n}{new\PYGZus{}a} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{new\PYGZus{}a}\PYG{p}{)} \PYG{c}{\PYGZsh{}dummy renorm}
+
+    \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{m\PYGZus{}new\PYGZus{}a}\PYG{p}{,}\PYG{n}{new\PYGZus{}a}\PYG{p}{)}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing distribution calcs...\PYGZdq{}}
+
+    \PYG{n}{F}\PYG{o}{=}\PYG{n}{Univariate}
+    \PYG{n}{m\PYGZus{}D} \PYG{o}{=} \PYG{n}{Distribution}\PYG{p}{\PYGZob{}}\PYG{n}{F}\PYG{p}{\PYGZcb{}[]}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{d}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{c}{\PYGZsh{} Super hacky...}
+        \PYG{c}{\PYGZsh{} https://github.com/JuliaStats/Distributions.jl/issues/809}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{m\PYGZus{}D}\PYG{p}{,} \PYG{n}{fit\PYGZus{}mle}\PYG{p}{(}\PYG{n}{eval}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{d}\PYG{p}{)}\PYG{o}{.}\PYG{n}{name}\PYG{o}{.}\PYG{n}{name}\PYG{p}{),} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{]),} \PYG{n}{m\PYGZus{}γ}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]))}
+    \PYG{k}{end}
+
+    \PYG{n}{obs\PYGZus{}mask} \PYG{o}{=} \PYG{o}{.!}\PYG{n}{nan\PYGZus{}mask}
+    \PYG{n}{obs\PYGZus{}collection} \PYG{o}{=} \PYG{n}{obs}\PYG{p}{[}\PYG{n}{obs\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]}
+
+    \PYG{n}{B} \PYG{o}{=} \PYG{n}{Distribution}\PYG{p}{\PYGZob{}}\PYG{n}{F}\PYG{p}{\PYGZcb{}[]}
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{d}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{c}{\PYGZsh{} Super hacky...}
+        \PYG{c}{\PYGZsh{} https://github.com/JuliaStats/Distributions.jl/issues/809}
+        \PYG{n}{γ\PYGZus{}d} \PYG{o}{=} \PYG{n+nb}{γ}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{B}\PYG{p}{,} \PYG{n}{fit\PYGZus{}mle}\PYG{p}{(}\PYG{n}{eval}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{d}\PYG{p}{)}\PYG{o}{.}\PYG{n}{name}\PYG{o}{.}\PYG{n}{name}\PYG{p}{),} \PYG{n}{obs\PYGZus{}collection}\PYG{p}{,} \PYG{n}{γ\PYGZus{}d}\PYG{p}{[}\PYG{n}{obs\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]))}
+        \PYG{c}{\PYGZsh{}slowest call by orders of magnitude}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}test maximization equivalency}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{d}\PYG{p}{,} \PYG{n}{dist}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{B}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{p}{,} \PYG{n}{m\PYGZus{}D}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,} \PYG{n}{m\PYGZus{}D}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing mle\PYGZus{}step...\PYGZdq{}}
+
+    \PYG{c}{\PYGZsh{}verify that above methods independently produce equivalent output, and that this is true of multiple identical obs, but not true of different obs sets}
+    \PYG{n}{mouchet\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{mouchet\PYGZus{}mle\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{])}
+
+    \PYG{n}{new\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{dblobs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{,} \PYG{l+m+mi}{22}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{dblobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}
+    \PYG{n}{dblobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]}
+    \PYG{n}{dblobs\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{l+m+mi}{21}\PYG{p}{]}
+    \PYG{n}{dbl\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{dblobs}\PYG{p}{,} \PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{otherobs} \PYG{o}{=} \PYG{n}{dblobs}
+    \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{21}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{other\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{otherobs}\PYG{p}{,} \PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{n}{fieldnames}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))}
+        \PYG{k}{if} \PYG{n}{n} \PYG{o}{==} \PYG{o}{:}\PYG{n}{B}
+            \PYG{k}{for} \PYG{p}{(}\PYG{n}{d}\PYG{p}{,} \PYG{n}{dist}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+                \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support} \PYG{o}{==} \PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+                \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+                \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support} \PYG{o}{==} \PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+                \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+                \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support} \PYG{o}{==} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+                \PYG{n+nd}{@test} \PYG{o}{!}\PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{k}{end}
+        \PYG{k}{elseif} \PYG{n}{n} \PYG{o}{==} \PYG{o}{:}\PYG{n}{partition}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+        \PYG{k}{else}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+            \PYG{n+nd}{@test} \PYG{o}{!}\PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{n+nd}{@test} \PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{==} \PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{!=} \PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{!=} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing fit\PYGZus{}mle!...\PYGZdq{}}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}test fit\PYGZus{}mle! function\PYGZdq{}}
+    \PYG{n}{input\PYGZus{}hmms}\PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{output\PYGZus{}hmms} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{30}\PYG{p}{))}
+    \PYG{n}{chainid}\PYG{o}{=}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{put!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{p}{(}\PYG{n}{chainid}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)))}
+    \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{EM\PYGZus{}converge!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{output\PYGZus{}hmms}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{EM\PYGZus{}func}\PYG{o}{=}\PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{,} \PYG{n}{max\PYGZus{}iterates}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm3}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{epsilon}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{jobid} \PYG{o}{==} \PYG{n}{chainid}
+    \PYG{n+nd}{@test} \PYG{n}{iterate} \PYG{o}{==} \PYG{l+m+mi}{3}
+    \PYG{n+nd}{@test} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm3}\PYG{p}{)} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{==} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{),}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{false}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{epsilon}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{jobid} \PYG{o}{==} \PYG{n}{chainid}
+    \PYG{n+nd}{@test} \PYG{n}{iterate} \PYG{o}{==} \PYG{l+m+mi}{4}
+    \PYG{n+nd}{@test} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm4}\PYG{p}{)} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{==} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{),}\PYG{n}{hmm3}\PYG{p}{,}\PYG{n}{linear}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{false}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Test convergence..\PYGZdq{}}
+    \PYG{n}{obs}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{,} \PYG{l+m+mi}{101}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)[}\PYG{l+m+mi}{2}\PYG{p}{]}
+        \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{100}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{100}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{input\PYGZus{}hmms}\PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{output\PYGZus{}hmms} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{30}\PYG{p}{))}
+    \PYG{n}{put!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{p}{(}\PYG{n}{chainid}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)))}
+    \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{EM\PYGZus{}converge!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{output\PYGZus{}hmms}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{EM\PYGZus{}func}\PYG{o}{=}\PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{,} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{n}{max\PYGZus{}iterates}\PYG{o}{=}\PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{epsilon}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{k}{while} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+        \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{epsilon}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n+nd}{@test} \PYG{n}{converged}\PYG{o}{==}\PYG{l+m+mi}{1}
+
+    \PYG{c}{\PYGZsh{}test t\PYGZus{}add\PYGZus{}categorical\PYGZus{}counts DimensionMismatch}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{DimensionMismatch} \PYG{n}{t\PYGZus{}add\PYGZus{}categorical\PYGZus{}counts!}\PYG{p}{(}\PYG{n}{zeros}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{),} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{),} \PYG{n}{zeros}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{))}
+
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}EM/churbanov.jl Baum\PYGZhy{}Welch equivalency and functions\PYGZdq{}} \PYG{k}{begin}
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Setting up for MLE function tests..\PYGZdq{}}
+    \PYG{n}{A} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{((}\PYG{l+m+mi}{1}\PYG{o}{/}\PYG{l+m+mi}{6}\PYG{p}{),}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{)}
+    \PYG{n}{B} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{ones}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{7}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{05}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]),}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]),}\PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{]),} \PYG{n}{Categorical}\PYG{p}{([}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{3}\PYG{p}{])]}
+    \PYG{n}{hmm} \PYG{o}{=} \PYG{n}{BHMM}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}A} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{)}
+
+    \PYG{n}{obs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{250}\PYG{p}{)}
+    \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{249}\PYG{p}{)}
+    \PYG{n}{obs\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{249}\PYG{p}{]}
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing mle\PYGZus{}step...\PYGZdq{}}
+
+    \PYG{c}{\PYGZsh{}verify that above methods independently produce equivalent output, and that this is true of multiple identical obs, but not true of different obs sets}
+    \PYG{n}{mouchet\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{mouchet\PYGZus{}mle\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{])}
+
+    \PYG{n}{new\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{linear\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{ms\PYGZus{}sng} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{k+kt}{Array}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)),} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{dblobs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{250}\PYG{p}{)}
+    \PYG{n}{dblobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]} \PYG{o}{=} \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]}
+    \PYG{n}{dblobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]} \PYG{o}{=} \PYG{n}{obs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]}
+    \PYG{n}{dblobs\PYGZus{}lengths}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{249}\PYG{p}{,}\PYG{l+m+mi}{249}\PYG{p}{]}
+    \PYG{n}{dbl\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{linear\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{dblobs}\PYG{p}{,} \PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+
+    \PYG{n}{ms\PYGZus{}dbl} \PYG{o}{=}\PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{k+kt}{Array}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{dblobs}\PYG{p}{)),}\PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{otherobs} \PYG{o}{=} \PYG{n}{deepcopy}\PYG{p}{(}\PYG{n}{dblobs}\PYG{p}{)}
+    \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{249}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{249}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{1}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{2}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+        \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{3}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{)}
+        \PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{4}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{otherobs}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{k}{end}
+    
+    \PYG{n}{other\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{linear\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{otherobs}\PYG{p}{,} \PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{n}{ms\PYGZus{}hmm} \PYG{o}{=} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{k+kt}{Array}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{otherobs}\PYG{p}{)),}\PYG{n}{dblobs\PYGZus{}lengths}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{n}{fieldnames}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))}
+        \PYG{k}{if} \PYG{n}{n} \PYG{o}{==} \PYG{o}{:}\PYG{n}{B}
+            \PYG{k}{for} \PYG{p}{(}\PYG{n}{d}\PYG{p}{,} \PYG{n}{dist}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{ms\PYGZus{}sng}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{ms\PYGZus{}sng}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{ms\PYGZus{}dbl}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,}\PYG{n}{ms\PYGZus{}dbl}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{dist}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{n}{ms\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}\PYG{o}{==}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{support}
+            \PYG{n+nd}{@test} \PYG{o}{!}\PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{dist}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{ms\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{,} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+
+            \PYG{k}{end}
+        \PYG{k}{elseif} \PYG{n}{n} \PYG{o}{==} \PYG{o}{:}\PYG{n}{partition}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+            \PYG{n+nd}{@test} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)} \PYG{o}{==} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{)}
+        \PYG{k}{else}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{ms\PYGZus{}sng}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{ms\PYGZus{}dbl}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+
+            \PYG{n+nd}{@test} \PYG{o}{!}\PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+            \PYG{n+nd}{@test} \PYG{n}{isapprox}\PYG{p}{(}\PYG{n}{getfield}\PYG{p}{(}\PYG{n}{ms\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{),} \PYG{n}{getfield}\PYG{p}{(}\PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{n}\PYG{p}{))}
+
+        \PYG{k}{end}
+    \PYG{k}{end}
+
+    \PYG{n+nd}{@test} \PYG{n}{ms\PYGZus{}sng}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{==} \PYG{n}{new\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{==} \PYG{n}{mouchet\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{!=} \PYG{n}{dbl\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{==} \PYG{n}{ms\PYGZus{}dbl}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{!=} \PYG{n}{other\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{==} \PYG{n}{ms\PYGZus{}hmm}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Testing fit\PYGZus{}mle!...\PYGZdq{}}
+
+    \PYG{c}{\PYGZsh{}test fit\PYGZus{}mle! function}
+    \PYG{n}{input\PYGZus{}hmms}\PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{output\PYGZus{}hmms} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{30}\PYG{p}{))}
+    \PYG{n}{chainid}\PYG{o}{=}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Test\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{put!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{p}{(}\PYG{n}{chainid}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{))}
+    \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{EM\PYGZus{}converge!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{output\PYGZus{}hmms}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{max\PYGZus{}iterates}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm3}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{jobid} \PYG{o}{==} \PYG{n}{chainid}
+    \PYG{n+nd}{@test} \PYG{n}{iterate} \PYG{o}{==} \PYG{l+m+mi}{3}
+    \PYG{n+nd}{@test} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm3}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm3}\PYG{p}{)} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{==} \PYG{n}{linear\PYGZus{}likelihood}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{false}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{jobid} \PYG{o}{==} \PYG{n}{chainid}
+    \PYG{n+nd}{@test} \PYG{n}{iterate} \PYG{o}{==} \PYG{l+m+mi}{4}
+    \PYG{n+nd}{@test} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm4}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm4}\PYG{p}{)} \PYG{o}{==} \PYG{n}{size}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1}
+    \PYG{n+nd}{@test} \PYG{n}{log\PYGZus{}p} \PYG{o}{==} \PYG{n}{linear\PYGZus{}likelihood}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{,} \PYG{n}{hmm3}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{false}
+
+    \PYG{c}{\PYGZsh{} \PYGZdq{}Test convergence..\PYGZdq{}}
+    \PYG{n}{obs}\PYG{o}{=}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{1001}\PYG{p}{)}    
+    \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{obs}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{obsl}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{100}\PYG{o}{:}\PYG{l+m+mi}{1000}\PYG{p}{)}
+        \PYG{n}{obs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obsl}\PYG{p}{]}\PYG{o}{=}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{n}{obsl}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{input\PYGZus{}hmms}\PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{output\PYGZus{}hmms} \PYG{o}{=} \PYG{n}{RemoteChannel}\PYG{p}{(()}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{k+kt}{Channel}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}(}\PYG{n+nb}{Inf}\PYG{p}{))}
+    \PYG{n}{put!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{p}{(}\PYG{n}{chainid}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{))}
+    \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{EM\PYGZus{}converge!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{output\PYGZus{}hmms}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=.}\PYG{l+m+mi}{05}\PYG{p}{,} \PYG{n}{max\PYGZus{}iterates}\PYG{o}{=}\PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{wait}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{k}{while} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+        \PYG{n}{workerid}\PYG{p}{,} \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{iterate}\PYG{p}{,} \PYG{n}{hmm4}\PYG{p}{,} \PYG{n}{log\PYGZus{}p}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,} \PYG{n}{converged} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{output\PYGZus{}hmms}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n+nd}{@test} \PYG{n}{converged}\PYG{o}{==}\PYG{l+m+mi}{1}
+\PYG{k}{end}
+
+\PYG{n+nd}{@testset} \PYG{l+s}{\PYGZdq{}API/EM\PYGZus{}master.jl and reports.jl API tests\PYGZdq{}} \PYG{k}{begin}
+    \PYG{c}{\PYGZsh{}CONSTANTS FOR BHMM LEARNING}
+    \PYG{n}{replicates} \PYG{o}{=} \PYG{l+m+mi}{4} \PYG{c}{\PYGZsh{}repeat optimisation from this many seperately initialised samples from the prior}
+    \PYG{n}{Ks} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{]} \PYG{c}{\PYGZsh{}mosaic class \PYGZsh{}s to test}
+    \PYG{n}{order\PYGZus{}nos} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{c}{\PYGZsh{}DNA kmer order \PYGZsh{}s to test}
+    \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{o}{=}\PYG{l+m+mi}{100}
+    \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{o}{=}\PYG{l+m+mi}{5}
+    \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{o}{=}\PYG{l+m+mi}{25}
+    \PYG{n}{perigenic\PYGZus{}pad}\PYG{o}{=}\PYG{l+m+mi}{250}
+
+    \PYG{n}{wkpool}\PYG{o}{=}\PYG{n}{addprocs}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nd}{@everywhere} \PYG{k}{using} \PYG{n}{BioBackgroundModels}
+
+    \PYG{n}{channels} \PYG{o}{=} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{p}{,} \PYG{n}{gff}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{min\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{max\PYGZus{}sample\PYGZus{}window}\PYG{p}{,} \PYG{n}{perigenic\PYGZus{}pad}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+    \PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}\PYG{o}{=}\PYG{n}{execute\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{(}\PYG{n}{channels}\PYG{p}{,} \PYG{n}{wkpool}\PYG{p}{)}
+    \PYG{n}{training\PYGZus{}sets}\PYG{p}{,} \PYG{n}{test\PYGZus{}sets} \PYG{o}{=} \PYG{n}{split\PYGZus{}obs\PYGZus{}sets}\PYG{p}{(}\PYG{n}{sample\PYGZus{}record\PYGZus{}dfs}\PYG{p}{)}
+
+    \PYG{n}{rmprocs}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{)}
+
+
+    \PYG{n}{job\PYGZus{}ids}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}()}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{obs}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{training\PYGZus{}sets}\PYG{p}{,} \PYG{n}{K} \PYG{k+kp}{in} \PYG{n}{Ks}\PYG{p}{,} \PYG{n}{order} \PYG{k+kp}{in} \PYG{n}{order\PYGZus{}nos}\PYG{p}{,} \PYG{n}{rep} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{replicates}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{rep}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{n}{no\PYGZus{}input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{chains}\PYG{p}{,} \PYG{n}{input\PYGZus{}hmms}\PYG{p}{,} \PYG{n}{output\PYGZus{}hmms} \PYG{o}{=} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{training\PYGZus{}sets}\PYG{p}{)}
+    \PYG{n+nd}{@test} \PYG{n}{no\PYGZus{}input\PYGZus{}hmms} \PYG{o}{==} \PYG{n}{replicates}\PYG{o}{*}\PYG{n}{length}\PYG{p}{(}\PYG{n}{Ks}\PYG{p}{)}\PYG{o}{*}\PYG{n}{length}\PYG{p}{(}\PYG{n}{order\PYGZus{}nos}\PYG{p}{)}\PYG{o}{*}\PYG{n}{length}\PYG{p}{(}\PYG{n}{training\PYGZus{}sets}\PYG{p}{)}
+
+    \PYG{k}{while} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{)}
+        \PYG{n}{jobid}\PYG{p}{,} \PYG{n}{start\PYGZus{}iterate}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{,} \PYG{n}{last\PYGZus{}norm}\PYG{p}{,} \PYG{n}{observations} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{input\PYGZus{}hmms}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{last\PYGZus{}norm} \PYG{o}{==} \PYG{n}{linear\PYGZus{}likelihood}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{,} \PYG{n}{hmm}\PYG{p}{)}
+        \PYG{n}{obs\PYGZus{}lengths} \PYG{o}{=} \PYG{p}{[}\PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{iszero}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{[}\PYG{n}{o}\PYG{p}{,}\PYG{o}{:}\PYG{p}{])}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]]}
+        \PYG{c}{\PYGZsh{}make sure input HMMs are valid and try to mle\PYGZus{}step them and ensure their 1\PYGZhy{}step children are valid}
+        \PYG{n+nd}{@test} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{n}{new\PYGZus{}hmm}\PYG{p}{,} \PYG{n}{prob} \PYG{o}{=} \PYG{n}{linear\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,}\PYG{n}{observations}\PYG{p}{,}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{n+nd}{@test} \PYG{n}{prob} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}
+    \PYG{k}{end}
+
+    \PYG{n}{genome\PYGZus{}reader} \PYG{o}{=} \PYG{n}{open}\PYG{p}{(}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{Reader}\PYG{p}{,} \PYG{n}{genome}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{n}{index}\PYG{p}{)}
+    \PYG{n}{seq}\PYG{o}{=}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{sequence}\PYG{p}{(}\PYG{n}{genome\PYGZus{}reader}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}CM002885.2.1\PYGZdq{}}\PYG{p}{]))}
+    \PYG{n}{seqdict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{p}{[}\PYG{n}{seq} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{3}\PYG{p}{])}
+    \PYG{n}{seqdict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}blacklist\PYGZdq{}}\PYG{p}{]}\PYG{o}{=}\PYG{n}{seqdict}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{]}
+
+    \PYG{n}{job\PYGZus{}ids}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}blacklist\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}blacklist\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{))}
+    \PYG{n}{Ks}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{];} \PYG{n}{order\PYGZus{}nos}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{K} \PYG{k+kp}{in} \PYG{n}{Ks}\PYG{p}{,} \PYG{n}{order} \PYG{k+kp}{in} \PYG{n}{order\PYGZus{}nos}\PYG{p}{,} \PYG{n}{replicate} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{2}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{,} \PYG{n}{K}\PYG{p}{,} \PYG{n}{order}\PYG{p}{,} \PYG{n}{replicate}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{n}{wkpool}\PYG{o}{=}\PYG{n}{addprocs}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{topology}\PYG{o}{=:}\PYG{n}{master\PYGZus{}worker}\PYG{p}{)}
+    \PYG{n+nd}{@everywhere} \PYG{k}{using} \PYG{n}{BioBackgroundModels}
+
+    \PYG{n}{load\PYGZus{}dict}\PYG{o}{=}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{n}{LoadConfig}\PYG{p}{\PYGZcb{}()}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{n}\PYG{p}{,}\PYG{n}{wk}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{)}
+        \PYG{n}{n}\PYG{o}{==}\PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{load\PYGZus{}dict}\PYG{p}{[}\PYG{n}{wk}\PYG{p}{]}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{blacklist}\PYG{o}{=}\PYG{p}{[}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}blacklist\PYGZdq{}}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)]))}
+        \PYG{n}{n}\PYG{o}{==}\PYG{l+m+mi}{2} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{load\PYGZus{}dict}\PYG{p}{[}\PYG{n}{wk}\PYG{p}{]}\PYG{o}{=}\PYG{n}{LoadConfig}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{k}{end}
+    \PYG{c}{\PYGZsh{}test work resumption, load configs}
+
+    \PYG{n}{em\PYGZus{}jobset}\PYG{o}{=}\PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{seqdict}\PYG{p}{,} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=}\PYG{l+m+mf}{10000.}\PYG{p}{)}
+    \PYG{n}{execute\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{,} \PYG{n}{em\PYGZus{}jobset}\PYG{o}{...}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}testchains\PYGZdq{}}\PYG{p}{,} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=}\PYG{l+m+mf}{10000.}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{,} \PYG{n}{load\PYGZus{}dict}\PYG{o}{=}\PYG{n}{load\PYGZus{}dict}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{chain\PYGZus{}id}\PYG{p}{,}\PYG{n}{chain}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{em\PYGZus{}jobset}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+        \PYG{n+nd}{@test} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{true}
+        \PYG{n+nd}{@test} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{delta} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{10000}
+        \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+        \PYG{n+nd}{@test} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}=} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{iterate} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{5000}
+    \PYG{k}{end}
+
+    \PYG{n}{wkpool}\PYG{o}{=}\PYG{n}{addprocs}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{topology}\PYG{o}{=:}\PYG{n}{master\PYGZus{}worker}\PYG{p}{)}
+    \PYG{n+nd}{@everywhere} \PYG{k}{using} \PYG{n}{BioBackgroundModels}
+
+    \PYG{n}{em\PYGZus{}jobset}\PYG{o}{=}\PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{p}{,} \PYG{n}{seqdict}\PYG{p}{,} \PYG{n}{chains}\PYG{o}{=}\PYG{n}{deserialize}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}testchains\PYGZdq{}}\PYG{p}{),} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=.}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{execute\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{,} \PYG{n}{em\PYGZus{}jobset}\PYG{o}{...}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}testchains\PYGZdq{}}\PYG{p}{,} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{chain\PYGZus{}id}\PYG{p}{,}\PYG{n}{chain}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{em\PYGZus{}jobset}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+        \PYG{n+nd}{@test} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{converged} \PYG{o}{==} \PYG{k+kc}{true}
+        \PYG{n+nd}{@test} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{delta} \PYG{o}{\PYGZlt{}=} \PYG{o}{.}\PYG{l+m+mi}{1}
+        \PYG{n+nd}{@test} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{hmm}\PYG{p}{)}\PYG{o}{==}\PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+        \PYG{n+nd}{@test} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}=} \PYG{n}{chain}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}\PYG{o}{.}\PYG{n}{iterate} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{5000}
+    \PYG{k}{end}
+
+    \PYG{c}{\PYGZsh{}test for already converged warning}
+    \PYG{n}{wkpool}\PYG{o}{=}\PYG{n}{addprocs}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{topology}\PYG{o}{=:}\PYG{n}{master\PYGZus{}worker}\PYG{p}{)}
+    \PYG{n+nd}{@everywhere} \PYG{k}{using} \PYG{n}{BioBackgroundModels}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{execute\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{(}\PYG{n}{wkpool}\PYG{p}{,} \PYG{n}{em\PYGZus{}jobset}\PYG{o}{...}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}testchains\PYGZdq{}}\PYG{p}{,} \PYG{n}{delta\PYGZus{}thresh}\PYG{o}{=.}\PYG{l+m+mi}{01}\PYG{p}{,} \PYG{n}{verbose}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+
+    \PYG{n}{rm}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}testchains\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{generate\PYGZus{}reports}\PYG{p}{(}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{EM\PYGZus{}step}\PYG{p}{\PYGZcb{}\PYGZcb{}(),}\PYG{n}{seqdict}\PYG{p}{)}
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{generate\PYGZus{}reports}\PYG{p}{(}\PYG{n}{em\PYGZus{}jobset}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}())}
+
+    \PYG{n+nd}{@test\PYGZus{}throws} \PYG{k+kt}{ArgumentError} \PYG{n}{BioBackgroundModels}\PYG{o}{.}\PYG{n}{report\PYGZus{}chains}\PYG{p}{(}\PYG{n}{em\PYGZus{}jobset}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}())}
+
+    \PYG{n}{report\PYGZus{}folders}\PYG{o}{=}\PYG{n}{generate\PYGZus{}reports}\PYG{p}{(}\PYG{n}{em\PYGZus{}jobset}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{n}{seqdict}\PYG{p}{)}
+    \PYG{n}{folder}\PYG{o}{=}\PYG{n}{report\PYGZus{}folders}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{p}{]}
+    \PYG{n+nd}{@test} \PYG{l+s}{\PYGZdq{}test\PYGZdq{}}\PYG{o}{==}\PYG{n}{folder}\PYG{o}{.}\PYG{n}{partition\PYGZus{}id}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{folder}\PYG{o}{.}\PYG{n}{partition\PYGZus{}report}\PYG{p}{)}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{folder}\PYG{o}{.}\PYG{n}{replicate\PYGZus{}report}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{id} \PYG{k+kp}{in} \PYG{n}{folder}\PYG{o}{.}\PYG{n}{partition\PYGZus{}report}\PYG{o}{.}\PYG{n}{best\PYGZus{}repset}
+        \PYG{n}{show}\PYG{p}{(}\PYG{n}{folder}\PYG{o}{.}\PYG{n}{chain\PYGZus{}reports}\PYG{p}{[}\PYG{n}{id}\PYG{p}{])}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{n}{rm}\PYG{p}{(}\PYG{n}{genome}\PYG{p}{)}
+\PYG{n}{rm}\PYG{p}{(}\PYG{n}{index}\PYG{p}{)}
+\PYG{n}{rm}\PYG{p}{(}\PYG{n}{gff}\PYG{p}{)}
+\PYG{n}{rm}\PYG{p}{(}\PYG{n}{posfasta}\PYG{p}{)}
+\end{Verbatim}

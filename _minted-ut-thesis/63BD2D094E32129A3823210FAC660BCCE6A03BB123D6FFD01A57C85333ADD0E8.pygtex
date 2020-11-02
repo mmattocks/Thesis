@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{Utility functions for learning and using background genomic hidden markov models}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{c}{\PYGZsh{}function to split random sample dataframe into training and test sets (divide total sequence length by half)}
+\PYG{k}{function} \PYG{n}{split\PYGZus{}obs\PYGZus{}sets}\PYG{p}{(}\PYG{n}{sample\PYGZus{}dfs}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{DataFrame}\PYG{p}{\PYGZcb{})}
+    \PYG{n}{training\PYGZus{}sets} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+    \PYG{n}{test\PYGZus{}sets} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{partition\PYGZus{}id}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{sample\PYGZus{}dfs}
+        \PYG{n}{partition} \PYG{o}{=} \PYG{n}{partition}\PYG{p}{[}\PYG{n}{shuffle}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{partition}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)),}\PYG{o}{:}\PYG{p}{]} \PYG{c}{\PYGZsh{}shuffle the samples to avoid any effect from sampling without replacement}
+        \PYG{n}{partition}\PYG{o}{.}\PYG{n}{sampleLength} \PYG{o}{=} \PYG{p}{(}\PYG{n}{partition}\PYG{o}{.}\PYG{n}{SampleEnd} \PYG{o}{\PYGZhy{}} \PYG{n}{partition}\PYG{o}{.}\PYG{n}{SampleStart}\PYG{p}{)} \PYG{o}{.+} \PYG{l+m+mi}{1}
+        \PYG{n}{midway} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{partition}\PYG{o}{.}\PYG{n}{sampleLength}\PYG{p}{)}\PYG{o}{÷}\PYG{l+m+mi}{2}
+        \PYG{n}{split\PYGZus{}index} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{n}{counter} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{k}{while} \PYG{n}{split\PYGZus{}index} \PYG{o}{==} \PYG{l+m+mi}{0}
+            \PYG{n}{counter} \PYG{o}{+=} \PYG{l+m+mi}{1}
+            \PYG{n}{length\PYGZus{}sum} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{partition}\PYG{o}{.}\PYG{n}{sampleLength}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{counter}\PYG{p}{])}
+            \PYG{k}{if} \PYG{n}{length\PYGZus{}sum} \PYG{o}{\PYGZgt{}} \PYG{n}{midway}
+                \PYG{n}{split\PYGZus{}index} \PYG{o}{=} \PYG{n}{counter}
+            \PYG{k}{end}
+        \PYG{k}{end}
+
+        \PYG{n}{training\PYGZus{}sets}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]}  \PYG{o}{=} \PYG{n}{partition}\PYG{o}{.}\PYG{n}{SampleSequence}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{split\PYGZus{}index}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{test\PYGZus{}sets}\PYG{p}{[}\PYG{n}{partition\PYGZus{}id}\PYG{p}{]} \PYG{o}{=} \PYG{n}{partition}\PYG{o}{.}\PYG{n}{SampleSequence}\PYG{p}{[}\PYG{n}{split\PYGZus{}index}\PYG{o}{:}\PYG{k}{end}\PYG{p}{]}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{training\PYGZus{}sets}\PYG{p}{,} \PYG{n}{test\PYGZus{}sets}
+\PYG{k}{end}
+\end{Verbatim}

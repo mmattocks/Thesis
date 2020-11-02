@@ -1,5 +1,5 @@
 \chapter{GMC\_NS.jl}
-
+\label{ch:GMC}
 \path{GMC_NS.jl} implements a basic Galilean Monte Carlo nested sampler \cite{Skilling2012} in pure Julia. It is not capable of multiprocess likelihood calculations like \path{BioMotifInference.jl} and is not intended for high-dimensional problems requiring dynamic ensemble size adjustment \cite{Higson2019} or multi-ellipsoidal sampling \cite{Feroz2009}. \path{GMC_NS.jl} accepts arbitrary user-defined functions for model calculations, so could be used for any moderately-sized sampling problem with a continuous parameter space.
 
 \section{Implementation notes}

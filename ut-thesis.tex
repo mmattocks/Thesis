@@ -82,8 +82,12 @@
 \usepackage{fontspec}
 \usepackage{placeins}
 
+\usepackage[inkscapearea=page]{svg}
+
 \usepackage[separate-uncertainty = true,multi-part-units=single]{siunitx}
 \sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
+
+\usepackage{rotating}
 
 \renewcommand{\chapterautorefname}{Chapter} 
 \renewcommand{\sectionautorefname}{Section} 
@@ -245,7 +249,7 @@ Acknowledgements text
 \include{chapters/PTIII/theoryA}
 \include{chapters/PTIII/theoryB}
 %code appendix
-% \include{chapters/PTIII/code}
+\include{chapters/PTIII/code}
 
 
 %% This adds a line for the Bibliography in the Table of Contents.

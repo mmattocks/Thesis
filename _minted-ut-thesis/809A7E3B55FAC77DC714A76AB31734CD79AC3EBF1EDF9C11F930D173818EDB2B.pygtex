@@ -1,0 +1,149 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+cp}{\PYGZsh{}ifndef BOIJERETINALNEURALFATES\PYGZus{}HPP\PYGZus{}}
+\PYG{c+cp}{\PYGZsh{}define BOIJERETINALNEURALFATES\PYGZus{}HPP\PYGZus{}}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}boost/shared\PYGZus{}ptr.hpp\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}AbstractCellProperty.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}ChasteSerialization.hpp\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}boost/serialization/base\PYGZus{}object.hpp\PYGZgt{}}
+
+\PYG{k}{class} \PYG{n+nc}{RetinalGanglion} \PYG{o}{:} \PYG{k}{public} \PYG{n}{AbstractCellProperty}
+\PYG{p}{\PYGZob{}}
+\PYG{k}{private}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Colour for use by visualizer.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n}{mColour}\PYG{p}{;}
+
+    \PYG{c+cm}{/** Needed for serialization. */}
+    \PYG{k}{friend} \PYG{k}{class} \PYG{n+nc}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{access}\PYG{p}{;}
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Archive the member variables.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param archive the archive}
+\PYG{c+cm}{     * @param version the current version of this class}
+\PYG{c+cm}{     */}
+    \PYG{k}{template}\PYG{o}{\PYGZlt{}}\PYG{k}{class} \PYG{n+nc}{Archive}\PYG{o}{\PYGZgt{}}
+    \PYG{k+kt}{void} \PYG{n}{serialize}\PYG{p}{(}\PYG{n}{Archive} \PYG{o}{\PYGZam{}} \PYG{n}{archive}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{version}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{base\PYGZus{}object}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractCellProperty}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{o}{*}\PYG{k}{this}\PYG{p}{);}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{mColour}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+\PYG{k}{public}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Constructor.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param colour  what colour cells with this property should be in the visualizer (defaults to 6)}
+\PYG{c+cm}{     */}
+    \PYG{n}{RetinalGanglion}\PYG{p}{(}\PYG{k+kt}{unsigned} \PYG{n}{colour}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{);}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Destructor.}
+\PYG{c+cm}{     */}
+    \PYG{k}{virtual} \PYG{o}{\PYGZti{}}\PYG{n}{RetinalGanglion}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * @return \PYGZsh{}mColour.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n+nf}{GetColour}\PYG{p}{()} \PYG{k}{const}\PYG{p}{;}
+\PYG{p}{\PYGZcb{};}
+
+\PYG{k}{class} \PYG{n+nc}{AmacrineHorizontal} \PYG{o}{:} \PYG{k}{public} \PYG{n}{AbstractCellProperty}
+\PYG{p}{\PYGZob{}}
+\PYG{k}{private}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Colour for use by visualizer.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n}{mColour}\PYG{p}{;}
+
+    \PYG{c+cm}{/** Needed for serialization. */}
+    \PYG{k}{friend} \PYG{k}{class} \PYG{n+nc}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{access}\PYG{p}{;}
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Archive the member variables.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param archive the archive}
+\PYG{c+cm}{     * @param version the current version of this class}
+\PYG{c+cm}{     */}
+    \PYG{k}{template}\PYG{o}{\PYGZlt{}}\PYG{k}{class} \PYG{n+nc}{Archive}\PYG{o}{\PYGZgt{}}
+    \PYG{k+kt}{void} \PYG{n}{serialize}\PYG{p}{(}\PYG{n}{Archive} \PYG{o}{\PYGZam{}} \PYG{n}{archive}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{version}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{base\PYGZus{}object}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractCellProperty}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{o}{*}\PYG{k}{this}\PYG{p}{);}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{mColour}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+\PYG{k}{public}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Constructor.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param colour  what colour cells with this property should be in the visualizer (defaults to 6)}
+\PYG{c+cm}{     */}
+    \PYG{n}{AmacrineHorizontal}\PYG{p}{(}\PYG{k+kt}{unsigned} \PYG{n}{colour}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{);}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Destructor.}
+\PYG{c+cm}{     */}
+    \PYG{k}{virtual} \PYG{o}{\PYGZti{}}\PYG{n}{AmacrineHorizontal}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * @return \PYGZsh{}mColour.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n+nf}{GetColour}\PYG{p}{()} \PYG{k}{const}\PYG{p}{;}
+\PYG{p}{\PYGZcb{};}
+
+\PYG{k}{class} \PYG{n+nc}{ReceptorBipolar} \PYG{o}{:} \PYG{k}{public} \PYG{n}{AbstractCellProperty}
+\PYG{p}{\PYGZob{}}
+\PYG{k}{private}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Colour for use by visualizer.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n}{mColour}\PYG{p}{;}
+
+    \PYG{c+cm}{/** Needed for serialization. */}
+    \PYG{k}{friend} \PYG{k}{class} \PYG{n+nc}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{access}\PYG{p}{;}
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Archive the member variables.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param archive the archive}
+\PYG{c+cm}{     * @param version the current version of this class}
+\PYG{c+cm}{     */}
+    \PYG{k}{template}\PYG{o}{\PYGZlt{}}\PYG{k}{class} \PYG{n+nc}{Archive}\PYG{o}{\PYGZgt{}}
+    \PYG{k+kt}{void} \PYG{n}{serialize}\PYG{p}{(}\PYG{n}{Archive} \PYG{o}{\PYGZam{}} \PYG{n}{archive}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{version}\PYG{p}{)}
+    \PYG{p}{\PYGZob{}}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{boost}\PYG{o}{::}\PYG{n}{serialization}\PYG{o}{::}\PYG{n}{base\PYGZus{}object}\PYG{o}{\PYGZlt{}}\PYG{n}{AbstractCellProperty}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{o}{*}\PYG{k}{this}\PYG{p}{);}
+        \PYG{n}{archive} \PYG{o}{\PYGZam{}} \PYG{n}{mColour}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+\PYG{k}{public}\PYG{o}{:}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Constructor.}
+\PYG{c+cm}{     *}
+\PYG{c+cm}{     * @param colour  what colour cells with this property should be in the visualizer (defaults to 6)}
+\PYG{c+cm}{     */}
+    \PYG{n}{ReceptorBipolar}\PYG{p}{(}\PYG{k+kt}{unsigned} \PYG{n}{colour}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{);}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * Destructor.}
+\PYG{c+cm}{     */}
+    \PYG{k}{virtual} \PYG{o}{\PYGZti{}}\PYG{n}{ReceptorBipolar}\PYG{p}{();}
+
+    \PYG{c+cm}{/**}
+\PYG{c+cm}{     * @return \PYGZsh{}mColour.}
+\PYG{c+cm}{     */}
+    \PYG{k+kt}{unsigned} \PYG{n+nf}{GetColour}\PYG{p}{()} \PYG{k}{const}\PYG{p}{;}
+\PYG{p}{\PYGZcb{};}
+
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}SerializationExportWrapper.hpp\PYGZdq{}}
+\PYG{c+c1}{// Declare identifier for the serializer}
+\PYG{n}{CHASTE\PYGZus{}CLASS\PYGZus{}EXPORT}\PYG{p}{(}\PYG{n}{RetinalGanglion}\PYG{p}{)}
+\PYG{n}{CHASTE\PYGZus{}CLASS\PYGZus{}EXPORT}\PYG{p}{(}\PYG{n}{AmacrineHorizontal}\PYG{p}{)}
+\PYG{n}{CHASTE\PYGZus{}CLASS\PYGZus{}EXPORT}\PYG{p}{(}\PYG{n}{ReceptorBipolar}\PYG{p}{)}
+
+\PYG{c+cp}{\PYGZsh{}endif }\PYG{c+cm}{/* BOIJERETINALNEURALFATES\PYGZus{}HPP\PYGZus{} */}
+\end{Verbatim}

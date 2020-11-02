@@ -1,0 +1,54 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{module} \PYG{n}{BioBackgroundModels}
+
+\PYG{k}{import} \PYG{n}{Base}\PYG{o}{:}\PYG{n}{copy}\PYG{p}{,}\PYG{n}{size}
+\PYG{k}{import} \PYG{n}{Distances}\PYG{o}{:} \PYG{n}{euclidean}
+\PYG{k}{import} \PYG{n}{Distributions}\PYG{o}{:}\PYG{n}{Univariate}\PYG{p}{,}\PYG{n}{Dirichlet}\PYG{p}{,}\PYG{n}{Categorical}\PYG{p}{,}\PYG{n}{logpdf}\PYG{p}{,}\PYG{n}{isprobvec}
+\PYG{k}{import} \PYG{n}{Distributed}\PYG{o}{:} \PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{myid}\PYG{p}{,} \PYG{n}{remote\PYGZus{}do}\PYG{p}{,} \PYG{n}{rmprocs}
+\PYG{k}{import} \PYG{n}{HMMBase}\PYG{o}{:} \PYG{n}{AbstractHMM}\PYG{p}{,} \PYG{n}{assert\PYGZus{}hmm}\PYG{p}{,} \PYG{n}{istransmat}
+\PYG{k}{import} \PYG{n}{MCMCChains}\PYG{o}{:} \PYG{n}{Chains}\PYG{p}{,} \PYG{n}{ChainDataFrame}\PYG{p}{,} \PYG{n}{heideldiag}
+\PYG{k}{import} \PYG{n}{Printf}\PYG{o}{:} \PYG{n+nd}{@sprintf}
+\PYG{k}{import} \PYG{n}{Random}\PYG{o}{:} \PYG{n}{rand}\PYG{p}{,} \PYG{n}{shuffle}
+\PYG{k}{import} \PYG{n}{Serialization}\PYG{o}{:} \PYG{n}{serialize}
+\PYG{k}{import} \PYG{n}{StatsFuns}\PYG{o}{:} \PYG{n}{logsumexp}\PYG{p}{,} \PYG{n}{logaddexp}
+\PYG{k}{import} \PYG{n}{Statistics}\PYG{o}{:} \PYG{n}{mean}
+\PYG{k}{import} \PYG{n}{UnicodePlots}\PYG{o}{:} \PYG{n}{lineplot}\PYG{p}{,}\PYG{n}{lineplot!}\PYG{p}{,} \PYG{n}{scatterplot}\PYG{p}{,}\PYG{n}{scatterplot!}
+\PYG{k}{using} \PYG{n}{BioSequences}\PYG{p}{,} \PYG{n}{DataFrames}\PYG{p}{,} \PYG{n}{FASTX}\PYG{p}{,} \PYG{n}{GFF3}\PYG{p}{,} \PYG{n}{ProgressMeter}
+
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}BHMM/BHMM.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{BHMM}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM/chain.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,} \PYG{n}{EM\PYGZus{}step}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}API/genome\PYGZus{}sampling.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{setup\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,} \PYG{n}{execute\PYGZus{}sample\PYGZus{}jobs}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}API/EM\PYGZus{}master.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{setup\PYGZus{}EM\PYGZus{}jobs!}\PYG{p}{,} \PYG{n}{execute\PYGZus{}EM\PYGZus{}jobs!}
+
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}reports/chain\PYGZus{}report.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}reports/partition\PYGZus{}report.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}reports/replicate\PYGZus{}convergence.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}API/reports.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{generate\PYGZus{}reports}
+
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM/baum\PYGZhy{}welch.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM/churbanov.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/load\PYGZus{}balancer.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{LoadConfig}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}EM/EM\PYGZus{}converge.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}genome\PYGZus{}sampling/partition\PYGZus{}masker.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}genome\PYGZus{}sampling/sequence\PYGZus{}sampler.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}likelihood\PYGZus{}funcs/bg\PYGZus{}lh\PYGZus{}matrix.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{BGHMM\PYGZus{}likelihood\PYGZus{}calc}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}likelihood\PYGZus{}funcs/hmm.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{obs\PYGZus{}lh\PYGZus{}given\PYGZus{}hmm}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/observation\PYGZus{}coding.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/BBG\PYGZus{}analysis.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/BBG\PYGZus{}progressmeter.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/HMM\PYGZus{}init.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/model\PYGZus{}display.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/utilities.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{split\PYGZus{}obs\PYGZus{}sets}
+\PYG{n}{include}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}utilities/log\PYGZus{}prob\PYGZus{}sum.jl\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{export} \PYG{n}{lps}
+\PYG{k}{end} \PYG{c}{\PYGZsh{} module}
+\end{Verbatim}

@@ -1,0 +1,141 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    ms\PYGZus{}mle\PYGZus{}step(hmm::AbstractHMM\PYGZob{}F\PYGZcb{}, observations) where F}
+
+\PYG{l+s}{Perform one step of the EM (Baum\PYGZhy{}Welch) algorithm.}
+
+\PYG{l+s}{\PYGZsh{} Example}
+\PYG{l+s}{```julia}
+\PYG{l+s}{hmm, log\PYGZus{}likelihood = ms\PYGZus{}mle\PYGZus{}step(hmm, observations)}
+\PYG{l+s}{```}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k}{function} \PYG{n}{bw\PYGZus{}step}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{bw\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{messages\PYGZus{}forwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{messages\PYGZus{}backwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}A} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{)}
+
+    \PYG{n}{K}\PYG{p}{,}\PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O} \PYG{o}{=} \PYG{n}{size}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{)} \PYG{c}{\PYGZsh{}the last T value is the 0 end marker of the longest T}
+
+    \PYG{c}{\PYGZsh{}transforms to cut down log\PYGZus{}ξ, log\PYGZus{}γ assignment times}
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{c}{\PYGZsh{} from (K,T,O) to (T,O,K)}
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}β}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{])}
+
+    \PYG{c}{\PYGZsh{} E\PYGZhy{}step}
+    \PYG{n}{log\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{K}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}γ} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{O}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}pobs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)}
+ 
+   \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{o} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}
+        \PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))}
+    \PYG{k}{end}
+
+    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{idx} \PYG{k+kp}{in} \PYG{p}{[(}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{,}\PYG{n}{o}\PYG{p}{)} \PYG{k}{for} \PYG{n}{i}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{j}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{o}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}\PYG{p}{]}
+        \PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{,}\PYG{n}{o} \PYG{o}{=} \PYG{n}{idx}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{idx}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{n}{idx}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}
+        \PYG{n}{obsl} \PYG{o}{=} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}
+        \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{t} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obsl}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{c}{\PYGZsh{}log\PYGZus{}ξ \PYGZam{} log\PYGZus{}γ calculated to T\PYGZhy{}1 for each o}
+           \PYG{n}{log\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{n}{lls}\PYG{p}{[}\PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{j}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])}
+           \PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])}
+        \PYG{k}{end}
+        \PYG{n}{t}\PYG{o}{=}\PYG{n}{obsl} \PYG{c}{\PYGZsh{}log\PYGZus{}ξ @ T = 0}
+        \PYG{n}{log\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],} \PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{[}\PYG{n}{o}\PYG{p}{])}
+    \PYG{k}{end}
+
+    \PYG{n}{ξ} \PYG{o}{=} \PYG{n}{similar}\PYG{p}{(}\PYG{n}{log\PYGZus{}ξ}\PYG{p}{)}
+    \PYG{n}{ξ} \PYG{o}{.=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}ξ}\PYG{p}{)}
+    \PYG{n}{∑k\PYGZus{}ξ} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{ξ}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{])}
+    \PYG{n}{nan\PYGZus{}mask} \PYG{o}{=} \PYG{n}{∑k\PYGZus{}ξ} \PYG{o}{.==} \PYG{l+m+mi}{0}
+    \PYG{n}{∑k\PYGZus{}ξ}\PYG{p}{[}\PYG{n}{nan\PYGZus{}mask}\PYG{p}{]} \PYG{o}{.=} \PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}prevent NaNs in dummy renorm}
+    \PYG{n}{ξ}  \PYG{o}{./=}  \PYG{n}{∑k\PYGZus{}ξ} \PYG{c}{\PYGZsh{}dummy renorm across K to keep numerical creep from causing isprobvec to fail on new new\PYGZus{}A during hmm creation}
+
+    \PYG{n+nb}{γ} \PYG{o}{=} \PYG{n}{similar}\PYG{p}{(}\PYG{n}{log\PYGZus{}γ}\PYG{p}{)}
+    \PYG{n+nb}{γ} \PYG{o}{.=} \PYG{n}{exp}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}γ}\PYG{p}{)}
+    \PYG{n}{∑k\PYGZus{}γ} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{∑k\PYGZus{}γ}\PYG{p}{[}\PYG{n}{nan\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]} \PYG{o}{.=} \PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}prevent NaNs in dummy renorm}
+    \PYG{n+nb}{γ} \PYG{o}{./=} \PYG{n}{∑k\PYGZus{}γ} \PYG{c}{\PYGZsh{}dummy renorm}
+
+    \PYG{c}{\PYGZsh{} M\PYGZhy{}step}
+    \PYG{n}{new\PYGZus{}A} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{j}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}
+        \PYG{n}{∑otξ\PYGZus{}vec} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)}
+        \PYG{n}{∑otγ\PYGZus{}vec} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{O}\PYG{p}{)}
+        \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{O}
+            \PYG{n}{∑otξ\PYGZus{}vec}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{ξ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{])}
+            \PYG{n}{∑otγ\PYGZus{}vec}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{,}\PYG{n}{i}\PYG{p}{])}
+        \PYG{k}{end}
+        \PYG{n}{new\PYGZus{}A}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{∑otξ\PYGZus{}vec}\PYG{p}{)} \PYG{o}{/} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{∑otγ\PYGZus{}vec}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{n}{new\PYGZus{}A} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{new\PYGZus{}A}\PYG{p}{,} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{c}{\PYGZsh{}dummy renorm}
+    \PYG{n}{new\PYGZus{}a} \PYG{o}{=} \PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{./}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n+nb}{γ}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{dims}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)))[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]}
+    \PYG{n}{new\PYGZus{}a} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{new\PYGZus{}a}\PYG{p}{)} \PYG{c}{\PYGZsh{}dummy renorm}
+
+    \PYG{n}{obs\PYGZus{}mask} \PYG{o}{=} \PYG{o}{.!}\PYG{n}{nan\PYGZus{}mask}
+    \PYG{n}{obs\PYGZus{}collection} \PYG{o}{=} \PYG{n}{observations}\PYG{p}{[}\PYG{n}{obs\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]}
+
+    \PYG{n}{B} \PYG{o}{=} \PYG{n}{Categorical}\PYG{p}{[]}
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{d}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+        \PYG{n}{γ\PYGZus{}d} \PYG{o}{=} \PYG{n+nb}{γ}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{B}\PYG{p}{,} \PYG{n}{t\PYGZus{}categorical\PYGZus{}mle}\PYG{p}{(}\PYG{n}{Categorical}\PYG{p}{,} \PYG{n}{d}\PYG{o}{.}\PYG{n}{support}\PYG{p}{[}\PYG{k}{end}\PYG{p}{],} \PYG{n}{obs\PYGZus{}collection}\PYG{p}{,} \PYG{n}{γ\PYGZus{}d}\PYG{p}{[}\PYG{n}{obs\PYGZus{}mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]]))}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{typeof}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{)(}\PYG{n}{new\PYGZus{}a}\PYG{p}{,} \PYG{n}{new\PYGZus{}A}\PYG{p}{,} \PYG{n}{B}\PYG{p}{),} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{)}
+\PYG{k}{end}
+                \PYG{k}{function} \PYG{n}{bw\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{observations}\PYG{p}{)}
+                    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{),} \PYG{n}{size}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{)}\PYG{o}{...}\PYG{p}{)}
+                    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{d} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{)}
+                        \PYG{n}{lls}\PYG{p}{[}\PYG{n}{d}\PYG{p}{,}\PYG{o}{:}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{=} \PYG{n}{logpdf}\PYG{o}{.}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{d}\PYG{p}{],} \PYG{n}{observations}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{lls}
+                \PYG{k}{end}
+                \PYG{c}{\PYGZsh{}Multisequence competent log implementations of forward and backwards algos}
+                \PYG{k}{function} \PYG{n}{messages\PYGZus{}forwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{init\PYGZus{}distn}\PYG{p}{,} \PYG{n}{trans\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+                    \PYG{n}{log\PYGZus{}alphas} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{))}
+                    \PYG{n}{log\PYGZus{}trans\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{trans\PYGZus{}matrix}\PYG{p}{)}
+                    \PYG{n}{log\PYGZus{}alphas}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{init\PYGZus{}distn}\PYG{p}{)} \PYG{o}{.+} \PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]}
+                    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{)[}\PYG{l+m+mi}{3}\PYG{p}{]}
+                        \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{t} \PYG{k+kp}{in} \PYG{l+m+mi}{2}\PYG{o}{:}\PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{],} \PYG{n}{j} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                            \PYG{n}{log\PYGZus{}alphas}\PYG{p}{[}\PYG{n}{j}\PYG{p}{,}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}\PYG{o}{=}\PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{log\PYGZus{}alphas}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{t}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]} \PYG{o}{.+} \PYG{n}{log\PYGZus{}trans\PYGZus{}matrix}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{j}\PYG{p}{])} \PYG{o}{+} \PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{[}\PYG{n}{j}\PYG{p}{,}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]}
+                        \PYG{k}{end}   
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{log\PYGZus{}alphas}
+                \PYG{k}{end}
+
+                \PYG{k}{function} \PYG{n}{messages\PYGZus{}backwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{trans\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{,} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{)}
+                    \PYG{n}{log\PYGZus{}betas} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{))}
+                    \PYG{n}{log\PYGZus{}trans\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{log}\PYG{o}{.}\PYG{p}{(}\PYG{n}{trans\PYGZus{}matrix}\PYG{p}{)}
+                    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{o} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{)[}\PYG{l+m+mi}{3}\PYG{p}{]}
+                        \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{t} \PYG{k+kp}{in} \PYG{n}{obs\PYGZus{}lengths}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{1}
+                            \PYG{n}{tmp} \PYG{o}{=} \PYG{n}{view}\PYG{p}{(}\PYG{n}{log\PYGZus{}betas}\PYG{p}{,} \PYG{o}{:}\PYG{p}{,} \PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{o}\PYG{p}{)} \PYG{o}{.+} \PYG{n}{view}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{,} \PYG{o}{:}\PYG{p}{,} \PYG{n}{t}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{o}\PYG{p}{)}
+                            \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{log\PYGZus{}likelihoods}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                                \PYG{n}{log\PYGZus{}betas}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{t}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{view}\PYG{p}{(}\PYG{n}{log\PYGZus{}trans\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,}\PYG{o}{:}\PYG{p}{)} \PYG{o}{.+} \PYG{n}{tmp}\PYG{p}{)}
+                            \PYG{k}{end}
+                        \PYG{k}{end}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{log\PYGZus{}betas}
+                \PYG{k}{end}
+                \PYG{c}{\PYGZsh{}subfunc derived from Distributions.jl categorical.jl fit\PYGZus{}mle, threaded}
+                \PYG{k}{function} \PYG{n}{t\PYGZus{}categorical\PYGZus{}mle}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{},} \PYG{n}{k}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{},} \PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{n}{F}\PYG{p}{\PYGZcb{})} \PYG{n}{where} \PYG{n}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer} \PYG{n}{where} \PYG{n}{F}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}
+                    \PYG{n}{Categorical}\PYG{p}{(}\PYG{n}{t\PYGZus{}pnormalize!}\PYG{p}{(}\PYG{n}{t\PYGZus{}add\PYGZus{}categorical\PYGZus{}counts!}\PYG{p}{(}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{k}\PYG{p}{),} \PYG{n}{x}\PYG{p}{,} \PYG{n}{w}\PYG{p}{)))}
+                \PYG{k}{end}
+
+                \PYG{n}{t\PYGZus{}pnormalize!}\PYG{p}{(}\PYG{n}{v}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{)} \PYG{o}{=} \PYG{p}{(}\PYG{n}{v} \PYG{o}{./=} \PYG{n}{sum}\PYG{p}{(}\PYG{n}{v}\PYG{p}{);} \PYG{n}{v}\PYG{p}{)}
+
+                \PYG{k}{function} \PYG{n}{t\PYGZus{}add\PYGZus{}categorical\PYGZus{}counts!}\PYG{p}{(}\PYG{n}{h}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{F}\PYG{p}{\PYGZcb{},} \PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{},} \PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{n}{F}\PYG{p}{\PYGZcb{})} \PYG{n}{where} \PYG{n}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer} \PYG{n}{where} \PYG{n}{F}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}
+                    \PYG{n}{n} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+                    \PYG{k}{if} \PYG{n}{n} \PYG{o}{!=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{w}\PYG{p}{)}
+                        \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DimensionMismatch}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Inconsistent array lengths.\PYGZdq{}}\PYG{p}{))}
+                    \PYG{k}{end}
+                    \PYG{n}{hlock} \PYG{o}{=} \PYG{k+kt}{ReentrantLock}\PYG{p}{()}
+                    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{n}{i}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{n}
+                        \PYG{n+nd}{@inbounds} \PYG{n}{xi} \PYG{o}{=} \PYG{n}{x}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+                        \PYG{n+nd}{@inbounds} \PYG{n}{wi} \PYG{o}{=} \PYG{n}{w}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+                        \PYG{n}{lock}\PYG{p}{(}\PYG{n}{hlock}\PYG{p}{)}
+                        \PYG{n}{h}\PYG{p}{[}\PYG{n}{xi}\PYG{p}{]} \PYG{o}{+=} \PYG{n}{wi}   \PYG{c}{\PYGZsh{} cannot use @inbounds, as no guarantee that x[i] is in bound}
+                        \PYG{n}{unlock}\PYG{p}{(}\PYG{n}{hlock}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{h}
+                \PYG{k}{end}
+\end{Verbatim}

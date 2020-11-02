@@ -1,0 +1,92 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{function} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}fasta}\PYG{p}{(}\PYG{n}{path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,}\PYG{n}{line\PYGZus{}length}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{80}\PYG{p}{)}
+	\PYG{n}{header}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}\PYGZgt{}CM002885.2.1 BioBackgroundModels Synthetic chromosome for tests}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}
+	\PYG{n}{write}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,} \PYG{n}{header}\PYG{p}{,} \PYG{n}{format\PYGZus{}lines}\PYG{p}{(}\PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{(),}\PYG{n}{line\PYGZus{}length}\PYG{p}{))}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}index}\PYG{p}{(}\PYG{n}{path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{)}
+	\PYG{n}{write}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}CM002885.2.1	1000	5	80	81}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}position}\PYG{p}{(}\PYG{n}{path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{)}
+	\PYG{n}{write}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}\PYGZgt{}1 start 501 end 641 smt\PYGZus{}pos 111 smt\PYGZus{}value 205.11821 fuzziness\PYGZus{}score 43.53698}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{()[}\PYG{l+m+mi}{501}\PYG{o}{:}\PYG{l+m+mi}{641}\PYG{p}{],}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{print\PYGZus{}synthetic\PYGZus{}gff}\PYG{p}{(}\PYG{n}{path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{)}
+\PYG{n}{gff\PYGZus{}txt} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}\PYGZsh{}\PYGZsh{}gff\PYGZhy{}version 3}
+\PYG{l+s}{\PYGZsh{}\PYGZsh{}sequence\PYGZhy{}region   1 1 1000}
+\PYG{l+s}{\PYGZsh{}!genome\PYGZhy{}build BGHMM Synthetic}
+\PYG{l+s}{\PYGZsh{}!genome\PYGZhy{}version Synth1.0}
+\PYG{l+s}{\PYGZsh{}!genome\PYGZhy{}date 2019\PYGZhy{}08}
+\PYG{l+s}{\PYGZsh{}!genome\PYGZhy{}build\PYGZhy{}accession NCBI:FAKE}
+\PYG{l+s}{\PYGZsh{}!genebuild\PYGZhy{}last\PYGZhy{}updated 2019\PYGZhy{}08}
+\PYG{l+s}{1	Ensembl	chromosome	1	1000	.	.	.	ID=chromosome:1;Alias=CM002885.2,NC\PYGZus{}000001.1}
+\PYG{l+s}{\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	gene	501	1000	.	\PYGZhy{}	.	ID=gene:ENSDARG00000000001;Name=fake01;biotype=protein\PYGZus{}coding;description=fake gene [Source:FAKESRC];gene\PYGZus{}id=ENSDARG00000000001;logic\PYGZus{}name=ensembl\PYGZus{}havana\PYGZus{}gene;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	mRNA	501	1000	.	\PYGZhy{}	.	ID=transcript:ENSDART00000000001;Parent=gene:ENSDARG00000000001;Name=fake01\PYGZhy{}203;biotype=protein\PYGZus{}coding;transcript\PYGZus{}id=ENSDART00000000001;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	three\PYGZus{}prime\PYGZus{}UTR	501	510	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	exon	501	570	.	+	.	Parent=transcript:ENSDART00000000001;Name=ENSDARE00000000001;constitutive=0;ensembl\PYGZus{}end\PYGZus{}phase=0;ensembl\PYGZus{}phase=0;exon\PYGZus{}id=ENSDARE00000000001;rank=5;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	CDS	511	570	.	+	0	ID=CDS:ENSDARP00000000001;Parent=transcript:ENSDART00000000001;protein\PYGZus{}id=ENSDARP00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	exon	601	660	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001;Name=ENSDARE00000000002;constitutive=0;ensembl\PYGZus{}end\PYGZus{}phase=0;ensembl\PYGZus{}phase=0;exon\PYGZus{}id=ENSDARE00000000002;rank=4;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	CDS	601	660	.	\PYGZhy{}	1	ID=CDS:ENSDARP00000000001;Parent=transcript:ENSDART00000000001;protein\PYGZus{}id=ENSDARP00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	exon	701	760	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001;Name=ENSDARE00000000003;constitutive=0;ensembl\PYGZus{}end\PYGZus{}phase=0;ensembl\PYGZus{}phase=0;exon\PYGZus{}id=ENSDARE00000000003;rank=3;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	CDS	701	760	.	\PYGZhy{}	0	ID=CDS:ENSDARP00000000001;Parent=transcript:ENSDART00000000001;protein\PYGZus{}id=ENSDARP00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	exon	801	860	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001;Name=ENSDARE00000000004;constitutive=0;ensembl\PYGZus{}end\PYGZus{}phase=0;ensembl\PYGZus{}phase=0;exon\PYGZus{}id=ENSDARE00000000004;rank=2;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	CDS	801	860	.	\PYGZhy{}	0	ID=CDS:ENSDARP00000000001;Parent=transcript:ENSDART00000000001;protein\PYGZus{}id=ENSDARP00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	exon	901	975	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001;Name=ENSDARE00000000005;constitutive=0;ensembl\PYGZus{}end\PYGZus{}phase=0;ensembl\PYGZus{}phase=0;exon\PYGZus{}id=ENSDARE00000000005;rank=1;version=1}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	CDS	901	960	.	\PYGZhy{}	1	ID=CDS:ENSDARP00000000001;Parent=transcript:ENSDART00000000001;protein\PYGZus{}id=ENSDARP00000000001}
+\PYG{l+s}{1	ensembl\PYGZus{}havana	five\PYGZus{}prime\PYGZus{}UTR	961	975	.	\PYGZhy{}	.	Parent=transcript:ENSDART00000000001}
+\PYG{l+s}{\PYGZsh{}\PYGZsh{}\PYGZsh{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}
+	\PYG{n}{write}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,}\PYG{n}{gff\PYGZus{}txt}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{generate\PYGZus{}synthetic\PYGZus{}seq}\PYG{p}{(}\PYG{n}{gene\PYGZus{}start}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{501}\PYG{p}{,} \PYG{n}{UTR3L}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{exon\PYGZus{}length}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{60}\PYG{p}{,} \PYG{n}{intron\PYGZus{}length}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{40}\PYG{p}{,} \PYG{n}{no\PYGZus{}exons}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{UTR5L}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{25}\PYG{p}{,} \PYG{n}{OAL}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{o}{=}\PYG{l+m+mi}{1000}\PYG{p}{,} \PYG{p}{(}\PYG{n}{iseq}\PYG{p}{,}\PYG{n}{pseq}\PYG{p}{,}\PYG{n}{eseq}\PYG{p}{)}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{String}\PYG{p}{,}\PYG{n}{String}\PYG{p}{\PYGZcb{}}\PYG{o}{=}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}AT\PYGZdq{}}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}CG\PYGZdq{}}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}CAT\PYGZdq{}}\PYG{p}{);} \PYG{n}{verbose}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+	\PYG{n+nd}{@assert} \PYG{n}{length}\PYG{p}{(}\PYG{n}{iseq}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{2}
+	\PYG{n+nd}{@assert} \PYG{n}{length}\PYG{p}{(}\PYG{n}{pseq}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{2}
+	\PYG{n+nd}{@assert} \PYG{n}{length}\PYG{p}{(}\PYG{n}{eseq}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{3}
+	\PYG{n+nd}{@assert} \PYG{n}{mod}\PYG{p}{(}\PYG{n}{gene\PYGZus{}start}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}
+	\PYG{n+nd}{@assert} \PYG{n}{mod}\PYG{p}{(}\PYG{n}{exon\PYGZus{}length}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}
+	\PYG{n+nd}{@assert} \PYG{n}{mod}\PYG{p}{(}\PYG{n}{intron\PYGZus{}length}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}
+	\PYG{n}{gene\PYGZus{}length}\PYG{o}{=}\PYG{n}{gene\PYGZus{}start}\PYG{o}{+}\PYG{n}{UTR3L}\PYG{o}{+}\PYG{p}{(}\PYG{n}{no\PYGZus{}exons}\PYG{o}{*}\PYG{n}{exon\PYGZus{}length}\PYG{p}{)}\PYG{o}{+}\PYG{p}{((}\PYG{n}{no\PYGZus{}exons}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{n}{intron\PYGZus{}length}\PYG{p}{)}\PYG{o}{+}\PYG{n}{UTR5L}
+	\PYG{n+nd}{@assert} \PYG{n}{gene\PYGZus{}length} \PYG{o}{\PYGZlt{}=}\PYG{n}{OAL}
+	\PYG{n}{seq}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}\PYGZdq{}}
+	\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{p}{((}\PYG{n}{gene\PYGZus{}start}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{)}
+		\PYG{n}{seq} \PYG{o}{*=} \PYG{n}{iseq}
+	\PYG{k}{end}
+	\PYG{n}{verbose} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Intergenic length }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+	\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{UTR3L} \PYG{o}{/} \PYG{l+m+mi}{2}
+		\PYG{n}{seq} \PYG{o}{*=} \PYG{n}{pseq}
+	\PYG{k}{end}
+	\PYG{n}{verbose} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Added 3\PYGZsq{}UTR... }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+	\PYG{k}{for} \PYG{n}{ex} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{no\PYGZus{}exons}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+		\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{p}{(}\PYG{n}{exon\PYGZus{}length}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}
+			\PYG{n}{seq}\PYG{o}{*=}\PYG{n}{eseq}
+		\PYG{k}{end}
+		\PYG{n}{ex} \PYG{o}{==} \PYG{l+m+mi}{1} \PYG{o}{?} \PYG{n}{ilength} \PYG{o}{=} \PYG{l+m+mi}{30} \PYG{o}{:} \PYG{n}{ilength} \PYG{o}{=} \PYG{l+m+mi}{40}
+		\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{p}{(}\PYG{n}{ilength}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}
+			\PYG{n}{seq}\PYG{o}{*=}\PYG{n}{pseq}
+		\PYG{k}{end}
+	\PYG{k}{end}
+	\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{p}{(}\PYG{n}{exon\PYGZus{}length}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}
+		\PYG{n}{seq}\PYG{o}{*=}\PYG{n}{eseq}
+	\PYG{k}{end}
+	\PYG{n}{verbose} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Added exons and introns... }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+	\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{UTR5L} \PYG{o}{/} \PYG{l+m+mi}{2}
+		\PYG{n}{seq} \PYG{o}{*=} \PYG{n}{pseq}
+	\PYG{k}{end}
+	\PYG{n}{verbose} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Added 5\PYGZsq{}UTR... }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+
+	\PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{p}{((}\PYG{n}{OAL}\PYG{o}{\PYGZhy{}}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}
+		\PYG{n}{seq}\PYG{o}{*=}\PYG{n}{iseq}
+	\PYG{k}{end}
+
+	\PYG{n}{verbose} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n+nd}{@info} \PYG{l+s}{\PYGZdq{}Generated synthetic genome sequence of length }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+
+	\PYG{k}{return} \PYG{n}{seq}
+\PYG{k}{end}
+
+  \PYG{k}{function} \PYG{n}{format\PYGZus{}lines}\PYG{p}{(}\PYG{n}{seq}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{line\PYGZus{}length}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+	\PYG{n}{a}\PYG{o}{=}\PYG{n}{join}\PYG{p}{((}\PYG{k+kt}{SubString}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{,}\PYG{n}{i}\PYG{p}{,}\PYG{n}{min}\PYG{p}{(}\PYG{n}{i}\PYG{o}{+}\PYG{n}{line\PYGZus{}length}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)))} \PYG{k}{for} \PYG{n}{i}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{line\PYGZus{}length}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)),}\PYG{l+s+sc}{\PYGZsq{}\PYGZbs{}n\PYGZsq{}}\PYG{p}{)}
+	\PYG{k}{return}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)}
+  \PYG{k}{end}
+\end{Verbatim}

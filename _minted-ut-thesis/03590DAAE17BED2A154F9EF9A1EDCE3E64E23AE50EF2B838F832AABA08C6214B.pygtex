@@ -1,0 +1,97 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}KMER ORDER/SEQUENCE INTEGER CODING UTILITIES}
+\PYG{c}{\PYGZsh{}higher order DNA alphabet}
+\PYG{n}{struct} \PYG{n}{CompoundAlphabet}
+  \PYG{n}{symbols}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
+  \PYG{n}{integers}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}}
+  \PYG{c}{\PYGZsh{}build a CompoundAlphabet for DNA of some order\PYGZus{}no}
+    \PYG{k}{function} \PYG{n}{CompoundAlphabet}\PYG{p}{(}\PYG{n}{alphabet}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{p}{,} \PYG{n}{order\PYGZus{}no}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+        \PYG{n}{symbols} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}()}
+        \PYG{n}{integers} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+    
+        \PYG{n}{tuples} \PYG{o}{=} \PYG{k+kt}{Array}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZcb{}}
+        \PYG{k}{if} \PYG{n}{order\PYGZus{}no} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+            \PYG{n}{tuples} \PYG{o}{=} \PYG{n}{collect}\PYG{p}{(}\PYG{n}{Iterators}\PYG{o}{.}\PYG{n}{product}\PYG{p}{([}\PYG{n}{alphabet} \PYG{k}{for} \PYG{n}{order} \PYG{k+kp}{in} \PYG{l+m+mi}{0}\PYG{o}{:}\PYG{n}{order\PYGZus{}no}\PYG{p}{]}\PYG{o}{...}\PYG{p}{))}
+        \PYG{k}{else} \PYG{c}{\PYGZsh{}0th order compound product of an alphabet is that alphabet}
+            \PYG{n}{tuples} \PYG{o}{=} \PYG{n}{collect}\PYG{p}{(}\PYG{n}{Iterators}\PYG{o}{.}\PYG{n}{product}\PYG{p}{(}\PYG{n}{alphabet}\PYG{p}{))}
+        \PYG{k}{end}
+    
+        \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{index} \PYG{k+kp}{in} \PYG{n}{eachindex}\PYG{p}{(}\PYG{n}{tuples}\PYG{p}{)}
+            \PYG{n}{tuple\PYGZus{}seq} \PYG{o}{=} \PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{n}{collect}\PYG{p}{(}\PYG{n}{tuples}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]))}
+            \PYG{n}{integers}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]} \PYG{o}{=} \PYG{n}{tuple\PYGZus{}seq}
+            \PYG{n}{symbols}\PYG{p}{[}\PYG{n}{tuple\PYGZus{}seq}\PYG{p}{]} \PYG{o}{=} \PYG{n}{index}
+        \PYG{k}{end}
+    
+        \PYG{n}{new}\PYG{p}{(}\PYG{n}{symbols}\PYG{p}{,}\PYG{n}{integers}\PYG{p}{)}
+    \PYG{k}{end}
+\PYG{k}{end}
+
+
+\PYG{n}{struct} \PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}
+    \PYG{n}{alphabet}\PYG{o}{::}\PYG{n}{CompoundAlphabet}
+    \PYG{n}{seq\PYGZus{}lengths}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{order\PYGZus{}kmers}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}}
+  \PYG{k}{end}
+  
+
+\PYG{k}{function} \PYG{n}{code\PYGZus{}job\PYGZus{}obs}\PYG{p}{(}\PYG{n}{job\PYGZus{}ids}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{},} \PYG{n}{obs\PYGZus{}sets}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{})}
+    \PYG{n}{code\PYGZus{}jobs}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+    \PYG{k}{for} \PYG{n}{id} \PYG{k+kp}{in} \PYG{n}{job\PYGZus{}ids} \PYG{c}{\PYGZsh{}assemble a vector of observation encoding jobs}
+        \PYG{n}{code\PYGZus{}job}\PYG{o}{=}\PYG{p}{(}\PYG{n}{id}\PYG{o}{.}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{id}\PYG{o}{.}\PYG{n}{order}\PYG{p}{)}
+        \PYG{o}{!}\PYG{p}{(}\PYG{n}{code\PYGZus{}job} \PYG{k+kp}{in} \PYG{n}{code\PYGZus{}jobs}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{push!}\PYG{p}{(}\PYG{n}{code\PYGZus{}jobs}\PYG{p}{,} \PYG{n}{code\PYGZus{}job}\PYG{p}{)}
+    \PYG{k}{end}
+
+    \PYG{n}{code\PYGZus{}dict} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{},} \PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZcb{}()}
+    \PYG{n+nd}{@showprogress} \PYG{l+m+mi}{1} \PYG{l+s}{\PYGZdq{}Encoding observations...\PYGZdq{}} \PYG{k}{for} \PYG{p}{(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{order}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{code\PYGZus{}jobs} \PYG{c}{\PYGZsh{}build the appropriate sample sets once}
+        \PYG{n}{order\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{obs\PYGZus{}sets}\PYG{p}{[}\PYG{n}{obs\PYGZus{}id}\PYG{p}{],}\PYG{n}{order}\PYG{p}{)} \PYG{c}{\PYGZsh{}get the kmer sequences at the appropriate order}
+        \PYG{n}{coded\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{order\PYGZus{}seqs}\PYG{p}{,} \PYG{n}{sorted}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)} \PYG{c}{\PYGZsh{}numerically code the sequences in trainable format}
+        \PYG{n}{code\PYGZus{}dict}\PYG{p}{[(}\PYG{n}{obs\PYGZus{}id}\PYG{p}{,} \PYG{n}{order}\PYG{p}{)]} \PYG{o}{=} \PYG{n}{coded\PYGZus{}seqs}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{code\PYGZus{}dict}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}from a vector of LongSequences, get}
+\PYG{k}{function} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{seqs}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{},} \PYG{n}{order\PYGZus{}no}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{base\PYGZus{}tuple}\PYG{o}{::}\PYG{k+kt}{Tuple}\PYG{o}{=}\PYG{n}{ACGT}\PYG{p}{)}
+    \PYG{n}{kmer\PYGZus{}vecs} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+    \PYG{n}{length\PYGZus{}vec} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{window} \PYG{o}{=} \PYG{n}{order\PYGZus{}no} \PYG{o}{+} \PYG{l+m+mi}{1}
+
+    \PYG{k}{for} \PYG{n}{seq} \PYG{k+kp}{in} \PYG{n}{seqs}
+        \PYG{n}{kmer\PYGZus{}vec} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+        \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{kmer}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{collect}\PYG{p}{(}\PYG{n}{each}\PYG{p}{(}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{},}\PYG{n}{window}\PYG{p}{\PYGZcb{},}\PYG{n}{seq}\PYG{p}{))}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{kmer\PYGZus{}vec}\PYG{p}{,} \PYG{n}{kmer}\PYG{p}{)}
+        \PYG{k}{end}
+
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{kmer\PYGZus{}vecs}\PYG{p}{,} \PYG{n}{kmer\PYGZus{}vec}\PYG{p}{)}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{length\PYGZus{}vec}\PYG{p}{,} \PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{nordseqs} \PYG{o}{=} \PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}\PYG{p}{(}\PYG{n}{CompoundAlphabet}\PYG{p}{(}\PYG{n}{base\PYGZus{}tuple}\PYG{p}{,} \PYG{n}{order\PYGZus{}no}\PYG{p}{),} \PYG{n}{length\PYGZus{}vec}\PYG{p}{,} \PYG{n}{kmer\PYGZus{}vecs}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}convert tuple kmers to symbol codes}
+\PYG{k}{function} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{input}\PYG{o}{::}\PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}\PYG{p}{,} \PYG{n}{offsets}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{input}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{)];} \PYG{n}{sorted}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{symbol\PYGZus{}no}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{input}\PYG{o}{.}\PYG{n}{alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{symbol\PYGZus{}no} \PYG{o}{\PYGZlt{}=} \PYG{n}{typemax}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{)}
+        \PYG{n}{integer\PYGZus{}type} \PYG{o}{=} \PYG{k+kt}{UInt8}
+    \PYG{k}{elseif} \PYG{n}{typemax}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{symbol\PYGZus{}no} \PYG{o}{\PYGZlt{}} \PYG{n}{typemax}\PYG{p}{(}\PYG{k+kt}{UInt16}\PYG{p}{)}
+        \PYG{n}{integer\PYGZus{}type} \PYG{o}{=} \PYG{k+kt}{UInt16}
+    \PYG{k}{else}
+        \PYG{n}{integer\PYGZus{}type} \PYG{o}{=} \PYG{k+kt}{UInt32}
+    \PYG{k}{end}
+
+    \PYG{n}{alphabet} \PYG{o}{=} \PYG{n}{input}\PYG{o}{.}\PYG{n}{alphabet}
+    \PYG{n}{output} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{integer\PYGZus{}type}\PYG{p}{,}  \PYG{n}{length}\PYG{p}{(}\PYG{n}{input}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{),} \PYG{p}{(}\PYG{n}{maximum}\PYG{p}{([}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)} \PYG{k}{for} \PYG{n}{seq} \PYG{k+kp}{in} \PYG{n}{input}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{])}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{))} \PYG{c}{\PYGZsh{}leave 1 missing value after the longest sequence forindexing sequence length in CLHMM messages}
+    \PYG{n}{sorted} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{sort\PYGZus{}idxs} \PYG{o}{=} \PYG{n}{sortperm}\PYG{p}{(}\PYG{n}{input}\PYG{o}{.}\PYG{n}{seq\PYGZus{}lengths}\PYG{p}{,}\PYG{n}{rev}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{))}
+    \PYG{n}{sorted} \PYG{o}{?} \PYG{n}{input\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{input}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}\PYG{p}{[}\PYG{n}{sort\PYGZus{}idxs}\PYG{p}{]} \PYG{o}{:} \PYG{n}{input\PYGZus{}seqs} \PYG{o}{=} \PYG{n}{input}\PYG{o}{.}\PYG{n}{order\PYGZus{}kmers}
+
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{seq}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{input\PYGZus{}seqs}\PYG{p}{)}
+        \PYG{k}{for} \PYG{n}{t} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)}
+            \PYG{n}{curr\PYGZus{}kmer} \PYG{o}{=} \PYG{n}{seq}\PYG{p}{[}\PYG{n}{t}\PYG{p}{]}
+            \PYG{n}{curr\PYGZus{}code} \PYG{o}{=} \PYG{n}{alphabet}\PYG{o}{.}\PYG{n}{symbols}\PYG{p}{[}\PYG{n}{curr\PYGZus{}kmer}\PYG{p}{]}
+            \PYG{n}{output}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,}\PYG{n}{t}\PYG{o}{+}\PYG{n}{offsets}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]]}\PYG{o}{=}\PYG{n}{curr\PYGZus{}code}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{output}
+\PYG{k}{end}
+\end{Verbatim}

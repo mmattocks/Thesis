@@ -1,0 +1,113 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{mutable} \PYG{n}{struct} \PYG{n}{Permute\PYGZus{}Tuner}
+    \PYG{n}{inst}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Instruct}
+    \PYG{n}{velocities}\PYG{o}{::}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{successes}\PYG{o}{::}\PYG{k+kt}{BitMatrix} \PYG{c}{\PYGZsh{}(memoryxfunc)}
+    \PYG{n}{tabular\PYGZus{}display}\PYG{o}{::}\PYG{n}{DataFrame}
+    \PYG{n}{time\PYGZus{}history}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
+    \PYG{n}{override}\PYG{o}{::}\PYG{k+kt}{Bool}
+\PYG{k}{end}
+
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    Permute\PYGZus{}Tuner(instruction)}
+
+\PYG{l+s}{Generate a Permute\PYGZus{}Tuner for the given instruction.}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{function} \PYG{n}{Permute\PYGZus{}Tuner}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Instruct}\PYG{p}{)}
+    \PYG{n}{nfuncs}\PYG{o}{=}\PYG{n}{length}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{)}
+    \PYG{n}{funcnames}\PYG{o}{=}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{\PYGZcb{}()}
+    \PYG{n}{vels}\PYG{o}{=}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{TUNING\PYGZus{}MEMORY}\PYG{o}{*}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{func\PYGZus{}limit}\PYG{p}{,}\PYG{n}{nfuncs}\PYG{p}{)}
+    \PYG{n}{succs}\PYG{o}{=}\PYG{n}{trues}\PYG{p}{(}\PYG{n}{TUNING\PYGZus{}MEMORY}\PYG{o}{*}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{func\PYGZus{}limit}\PYG{p}{,}\PYG{n}{nfuncs}\PYG{p}{)}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{idx}\PYG{p}{,}\PYG{n}{func}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{)}
+        \PYG{n}{length}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{n}{idx}\PYG{p}{])}\PYG{o}{\PYGZgt{}}\PYG{l+m+mi}{0} \PYG{o}{?} \PYG{p}{(}\PYG{n}{kwstr}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}(+}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{n}{idx}\PYG{p}{]))}\PYG{l+s}{kwa)\PYGZdq{}}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{kwstr}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{funcnames}\PYG{p}{,} \PYG{n}{string}\PYG{p}{(}\PYG{n}{nameof}\PYG{p}{(}\PYG{n}{func}\PYG{p}{),}\PYG{n}{kwstr}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{n}{tabular\PYGZus{}display}\PYG{o}{=}\PYG{n}{DataFrame}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Function\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{funcnames}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}Succeed\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{n}{nfuncs}\PYG{p}{),} \PYG{l+s}{\PYGZdq{}Fail\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int64}\PYG{p}{,} \PYG{n}{nfuncs}\PYG{p}{),}\PYG{l+s}{\PYGZdq{}Velocity\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{nfuncs}\PYG{p}{),} \PYG{l+s}{\PYGZdq{}Weights\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{n}{instruction}\PYG{o}{.}\PYG{n}{weights}\PYG{p}{)}
+
+    \PYG{n}{instruction}\PYG{o}{.}\PYG{n}{override\PYGZus{}time}\PYG{o}{\PYGZgt{}}\PYG{l+m+mf}{0.} \PYG{o}{?} \PYG{p}{(}\PYG{n}{override}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{override}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{Permute\PYGZus{}Tuner}\PYG{p}{(}\PYG{n}{instruction}\PYG{p}{,}\PYG{n}{vels}\PYG{p}{,}\PYG{n}{succs}\PYG{p}{,}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{,}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{CONVERGENCE\PYGZus{}MEMORY}\PYG{p}{),}\PYG{n}{override}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    tune\PYGZus{}weights!(tuner, call\PYGZus{}report)}
+
+\PYG{l+s}{Given a call\PYGZus{}report from permute\PYGZus{}IPM(), adjust tuner\PYGZsq{}s Permute\PYGZus{}Instruct weights for function success rate and likelihood surface velocity.}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{function} \PYG{n}{tune\PYGZus{}weights!}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Tuner}\PYG{p}{,} \PYG{n}{call\PYGZus{}report}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Int64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{})}
+    \PYG{k}{for} \PYG{n}{call} \PYG{k+kp}{in} \PYG{n}{call\PYGZus{}report}
+        \PYG{n}{funcidx}\PYG{p}{,}\PYG{n}{time}\PYG{p}{,}\PYG{n}{distance}\PYG{o}{=}\PYG{n}{call}
+        \PYG{n}{distance!}\PYG{o}{==\PYGZhy{}}\PYG{n+nb}{Inf} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{velocities}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{]}\PYG{o}{=}\PYG{n}{update\PYGZus{}velocity!}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{velocities}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{],}\PYG{n}{time}\PYG{p}{,}\PYG{n}{distance}\PYG{p}{))} \PYG{c}{\PYGZsh{}do not push velocity to array if it has \PYGZhy{}Inf probability (usu no new model found)}
+        \PYG{k}{if} \PYG{n}{call}\PYG{o}{===}\PYG{n}{call\PYGZus{}report}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}
+            \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{]}\PYG{o}{=}\PYG{n}{update\PYGZus{}sucvec!}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{],}\PYG{k+kc}{true}\PYG{p}{)}
+            \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Succeed\PYGZdq{}}\PYG{p}{]}\PYG{o}{+=}\PYG{l+m+mi}{1}
+        \PYG{k}{else}
+            \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{]}\PYG{o}{=}\PYG{n}{update\PYGZus{}sucvec!}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{funcidx}\PYG{p}{],}\PYG{k+kc}{false}\PYG{p}{)}
+            \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{[}\PYG{n}{funcidx}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Fail\PYGZdq{}}\PYG{p}{]}\PYG{o}{+=}\PYG{l+m+mi}{1} 
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{override} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{mean}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{time\PYGZus{}history}\PYG{p}{)}\PYG{o}{\PYGZgt{}}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{override\PYGZus{}time} \PYG{o}{?} \PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{weights}\PYG{o}{=}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{override\PYGZus{}weights}\PYG{p}{;} \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Weights\PYGZdq{}}\PYG{p}{]}\PYG{o}{=}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{override\PYGZus{}weights}\PYG{p}{)} \PYG{o}{:}
+        \PYG{n}{update\PYGZus{}weights!}\PYG{p}{(}\PYG{n}{tuner}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{update\PYGZus{}velocity!}\PYG{p}{(}\PYG{n}{velvec}\PYG{p}{,}\PYG{n}{time}\PYG{p}{,}\PYG{n}{distance}\PYG{p}{)}
+    \PYG{n}{popfirst!}\PYG{p}{(}\PYG{n}{velvec}\PYG{p}{)} \PYG{c}{\PYGZsh{}remove first value}
+    \PYG{n}{vel} \PYG{o}{=} \PYG{n}{distance} \PYG{o}{\PYGZhy{}} \PYG{n}{log}\PYG{p}{(}\PYG{n}{time}\PYG{p}{)}
+    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{velvec}\PYG{p}{,}\PYG{n}{distance}\PYG{o}{\PYGZhy{}}\PYG{n}{log}\PYG{p}{(}\PYG{n}{time}\PYG{p}{))}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{update\PYGZus{}sucvec!}\PYG{p}{(}\PYG{n}{sucvec}\PYG{p}{,} \PYG{n}{bool}\PYG{p}{)}
+    \PYG{n}{popfirst!}\PYG{p}{(}\PYG{n}{sucvec}\PYG{p}{)}
+    \PYG{n}{push!}\PYG{p}{(}\PYG{n}{sucvec}\PYG{p}{,} \PYG{n}{bool}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{update\PYGZus{}weights!}\PYG{p}{(}\PYG{n}{t}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Tuner}\PYG{p}{)}
+    \PYG{n}{mvels}\PYG{o}{=}\PYG{p}{[}\PYG{n}{mean}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{velocities}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{n}\PYG{p}{])} \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{)]}
+    \PYG{n}{t}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Velocity\PYGZdq{}}\PYG{p}{]}\PYG{o}{=}\PYG{n}{copy}\PYG{p}{(}\PYG{n}{mvels}\PYG{p}{)}
+
+    \PYG{n}{any}\PYG{p}{(}\PYG{n}{i}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{i}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{mvels}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{mvels}\PYG{o}{.+=\PYGZhy{}}\PYG{n}{minimum}\PYG{p}{(}\PYG{n}{mvels}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mf}{1.}\PYG{p}{)} \PYG{c}{\PYGZsh{}to calculate weights, scale negative values into \PYGZgt{}1.}
+    \PYG{n}{pvec}\PYG{o}{=}\PYG{p}{[}\PYG{n}{mvels}\PYG{p}{[}\PYG{n}{n}\PYG{p}{]}\PYG{o}{*}\PYG{p}{(}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{n}\PYG{p}{])}\PYG{o}{/}\PYG{n}{length}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{successes}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{n}{n}\PYG{p}{]))} \PYG{k}{for} \PYG{n}{n} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{funcs}\PYG{p}{)]}
+    \PYG{n}{pvec}\PYG{o}{./=}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{)}
+    \PYG{p}{(}\PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZlt{}}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{)} \PYG{o}{||} \PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZgt{}}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{clamp\PYGZus{}pvec!}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{,}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{,}\PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{)}
+
+    \PYG{n+nd}{@assert} \PYG{n}{isprobvec}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{)}
+    \PYG{n}{t}\PYG{o}{.}\PYG{n}{inst}\PYG{o}{.}\PYG{n}{weights}\PYG{o}{=}\PYG{n}{pvec}\PYG{p}{;} \PYG{n}{t}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}Weights\PYGZdq{}}\PYG{p}{]}\PYG{o}{=}\PYG{n}{pvec}
+\PYG{k}{end}
+
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s}{    clamp\PYGZus{}pvec(pvec, tuner)}
+
+\PYG{l+s}{Clamp the values of a probability vector between the minimums and maximums provided by a Permute\PYGZus{}Tuner.}
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+            \PYG{k}{function} \PYG{n}{clamp\PYGZus{}pvec!}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{,} \PYG{n}{min\PYGZus{}clmps}\PYG{p}{,} \PYG{n}{max\PYGZus{}clmps}\PYG{p}{)}
+                \PYG{c}{\PYGZsh{}logic\PYGZhy{} first accumulate on low values, then distribute excess from high values}
+                \PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZlt{}}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{n}{low\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{low\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+                \PYG{k}{while} \PYG{o}{!}\PYG{n}{low\PYGZus{}clamped}
+                    \PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{o}{=}\PYG{n}{pvec}\PYG{o}{.\PYGZlt{}}\PYG{n}{min\PYGZus{}clmps}
+                    \PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{o}{=}\PYG{n}{pvec}\PYG{o}{.\PYGZgt{}}\PYG{n}{min\PYGZus{}clmps}
+
+                    \PYG{n}{depletion}\PYG{o}{=}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{]}\PYG{o}{.\PYGZhy{}}\PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{])}
+                    \PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{]}\PYG{o}{.=}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{]}
+                    \PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{]}\PYG{o}{.\PYGZhy{}=}\PYG{n}{depletion}\PYG{o}{/}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{)}
+
+                    \PYG{o}{!}\PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZlt{}}\PYG{n}{min\PYGZus{}clmps}\PYG{p}{)}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{low\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+                \PYG{k}{end}
+
+                \PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZgt{}}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{)} \PYG{o}{?} \PYG{p}{(}\PYG{n}{high\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{high\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+                \PYG{k}{while} \PYG{o}{!}\PYG{n}{high\PYGZus{}clamped}
+                    \PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{o}{=}\PYG{n}{pvec}\PYG{o}{.\PYGZgt{}}\PYG{n}{max\PYGZus{}clmps}
+                    \PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{o}{=}\PYG{n}{pvec}\PYG{o}{.\PYGZlt{}}\PYG{n}{max\PYGZus{}clmps}
+
+                    \PYG{n}{depletion}\PYG{o}{=}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{]}\PYG{o}{.\PYGZhy{}}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{])}
+                    \PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{]}\PYG{o}{.=}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}deplete}\PYG{p}{]}
+                    \PYG{n}{pvec}\PYG{p}{[}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{]}\PYG{o}{.+=}\PYG{n}{depletion}\PYG{o}{/}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{vals\PYGZus{}to\PYGZus{}accumulate}\PYG{p}{)}
+
+                    \PYG{o}{!}\PYG{n}{any}\PYG{p}{(}\PYG{n}{pvec}\PYG{o}{.\PYGZgt{}}\PYG{n}{max\PYGZus{}clmps}\PYG{p}{)}\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{p}{(}\PYG{n}{high\PYGZus{}clamped}\PYG{o}{=}\PYG{k+kc}{true}\PYG{p}{)}
+                \PYG{k}{end}
+            \PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{Base}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{,} \PYG{n}{tuner}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Tuner}\PYG{p}{;} \PYG{n}{progress}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,} \PYG{n}{tuner}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{,} \PYG{n}{rowlabel}\PYG{o}{=:}\PYG{n+nb}{I}\PYG{p}{,} \PYG{n}{summary}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{n}{progress} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{return}\PYG{p}{(}\PYG{n}{size}\PYG{p}{(}\PYG{n}{tuner}\PYG{o}{.}\PYG{n}{tabular\PYGZus{}display}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{4}\PYG{p}{)}
+\PYG{k}{end}
+\end{Verbatim}

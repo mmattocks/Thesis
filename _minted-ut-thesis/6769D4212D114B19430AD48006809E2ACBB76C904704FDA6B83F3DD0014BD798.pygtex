@@ -1,0 +1,257 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}SAMPLING FUNCTIONS\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c}{\PYGZsh{}function for a Distributed worker to produce a set of samples of given parameters from genomic sequences}
+\PYG{k}{function} \PYG{n}{get\PYGZus{}sample\PYGZus{}set}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}jobs}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{completed\PYGZus{}sample\PYGZus{}jobs}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{,} \PYG{n}{progress\PYGZus{}updates}\PYG{o}{::}\PYG{n}{RemoteChannel}\PYG{p}{)}
+    \PYG{k}{while} \PYG{n}{isready}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{)}
+        \PYG{n}{genome\PYGZus{}path}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{p}{,} \PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{,} \PYG{n}{deterministic} \PYG{o}{=} \PYG{n}{take!}\PYG{p}{(}\PYG{n}{input\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{)}
+
+        \PYG{n}{stranded}\PYG{o}{::}\PYG{k+kt}{Bool} \PYG{o}{=} \PYG{n}{get\PYGZus{}strand\PYGZus{}dict}\PYG{p}{()[}\PYG{n}{partitionid}\PYG{p}{]}
+        \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{LongSequence}\PYG{p}{\PYGZcb{}} \PYG{o}{=} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{(}\PYG{n}{genome\PYGZus{}path}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index\PYGZus{}path}\PYG{p}{)}
+
+        \PYG{n}{sample\PYGZus{}df} \PYG{o}{=} \PYG{n}{DataFrame}\PYG{p}{(}\PYG{n}{SampleScaffold}\PYG{o}{=}\PYG{n}{String}\PYG{p}{[],}\PYG{n}{SampleStart}\PYG{o}{=}\PYG{k+kt}{Integer}\PYG{p}{[],}\PYG{n}{SampleEnd}\PYG{o}{=}\PYG{k+kt}{Integer}\PYG{p}{[],}\PYG{n}{SampleSequence}\PYG{o}{=}\PYG{n}{LongSequence}\PYG{p}{[],}\PYG{n}{Strand}\PYG{o}{=}\PYG{k+kt}{Char}\PYG{p}{[])}
+        \PYG{n}{metacoordinate\PYGZus{}bitarray} \PYG{o}{=} \PYG{n}{trues}\PYG{p}{(}\PYG{n}{partition\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{k}{end}\PYG{p}{])}
+        \PYG{n}{sample\PYGZus{}set\PYGZus{}counter} \PYG{o}{=} \PYG{l+m+mi}{0}
+
+        \PYG{k}{while} \PYG{n}{sample\PYGZus{}set\PYGZus{}counter} \PYG{o}{\PYGZlt{}} \PYG{n}{sample\PYGZus{}set\PYGZus{}length} \PYG{c}{\PYGZsh{}while we don\PYGZsq{}t yet have enough sample sequence}
+            \PYG{n}{sample\PYGZus{}scaffold}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{sample\PYGZus{}Start}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}End}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}metaStart}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}metaEnd}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}sequence}\PYG{o}{::}\PYG{n}{LongSequence}\PYG{p}{,} \PYG{n}{strand}\PYG{o}{::}\PYG{k+kt}{Char} \PYG{o}{=} \PYG{n}{get\PYGZus{}sample}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{,}  \PYG{n}{partition\PYGZus{}df}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}sequence\PYGZus{}record\PYGZus{}dict}\PYG{p}{;} \PYG{n}{stranded}\PYG{o}{=}\PYG{n}{stranded}\PYG{p}{,} \PYG{n}{deterministic}\PYG{o}{=}\PYG{n}{deterministic}\PYG{p}{)}
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{sample\PYGZus{}df}\PYG{p}{,[}\PYG{n}{sample\PYGZus{}scaffold}\PYG{p}{,} \PYG{n}{sample\PYGZus{}Start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}End}\PYG{p}{,} \PYG{n}{sample\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{strand}\PYG{p}{])} \PYG{c}{\PYGZsh{}push the sample to the df}
+            \PYG{n}{sample\PYGZus{}length} \PYG{o}{=} \PYG{n}{sample\PYGZus{}End} \PYG{o}{\PYGZhy{}} \PYG{n}{sample\PYGZus{}Start} \PYG{o}{+} \PYG{l+m+mi}{1}
+            \PYG{n}{sample\PYGZus{}set\PYGZus{}counter} \PYG{o}{+=} \PYG{n}{sample\PYGZus{}length} \PYG{c}{\PYGZsh{}increase the counter by the length of the sampled sequence}
+            \PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{[}\PYG{n}{sample\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{sample\PYGZus{}metaEnd}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[}\PYG{k+kc}{false} \PYG{k}{for} \PYG{n}{base} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{sample\PYGZus{}length}\PYG{p}{]} \PYG{c}{\PYGZsh{}mark these residues as sampled}
+            \PYG{n}{put!}\PYG{p}{(}\PYG{n}{progress\PYGZus{}updates}\PYG{p}{,} \PYG{p}{(}\PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{min}\PYG{p}{(}\PYG{n}{sample\PYGZus{}set\PYGZus{}counter}\PYG{p}{,}\PYG{n}{sample\PYGZus{}set\PYGZus{}length}\PYG{p}{)))}
+        \PYG{k}{end}
+        \PYG{n}{put!}\PYG{p}{(}\PYG{n}{completed\PYGZus{}sample\PYGZus{}jobs}\PYG{p}{,(}\PYG{n}{partitionid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}df}\PYG{p}{))}
+    \PYG{k}{end}
+\PYG{k}{end}
+                \PYG{c}{\PYGZsh{}get\PYGZus{}sample\PYGZus{}set() SUBFUNCTIONS}
+                \PYG{c}{\PYGZsh{}function defining whether partitions respect stranding upon fetching sequence (ie is the sequence fetched in the feature strand orientation, or are we agnostic about the strand we sample?)}
+                \PYG{k}{function} \PYG{n}{get\PYGZus{}strand\PYGZus{}dict}\PYG{p}{()}
+                    \PYG{k}{return} \PYG{k+kt}{Dict}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}exon\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{k+kc}{true}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}periexonic\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{k+kc}{true}\PYG{p}{,}\PYG{l+s}{\PYGZdq{}intergenic\PYGZdq{}}\PYG{o}{=\PYGZgt{}}\PYG{k+kc}{false}\PYG{p}{)}
+                \PYG{k}{end}
+                \PYG{c}{\PYGZsh{}function to obtain a dict of scaffold sequences from a FASTA reader}
+                \PYG{k}{function} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{(}\PYG{n}{genome\PYGZus{}fa}\PYG{p}{,} \PYG{n}{genome\PYGZus{}index}\PYG{p}{)}
+                    \PYG{n}{genome\PYGZus{}reader} \PYG{o}{=} \PYG{n}{open}\PYG{p}{(}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{Reader}\PYG{p}{,} \PYG{n}{genome\PYGZus{}fa}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{n}{genome\PYGZus{}index}\PYG{p}{)}
+                    \PYG{n}{seq\PYGZus{}dict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,} \PYG{n}{LongSequence}\PYG{p}{\PYGZcb{}} \PYG{o}{=} \PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{Record}\PYG{p}{\PYGZcb{}()}
+                    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{record} \PYG{k+kp}{in} \PYG{n}{genome\PYGZus{}reader}
+                        \PYG{n}{id} \PYG{o}{=} \PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{identifier}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)}
+                        \PYG{n}{seq\PYGZus{}dict}\PYG{p}{[}\PYG{n}{rectify\PYGZus{}identifier}\PYG{p}{(}\PYG{n}{id}\PYG{p}{)]}\PYG{o}{=}\PYG{n}{FASTA}\PYG{o}{.}\PYG{n}{sequence}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)}
+                    \PYG{k}{end}
+                    \PYG{n}{close}\PYG{p}{(}\PYG{n}{genome\PYGZus{}reader}\PYG{p}{)}
+                    \PYG{k}{return} \PYG{n}{seq\PYGZus{}dict}
+                \PYG{k}{end}
+
+                \PYG{c}{\PYGZsh{} function to convert scaffold ID from that observed by the masked .fna to the more legible one observed by the GRCz11 GFF3}
+                \PYG{k}{function} \PYG{n}{rectify\PYGZus{}identifier}\PYG{p}{(}\PYG{n}{scaffold\PYGZus{}id}\PYG{o}{::}\PYG{n}{String}\PYG{p}{)}
+                    \PYG{k}{if} \PYG{n}{length}\PYG{p}{(}\PYG{n}{scaffold\PYGZus{}id}\PYG{p}{)} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{4} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{scaffold\PYGZus{}id}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}CM00\PYGZdq{}} \PYG{c}{\PYGZsh{}marks chromosome scaffold}
+                        \PYG{n}{chr\PYGZus{}code} \PYG{o}{=} \PYG{n}{scaffold\PYGZus{}id}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{o}{:}\PYG{l+m+mi}{10}\PYG{p}{]}
+                        \PYG{n}{chr\PYGZus{}no} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{k+kt}{Int}\PYG{p}{((}\PYG{n}{parse}\PYG{p}{(}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{n}{chr\PYGZus{}code}\PYG{p}{))} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{2884.2}\PYG{p}{))}\PYG{l+s}{\PYGZdq{}}
+                        \PYG{k}{return} \PYG{n}{chr\PYGZus{}no}
+                    \PYG{k}{else}
+                        \PYG{k}{return} \PYG{n}{scaffold\PYGZus{}id}
+                    \PYG{k}{end}
+                \PYG{k}{end}
+
+                \PYG{c}{\PYGZsh{}function to produce a single sample from a metacoordinate set and the feature df}
+                \PYG{k}{function} \PYG{n}{get\PYGZus{}sample}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{o}{::}\PYG{k+kt}{BitArray}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,}  \PYG{n}{scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,}\PYG{n}{LongSequence}\PYG{p}{\PYGZcb{};} \PYG{n}{stranded}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{,} \PYG{n}{deterministic}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+                    \PYG{n}{proposal\PYGZus{}acceptance} \PYG{o}{=} \PYG{k+kc}{false}
+                    \PYG{n}{sample\PYGZus{}metaStart} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{sample\PYGZus{}metaEnd} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{sample\PYGZus{}Start} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{sample\PYGZus{}End} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{sample\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}(}\PYG{l+s}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)}
+                    \PYG{n}{sample\PYGZus{}scaffold} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}\PYGZdq{}}
+                    \PYG{n}{strand} \PYG{o}{=} \PYG{n+nb}{nothing}
+                    
+                    \PYG{k}{while} \PYG{n}{proposal\PYGZus{}acceptance} \PYG{o}{==} \PYG{k+kc}{false}
+                        \PYG{n}{available\PYGZus{}indices} \PYG{o}{=} \PYG{n}{findall}\PYG{p}{(}\PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{)} \PYG{c}{\PYGZsh{}find all unsampled indices}
+                        \PYG{n}{window} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}FAIL\PYGZdq{}}
+                        \PYG{n}{start\PYGZus{}index}\PYG{p}{,}\PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{feature\PYGZus{}length} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}
+                        \PYG{n}{strand} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}0\PYGZsq{}}
+                        \PYG{k}{while} \PYG{n}{window} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}FAIL\PYGZdq{}}
+                            \PYG{n}{start\PYGZus{}index} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{(}\PYG{n}{available\PYGZus{}indices}\PYG{p}{)} \PYG{c}{\PYGZsh{}randomly choose from the unsampled indices}
+                            \PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{strand} \PYG{o}{=} \PYG{n}{get\PYGZus{}feature\PYGZus{}params\PYGZus{}from\PYGZus{}metacoord}\PYG{p}{(}\PYG{n}{start\PYGZus{}index}\PYG{p}{,} \PYG{n}{partition\PYGZus{}df}\PYG{p}{,} \PYG{n}{stranded}\PYG{p}{)}
+                            \PYG{n}{feature\PYGZus{}length} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{)} \PYG{c}{\PYGZsh{}find the metaboundaries of the feature the index occurs in}
+                            \PYG{k}{if} \PYG{n}{feature\PYGZus{}length} \PYG{o}{\PYGZgt{}=} \PYG{n}{sample\PYGZus{}window\PYGZus{}min} \PYG{c}{\PYGZsh{}don\PYGZsq{}t bother finding windows on features smaller than min}
+                                \PYG{n}{window} \PYG{o}{=} \PYG{n}{determine\PYGZus{}sample\PYGZus{}window}\PYG{p}{(}\PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{start\PYGZus{}index}\PYG{p}{,} \PYG{n}{metacoordinate\PYGZus{}bitarray}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{p}{)} \PYG{c}{\PYGZsh{}get an appropriate sampling window around the selected index, given the feature boundaries and params}
+                            \PYG{k}{end}
+                        \PYG{k}{end}
+
+                        \PYG{n}{sample\PYGZus{}scaffoldid}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end} \PYG{o}{=} \PYG{n}{meta\PYGZus{}to\PYGZus{}feature\PYGZus{}coord}\PYG{p}{(}\PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],}\PYG{n}{partition\PYGZus{}df}\PYG{p}{)}
+
+                        \PYG{n}{proposal\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{fetch\PYGZus{}sequence}\PYG{p}{(}\PYG{n}{sample\PYGZus{}scaffoldid}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end}\PYG{p}{,} \PYG{n}{strand}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{n}{deterministic}\PYG{p}{)} \PYG{c}{\PYGZsh{}get the sequence associated with the sample window}
+
+                        \PYG{k}{if} \PYG{n}{mask\PYGZus{}check}\PYG{p}{(}\PYG{n}{proposal\PYGZus{}sequence}\PYG{p}{)}
+                            \PYG{n}{proposal\PYGZus{}acceptance} \PYG{o}{=} \PYG{k+kc}{true} \PYG{c}{\PYGZsh{}if the sequence passes the mask check, accept the proposed sample}
+                            \PYG{n}{sample\PYGZus{}scaffold} \PYG{o}{=} \PYG{n}{sample\PYGZus{}scaffoldid}
+                            \PYG{n}{sample\PYGZus{}Start} \PYG{o}{=} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}start}
+                            \PYG{n}{sample\PYGZus{}End} \PYG{o}{=} \PYG{n}{sample\PYGZus{}scaffold\PYGZus{}end}
+                            \PYG{n}{sample\PYGZus{}metaStart} \PYG{o}{=} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+                            \PYG{n}{sample\PYGZus{}metaEnd} \PYG{o}{=} \PYG{n}{window}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+                            \PYG{n}{sample\PYGZus{}sequence}\PYG{o}{=}\PYG{n}{proposal\PYGZus{}sequence}
+                        \PYG{k}{end}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{sample\PYGZus{}scaffold}\PYG{p}{,} \PYG{n}{sample\PYGZus{}Start}\PYG{p}{,} \PYG{n}{sample\PYGZus{}End}\PYG{p}{,} \PYG{n}{sample\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{sample\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{sample\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{strand}
+                \PYG{k}{end}
+                
+                \PYG{c}{\PYGZsh{}function to find a valid sampling window}
+                \PYG{k}{function} \PYG{n}{determine\PYGZus{}sample\PYGZus{}window}\PYG{p}{(}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{metacoord}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{metacoord\PYGZus{}bitarray}\PYG{o}{::}\PYG{k+kt}{BitArray}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+                    \PYG{n}{window\PYGZus{}start} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{window\PYGZus{}end} \PYG{o}{=} \PYG{l+m+mi}{0}
+                    \PYG{n}{feature\PYGZus{}size} \PYG{o}{=} \PYG{n}{feature\PYGZus{}metaEnd} \PYG{o}{\PYGZhy{}} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{+} \PYG{l+m+mi}{1}
+                    \PYG{n}{feature\PYGZus{}sampled} \PYG{o}{=} \PYG{n}{any}\PYG{p}{(}\PYG{o}{!}\PYG{n}{eval}\PYG{p}{,} \PYG{n}{metacoord\PYGZus{}bitarray}\PYG{p}{[}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{])}
+                    \PYG{c}{\PYGZsh{}attempt to construct the sample window by taking the whole feature}
+                    \PYG{k}{if} \PYG{o}{!}\PYG{n}{feature\PYGZus{}sampled} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{feature\PYGZus{}size} \PYG{o}{\PYGZlt{}} \PYG{n}{sample\PYGZus{}window\PYGZus{}max} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{feature\PYGZus{}size} \PYG{o}{\PYGZgt{}} \PYG{n}{sample\PYGZus{}window\PYGZus{}min}
+                        \PYG{n}{window\PYGZus{}start} \PYG{o}{=} \PYG{n}{feature\PYGZus{}metaStart}
+                        \PYG{n}{window\PYGZus{}end} \PYG{o}{=} \PYG{n}{feature\PYGZus{}metaEnd}
+                        \PYG{k}{return} \PYG{n}{window\PYGZus{}start}\PYG{p}{,} \PYG{n}{window\PYGZus{}end}
+                    \PYG{k}{else} \PYG{c}{\PYGZsh{}if this fails, build the biggest window we can from the sampling point, within the feature}
+                        \PYG{n}{featurepos} \PYG{o}{=} \PYG{n}{metacoord} \PYG{o}{\PYGZhy{}} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{+} \PYG{l+m+mi}{1}
+                        \PYG{n}{next\PYGZus{}sampled\PYGZus{}index} \PYG{o}{=} \PYG{n}{findnext}\PYG{p}{(}\PYG{o}{!}\PYG{n}{eval}\PYG{p}{,} \PYG{n}{metacoord\PYGZus{}bitarray}\PYG{p}{[}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{],} \PYG{n}{featurepos}\PYG{p}{)}
+                        \PYG{n}{prev\PYGZus{}sampled\PYGZus{}index} \PYG{o}{=} \PYG{n}{findprev}\PYG{p}{(}\PYG{o}{!}\PYG{n}{eval}\PYG{p}{,} \PYG{n}{metacoord\PYGZus{}bitarray}\PYG{p}{[}\PYG{n}{feature\PYGZus{}metaStart}\PYG{o}{:}\PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{],} \PYG{n}{featurepos}\PYG{p}{)}
+                        \PYG{n}{next\PYGZus{}sampled\PYGZus{}index} \PYG{o}{===} \PYG{n+nb}{nothing} \PYG{o}{?} \PYG{p}{(}\PYG{n}{window\PYGZus{}end} \PYG{o}{=} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{window\PYGZus{}end} \PYG{o}{=} \PYG{n}{next\PYGZus{}sampled\PYGZus{}index} \PYG{o}{+} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+                        \PYG{n}{prev\PYGZus{}sampled\PYGZus{}index} \PYG{o}{===} \PYG{n+nb}{nothing} \PYG{o}{?} \PYG{p}{(}\PYG{n}{window\PYGZus{}start} \PYG{o}{=} \PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{)} \PYG{o}{:} \PYG{p}{(}\PYG{n}{window\PYGZus{}start} \PYG{o}{=} \PYG{n}{prev\PYGZus{}sampled\PYGZus{}index} \PYG{o}{+} \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+                        \PYG{n}{windowsize} \PYG{o}{=} \PYG{n}{window\PYGZus{}end} \PYG{o}{\PYGZhy{}} \PYG{n}{window\PYGZus{}start} \PYG{o}{+} \PYG{l+m+mi}{1}
+                        \PYG{c}{\PYGZsh{}check to see if this window is bigger than the min, if not, return a failure code}
+                        \PYG{n}{windowsize} \PYG{o}{\PYGZlt{}} \PYG{n}{sample\PYGZus{}window\PYGZus{}min} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{k}{return} \PYG{l+s}{\PYGZdq{}FAIL\PYGZdq{}}
+                        \PYG{c}{\PYGZsh{}check to see if this window is bigger than the max, if so, trim it before returning, removing as evenly as possible around the metacoordinate}
+                        \PYG{k}{if} \PYG{n}{windowsize} \PYG{o}{\PYGZgt{}} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}
+                            \PYG{n}{bases\PYGZus{}to\PYGZus{}trim} \PYG{o}{=} \PYG{n}{windowsize} \PYG{o}{\PYGZhy{}} \PYG{n}{sample\PYGZus{}window\PYGZus{}max}
+                            \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{=} \PYG{n}{metacoord} \PYG{o}{\PYGZhy{}} \PYG{n}{window\PYGZus{}start} \PYG{o}{+} \PYG{l+m+mi}{1}
+                            \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{=} \PYG{n}{window\PYGZus{}end} \PYG{o}{\PYGZhy{}} \PYG{n}{metacoord} \PYG{o}{+} \PYG{l+m+mi}{1}
+                            \PYG{n}{trimmed}\PYG{o}{=}\PYG{l+m+mi}{0}
+                            \PYG{k}{while} \PYG{n}{trimmed} \PYG{o}{\PYGZlt{}} \PYG{n}{bases\PYGZus{}to\PYGZus{}trim}
+                                \PYG{k}{if} \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{\PYGZgt{}=} \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+                                    \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{\PYGZhy{}=} \PYG{l+m+mi}{1}
+                                \PYG{k}{elseif} \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{\PYGZgt{}} \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+                                    \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{\PYGZhy{}=} \PYG{l+m+mi}{1}
+                                \PYG{k}{end}
+                                \PYG{n}{trimmed} \PYG{o}{+=}\PYG{l+m+mi}{1}
+                            \PYG{k}{end} 
+                            \PYG{n}{window\PYGZus{}start} \PYG{o}{=} \PYG{n}{metacoord} \PYG{o}{\PYGZhy{}} \PYG{n}{clearance\PYGZus{}5P} \PYG{o}{+} \PYG{l+m+mi}{1}
+                            \PYG{n}{window\PYGZus{}end} \PYG{o}{=} \PYG{n}{metacoord} \PYG{o}{+} \PYG{n}{clearance\PYGZus{}3P} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}
+                        \PYG{k}{end}
+                        \PYG{k}{return} \PYG{n}{window\PYGZus{}start}\PYG{p}{,} \PYG{n}{window\PYGZus{}end}
+                    \PYG{k}{end}
+                \PYG{k}{end}
+
+
+                \PYG{c}{\PYGZsh{} function to check for repetitive stretches or degenerate bases in proposal sequence}
+                \PYG{k}{function} \PYG{n}{mask\PYGZus{}check}\PYG{p}{(}\PYG{n}{proposal\PYGZus{}sequence}\PYG{o}{::}\PYG{n}{LongSequence}\PYG{p}{)}
+                    \PYG{n}{proposal\PYGZus{}acceptance} \PYG{o}{=} \PYG{k+kc}{true}
+                    \PYG{k}{if} \PYG{n}{hasambiguity}\PYG{p}{(}\PYG{n}{proposal\PYGZus{}sequence}\PYG{p}{)} \PYG{o}{||} \PYG{n}{isrepetitive}\PYG{p}{(}\PYG{n}{proposal\PYGZus{}sequence}\PYG{p}{,} \PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{proposal\PYGZus{}sequence}\PYG{p}{)} \PYG{o}{÷} \PYG{l+m+mi}{10}\PYG{p}{))}
+                        \PYG{n}{proposal\PYGZus{}acceptance} \PYG{o}{=} \PYG{k+kc}{false}
+                    \PYG{k}{end}
+                    \PYG{k}{return} \PYG{n}{proposal\PYGZus{}acceptance}
+                \PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}SHARED SEQUENCE FETCHER\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c}{\PYGZsh{} function to get proposal sequence from dict of scaffold sequences, given coords and scaffold id}
+\PYG{k}{function} \PYG{n}{fetch\PYGZus{}sequence}\PYG{p}{(}\PYG{n}{scaffold\PYGZus{}id}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{String}\PYG{p}{,} \PYG{n}{LongSequence}\PYG{p}{\PYGZcb{},} \PYG{n}{proposal\PYGZus{}start}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{proposal\PYGZus{}end}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{strand}\PYG{o}{::}\PYG{k+kt}{Char}\PYG{p}{;} \PYG{n}{deterministic}\PYG{o}{=}\PYG{k+kc}{false}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}0\PYGZsq{}} \PYG{c}{\PYGZsh{}unstranded samples may be returned with no preference in either orientation}
+        \PYG{n}{deterministic} \PYG{o}{?} \PYG{n}{strand} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}+\PYGZsq{}} \PYG{o}{:} \PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZlt{}=.}\PYG{l+m+mi}{5} \PYG{o}{?} \PYG{n}{strand} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}+\PYGZsq{}} \PYG{o}{:} \PYG{n}{strand} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{)}
+    \PYG{k}{end}
+    \PYG{k}{if} \PYG{n}{strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}+\PYGZsq{}}
+        \PYG{n}{proposal\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{[}\PYG{n}{scaffold\PYGZus{}id}\PYG{p}{][}\PYG{n}{proposal\PYGZus{}start}\PYG{o}{:}\PYG{n}{proposal\PYGZus{}end}\PYG{p}{]}
+    \PYG{k}{elseif} \PYG{n}{strand} \PYG{o}{==} \PYG{l+s+sc}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}
+        \PYG{n}{proposal\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{reverse\PYGZus{}complement}\PYG{p}{(}\PYG{n}{scaffold\PYGZus{}seq\PYGZus{}dict}\PYG{p}{[}\PYG{n}{scaffold\PYGZus{}id}\PYG{p}{][}\PYG{n}{proposal\PYGZus{}start}\PYG{o}{:}\PYG{n}{proposal\PYGZus{}end}\PYG{p}{])}
+    \PYG{k}{else}
+        \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Invalid sample code! Must be \PYGZsq{}+\PYGZsq{}, \PYGZsq{}\PYGZhy{}\PYGZsq{}, or \PYGZsq{}0\PYGZsq{} (random strand)\PYGZdq{}}\PYG{p}{))}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{proposal\PYGZus{}sequence}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}SHARED BASIC COORDINATE SUBFUNCTIONS\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c}{\PYGZsh{} function to push scaffold ID, start, and end points of given featuretype to supplied dataframe}
+\PYG{k}{function} \PYG{n}{build\PYGZus{}feature\PYGZus{}df!}\PYG{p}{(}\PYG{n}{GFF3\PYGZus{}path}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{feature\PYGZus{}type}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}exclusion}\PYG{o}{::}\PYG{n}{String}\PYG{p}{,} \PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{)}
+    \PYG{n}{reader} \PYG{o}{=} \PYG{n}{open}\PYG{p}{(}\PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{Reader}\PYG{p}{,} \PYG{n}{GFF3\PYGZus{}path}\PYG{p}{)} \PYG{c}{\PYGZsh{} access the GFF3}
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{record} \PYG{k+kp}{in} \PYG{n}{reader} \PYG{c}{\PYGZsh{} iterate over Gff3 records}
+        \PYG{k}{if} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{isfeature}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)} \PYG{c}{\PYGZsh{} if the record is a feature}
+            \PYG{k}{if} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{featuretype}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)} \PYG{o}{==} \PYG{n}{feature\PYGZus{}type} \PYG{c}{\PYGZsh{}if the features is of the requested type, get the following info}
+                \PYG{n}{seqID} \PYG{o}{=} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{seqid}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)}
+                \PYG{k}{if} \PYG{n}{seqID} \PYG{o}{!=} \PYG{n}{scaffold\PYGZus{}exclusion}
+                    \PYG{n}{seq\PYGZus{}start} \PYG{o}{=} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{seqstart}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)}
+                    \PYG{n}{seq\PYGZus{}end} \PYG{o}{=} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{seqend}\PYG{p}{(}\PYG{n}{record}\PYG{p}{)}
+                    \PYG{k}{if} \PYG{n}{feature\PYGZus{}type} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}CDS\PYGZdq{}} \PYG{o}{||} \PYG{n}{feature\PYGZus{}type} \PYG{o}{==} \PYG{l+s}{\PYGZdq{}gene\PYGZdq{}}
+                        \PYG{n}{seq\PYGZus{}strand} \PYG{o}{=} \PYG{n}{convert}\PYG{p}{(}\PYG{k+kt}{Char}\PYG{p}{,} \PYG{n}{GFF3}\PYG{o}{.}\PYG{n}{strand}\PYG{p}{(}\PYG{n}{record}\PYG{p}{))}
+                        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,} \PYG{p}{[}\PYG{n}{seqID}\PYG{p}{,} \PYG{n}{seq\PYGZus{}start}\PYG{p}{,} \PYG{n}{seq\PYGZus{}end}\PYG{p}{,} \PYG{n}{seq\PYGZus{}strand}\PYG{p}{])}
+                    \PYG{k}{else}
+                        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,} \PYG{p}{[}\PYG{n}{seqID}\PYG{p}{,} \PYG{n}{seq\PYGZus{}start}\PYG{p}{,} \PYG{n}{seq\PYGZus{}end}\PYG{p}{])} \PYG{c}{\PYGZsh{} push relevant info to the df}
+                    \PYG{k}{end}
+                \PYG{k}{end}
+            \PYG{k}{end}
+        \PYG{k}{end}
+    \PYG{k}{end}
+    \PYG{n}{close}\PYG{p}{(}\PYG{n}{reader}\PYG{p}{)}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function to assemble dataframe of scaffold coords + metacoords given gff3}
+\PYG{k}{function} \PYG{n}{build\PYGZus{}scaffold\PYGZus{}df}\PYG{p}{(}\PYG{n}{gff3\PYGZus{}path}\PYG{p}{)}
+    \PYG{n}{scaffold\PYGZus{}df} \PYG{o}{=} \PYG{n}{DataFrame}\PYG{p}{(}\PYG{n}{SeqID} \PYG{o}{=} \PYG{n}{String}\PYG{p}{[],} \PYG{n}{Start} \PYG{o}{=} \PYG{k+kt}{Integer}\PYG{p}{[],} \PYG{n}{End} \PYG{o}{=} \PYG{k+kt}{Integer}\PYG{p}{[])}
+    \PYG{n}{build\PYGZus{}feature\PYGZus{}df!}\PYG{p}{(}\PYG{n}{gff3\PYGZus{}path}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}supercontig\PYGZdq{}}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}MT\PYGZdq{}}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}df}\PYG{p}{)}
+    \PYG{n}{build\PYGZus{}feature\PYGZus{}df!}\PYG{p}{(}\PYG{n}{gff3\PYGZus{}path}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}chromosome\PYGZdq{}}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}MT\PYGZdq{}}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}df}\PYG{p}{)}
+    \PYG{n}{add\PYGZus{}metacoordinates!}\PYG{p}{(}\PYG{n}{scaffold\PYGZus{}df}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{scaffold\PYGZus{}df}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function to add pad to either side of some featureset}
+\PYG{k}{function} \PYG{n}{add\PYGZus{}pad\PYGZus{}to\PYGZus{}coordinates!}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{pad\PYGZus{}size}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{;} \PYG{n}{col\PYGZus{}symbols}\PYG{o}{::}\PYG{k+kt}{Array}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Symbol}\PYG{p}{\PYGZcb{}}\PYG{o}{=}\PYG{p}{[}\PYG{o}{:}\PYG{n}{Start}\PYG{p}{,} \PYG{o}{:}\PYG{n}{End}\PYG{p}{])}
+    \PYG{n}{pad\PYGZus{}start\PYGZus{}array} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{pad\PYGZus{}end\PYGZus{}array} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{size}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{))}
+    \PYG{n}{feature\PYGZus{}df}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,} \PYG{n}{col\PYGZus{}symbols}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]} \PYG{o}{=} \PYG{p}{[}\PYG{n}{max}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{Start}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{pad\PYGZus{}size}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)]} \PYG{c}{\PYGZsh{}truncate pads at beginning and end of scaffolds}
+    \PYG{n}{feature\PYGZus{}df}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,} \PYG{n}{col\PYGZus{}symbols}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]]} \PYG{o}{=} \PYG{p}{[}\PYG{n}{min}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{+}\PYG{n}{pad\PYGZus{}size}\PYG{p}{,}\PYG{n}{scaffold\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{isequal}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqID}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]),}\PYG{n}{scaffold\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqID}\PYG{p}{)])} \PYG{k}{for} \PYG{n}{i} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{size}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)]}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}SHARED METACOORDINATE FUNCTIONS\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c}{\PYGZsh{} function to add a metacoordinate column to a dataframe of scaffold positions, allowing sampling across all scaffolds}
+\PYG{k}{function} \PYG{n}{add\PYGZus{}metacoordinates!}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{)}
+    \PYG{n}{meta\PYGZus{}start\PYGZus{}array} \PYG{o}{=} \PYG{k+kt}{Integer}\PYG{p}{[]}
+    \PYG{n}{meta\PYGZus{}end\PYGZus{}array} \PYG{o}{=} \PYG{k+kt}{Integer}\PYG{p}{[]}
+    \PYG{n}{metaposition} \PYG{o}{=} \PYG{l+m+mi}{1}
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{feature} \PYG{k+kp}{in} \PYG{n}{eachrow}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{)}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{meta\PYGZus{}start\PYGZus{}array}\PYG{p}{,} \PYG{p}{(}\PYG{n}{metaposition}\PYG{p}{))}
+        \PYG{n}{metaposition} \PYG{o}{+=} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{End} \PYG{o}{\PYGZhy{}} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{Start}
+        \PYG{n}{push!}\PYG{p}{(}\PYG{n}{meta\PYGZus{}end\PYGZus{}array}\PYG{p}{,} \PYG{p}{(}\PYG{n}{metaposition}\PYG{p}{))}
+        \PYG{n}{metaposition} \PYG{o}{+=} \PYG{l+m+mi}{1}
+    \PYG{k}{end}
+    \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart} \PYG{o}{=} \PYG{n}{meta\PYGZus{}start\PYGZus{}array} \PYG{c}{\PYGZsh{} metacoordinate contains \PYGZsq{}start\PYGZsq{} metaposition across all genomic material}
+    \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd} \PYG{o}{=} \PYG{n}{meta\PYGZus{}end\PYGZus{}array} \PYG{c}{\PYGZsh{} metacoordinate contains \PYGZsq{}end\PYGZsq{} metaposition across all genomic material}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{} function to convert metacoordinate set to scaffold\PYGZhy{}relative coordinates}
+\PYG{k}{function} \PYG{n}{meta\PYGZus{}to\PYGZus{}feature\PYGZus{}coord}\PYG{p}{(}\PYG{n}{meta\PYGZus{}start}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{meta\PYGZus{}end}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{)}
+    \PYG{n}{feature\PYGZus{}row} \PYG{o}{=} \PYG{n}{get\PYGZus{}feature\PYGZus{}row\PYGZus{}index}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,} \PYG{n}{meta\PYGZus{}start}\PYG{p}{)}
+    \PYG{n}{seqid} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{SeqID}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]}
+    \PYG{n}{scaffold\PYGZus{}start} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{Start}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]} \PYG{o}{+} \PYG{p}{(}\PYG{n}{meta\PYGZus{}start} \PYG{o}{\PYGZhy{}} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{])}
+    \PYG{n}{scaffold\PYGZus{}end} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{End}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{meta\PYGZus{}end}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{seqid}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}start}\PYG{p}{,} \PYG{n}{scaffold\PYGZus{}end}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function to obtain the feature boundaries and strand of the feature that a metacoordinate falls within}
+\PYG{k}{function} \PYG{n}{get\PYGZus{}feature\PYGZus{}params\PYGZus{}from\PYGZus{}metacoord}\PYG{p}{(}\PYG{n}{metacoordinate}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{,} \PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{stranded}\PYG{o}{::}\PYG{k+kt}{Bool}\PYG{p}{)}
+    \PYG{n}{feature\PYGZus{}row} \PYG{o}{=} \PYG{n}{get\PYGZus{}feature\PYGZus{}row\PYGZus{}index}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,} \PYG{n}{metacoordinate}\PYG{p}{)}
+    \PYG{n}{feature\PYGZus{}metaStart} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]}
+    \PYG{n}{feature\PYGZus{}metaEnd} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]}
+    \PYG{n}{stranded} \PYG{o}{?} \PYG{n}{feature\PYGZus{}strand} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{Strand}\PYG{p}{[}\PYG{n}{feature\PYGZus{}row}\PYG{p}{]} \PYG{o}{:} \PYG{n}{feature\PYGZus{}strand} \PYG{o}{=} \PYG{l+s+sc}{\PYGZsq{}0\PYGZsq{}}
+    \PYG{k}{return} \PYG{n}{feature\PYGZus{}metaStart}\PYG{p}{,} \PYG{n}{feature\PYGZus{}metaEnd}\PYG{p}{,} \PYG{n}{feature\PYGZus{}strand}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function obtain the index of a feature given its metacoordinate}
+\PYG{k}{function} \PYG{n}{get\PYGZus{}feature\PYGZus{}row\PYGZus{}index}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{metacoordinate}\PYG{o}{::}\PYG{k+kt}{Integer}\PYG{p}{)}
+    \PYG{n}{total\PYGZus{}feature\PYGZus{}bases} \PYG{o}{=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{k}{end}\PYG{p}{]}
+    \PYG{k}{if} \PYG{n}{metacoordinate} \PYG{o}{==} \PYG{n}{total\PYGZus{}feature\PYGZus{}bases} \PYG{c}{\PYGZsh{}edge case of metacoord at end of range}
+        \PYG{k}{return} \PYG{n}{size}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c}{\PYGZsh{}last index in df}
+    \PYG{k}{else}
+        \PYG{n}{index} \PYG{o}{=} \PYG{n}{findfirst}\PYG{p}{(}\PYG{n}{end\PYGZus{}coord}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{end\PYGZus{}coord}\PYG{o}{\PYGZgt{}}\PYG{n}{metacoordinate}\PYG{p}{,}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{)} \PYG{c}{\PYGZsh{}find the index of the feature whose end metacoord is \PYGZgt{} the query metacoord}
+        \PYG{k}{if} \PYG{n}{index} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{metacoordinate} \PYG{o}{==} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{index}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{c}{\PYGZsh{}if the metacoordinate is the last base of the previous feature}
+            \PYG{k}{if} \PYG{n}{metacoordinate} \PYG{o}{\PYGZgt{}=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{[}\PYG{n}{index}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{metacoordinate} \PYG{o}{\PYGZlt{}=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{index}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{c}{\PYGZsh{}confirm that the metacoord is in the previous feature}
+                \PYG{k}{return} \PYG{n}{index}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{c}{\PYGZsh{}return the previous feature index}
+            \PYG{k}{end}
+        \PYG{k}{elseif} \PYG{n}{metacoordinate} \PYG{o}{\PYGZgt{}=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{metacoordinate} \PYG{o}{\PYGZlt{}=} \PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]} \PYG{c}{\PYGZsh{}else confirm that the metacoordinate is in the found feature}
+            \PYG{k}{return} \PYG{n}{index} \PYG{c}{\PYGZsh{}return the found feature index}
+        \PYG{k}{else}
+            \PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{DomainError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Unexpected metacoordinate }\PYG{l+s+si}{\PYGZdl{}metacoordinate}\PYG{l+s}{ in partition of }\PYG{l+s+si}{\PYGZdl{}total\PYGZus{}feature\PYGZus{}bases}\PYG{l+s}{ bases, with feature start }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaStart}\PYG{p}{[}\PYG{n}{index}\PYG{p}{])}\PYG{l+s}{, end }\PYG{l+s+si}{\PYGZdl{}}\PYG{p}{(}\PYG{n}{feature\PYGZus{}df}\PYG{o}{.}\PYG{n}{MetaEnd}\PYG{p}{[}\PYG{n}{index}\PYG{p}{])}\PYG{l+s}{\PYGZdq{}}\PYG{p}{))}
+        \PYG{k}{end}
+    \PYG{k}{end}
+\PYG{k}{end}
+\end{Verbatim}

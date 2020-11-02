@@ -1,0 +1,598 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k+kn}{import} \PYG{n+nn}{multiprocessing}
+\PYG{k+kn}{import} \PYG{n+nn}{os}
+\PYG{k+kn}{import} \PYG{n+nn}{subprocess}
+\PYG{k+kn}{import} \PYG{n+nn}{datetime}
+
+\PYG{k+kn}{import} \PYG{n+nn}{numpy} \PYG{k+kn}{as} \PYG{n+nn}{np}
+\PYG{k+kn}{import} \PYG{n+nn}{matplotlib.pyplot} \PYG{k+kn}{as} \PYG{n+nn}{plt}
+\PYG{k+kn}{from} \PYG{n+nn}{scipy.stats} \PYG{k+kn}{import} \PYG{n}{bernoulli}
+\PYG{k+kn}{from} \PYG{n+nn}{fileinput} \PYG{k+kn}{import} \PYG{n}{filename}
+\PYG{k+kn}{from} \PYG{n+nn}{statsmodels.sandbox.distributions.gof\PYGZus{}new} \PYG{k+kn}{import} \PYG{n}{a\PYGZus{}st70\PYGZus{}upp}
+
+\PYG{n}{executable} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}/home/main/chaste\PYGZus{}build/projects/ISP/apps/HeSimulator\PYGZsq{}}
+
+\PYG{k}{if} \PYG{o+ow}{not}\PYG{p}{(}\PYG{n}{os}\PYG{o}{.}\PYG{n}{path}\PYG{o}{.}\PYG{n}{isfile}\PYG{p}{(}\PYG{n}{executable}\PYG{p}{)):}
+    \PYG{k}{raise} \PYG{n+ne}{Exception}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Could not find executable: \PYGZsq{}} \PYG{o}{+} \PYG{n}{executable}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} SPSA COEFFICIENTS}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{n}{a\PYGZus{}s} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mo}{025}
+\PYG{n}{c\PYGZus{}s} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{1}
+
+\PYG{n}{a\PYGZus{}d} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mo}{001}\PYG{l+m+mi}{9}
+\PYG{n}{c\PYGZus{}d} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{1}
+
+\PYG{n}{A} \PYG{o}{=} \PYG{l+m+mi}{20} \PYG{c+c1}{\PYGZsh{}10\PYGZpc{} of expected \PYGZsh{} iterations}
+\PYG{n}{alpha} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{602}
+\PYG{n}{gamma} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{101}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} SPSA \PYGZam{} AIC UTILITY VARS}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{n}{max\PYGZus{}iterations} \PYG{o}{=} \PYG{l+m+mi}{199}
+\PYG{n}{number\PYGZus{}comparisons} \PYG{o}{=} \PYG{l+m+mi}{3030} \PYG{c+c1}{\PYGZsh{}total number of comparison points between model output and empirical data (1000 per induction time, 10 per rate mode)}
+\PYG{n}{number\PYGZus{}comparisons\PYGZus{}per\PYGZus{}induction} \PYG{o}{=} \PYG{l+m+mi}{1000}
+\PYG{n}{error\PYGZus{}samples} \PYG{o}{=} \PYG{l+m+mi}{5000} \PYG{c+c1}{\PYGZsh{}number of samples to draw when estimating plausibility interval for simulations}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} SIMULATION PARAMETERS}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{c+c1}{\PYGZsh{}Define start and end RNG seeds; determines:}
+\PYG{c+c1}{\PYGZsh{}No. lineages per loss function run}
+\PYG{c+c1}{\PYGZsh{}unique sequence of RNG results for each lineage}
+\PYG{n}{start\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{0}
+\PYG{n}{end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{249}
+\PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{99}
+\PYG{n}{directory\PYGZus{}name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}SPSA\PYGZdq{}}
+\PYG{n}{file\PYGZus{}name\PYGZus{}he} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}HeSPSA\PYGZdq{}}
+\PYG{n}{file\PYGZus{}name\PYGZus{}det} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}DetSPSA\PYGZdq{}}
+\PYG{n}{log\PYGZus{}name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}HeSPSAOutput\PYGZdq{}}
+\PYG{n}{deterministic\PYGZus{}modes} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{c+c1}{\PYGZsh{}1=det. mode enabled}
+\PYG{n}{count\PYGZus{}output\PYGZus{}mode} \PYG{o}{=} \PYG{l+m+mi}{0} \PYG{c+c1}{\PYGZsh{}0=lineage counts;1=mitotic event logging;2=sequence sampling}
+\PYG{n}{event\PYGZus{}output\PYGZus{}mode} \PYG{o}{=} \PYG{l+m+mi}{1}
+\PYG{n}{fixture} \PYG{o}{=} \PYG{l+m+mi}{0} \PYG{c+c1}{\PYGZsh{}0=He 2012;1=Wan 2016}
+\PYG{n}{debug\PYGZus{}output} \PYG{o}{=} \PYG{l+m+mi}{0} \PYG{c+c1}{\PYGZsh{}0=off;1=on}
+\PYG{n}{ath5founder} \PYG{o}{=} \PYG{l+m+mi}{0} \PYG{c+c1}{\PYGZsh{}0=no morpholino 1=ath5 morpholino}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}GLOBAL MODEL PARAMETERS}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{c+c1}{\PYGZsh{}Values defining different marker induction timepoints \PYGZam{} relative start time of TiL counter}
+\PYG{n}{earliest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time} \PYG{o}{=} \PYG{l+m+mf}{23.0} \PYG{c+c1}{\PYGZsh{}RPCs begin to enter \PYGZdq{}He model regime\PYGZdq{} nasally at 23hpf}
+\PYG{n}{latest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time} \PYG{o}{=} \PYG{l+m+mf}{39.0} \PYG{c+c1}{\PYGZsh{}last temporal retinal RPC has entered \PYGZdq{}He model regime\PYGZdq{} at 39hpf}
+\PYG{n}{induction\PYGZus{}times} \PYG{o}{=} \PYG{p}{[} \PYG{l+m+mi}{24}\PYG{p}{,} \PYG{l+m+mi}{32}\PYG{p}{,} \PYG{l+m+mi}{48} \PYG{p}{]} 
+\PYG{n}{end\PYGZus{}time} \PYG{o}{=} \PYG{l+m+mf}{72.0}
+\PYG{n}{rate\PYGZus{}end\PYGZus{}time} \PYG{o}{=} \PYG{l+m+mi}{80}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} SPECIFIC MODEL PARAMETERS \PYGZhy{} THETAHAT}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{c+c1}{\PYGZsh{}STOCHASTIC MITOTIC MODE}
+\PYG{c+c1}{\PYGZsh{}mitotic mode per\PYGZhy{}phase probabilities}
+\PYG{c+c1}{\PYGZsh{}3\PYGZhy{}phase mitotic mode time periodisation}
+\PYG{n}{mitotic\PYGZus{}mode\PYGZus{}phase\PYGZus{}2} \PYG{o}{=} \PYG{l+m+mi}{8} \PYG{c+c1}{\PYGZsh{}These are phase lengths, so}
+\PYG{n}{mitotic\PYGZus{}mode\PYGZus{}phase\PYGZus{}3} \PYG{o}{=} \PYG{l+m+mi}{7} \PYG{c+c1}{\PYGZsh{}Phase3 boundary = mmp2 + mmp3}
+\PYG{n}{phase\PYGZus{}1\PYGZus{}pPP} \PYG{o}{=} \PYG{l+m+mf}{1.0}
+\PYG{n}{phase\PYGZus{}1\PYGZus{}pPD} \PYG{o}{=} \PYG{l+m+mf}{0.0}
+\PYG{n}{phase\PYGZus{}2\PYGZus{}pPP} \PYG{o}{=} \PYG{l+m+mf}{0.2}
+\PYG{n}{phase\PYGZus{}2\PYGZus{}pPD} \PYG{o}{=} \PYG{l+m+mf}{0.4}
+\PYG{n}{phase\PYGZus{}3\PYGZus{}pPP} \PYG{o}{=} \PYG{l+m+mf}{0.2}
+\PYG{n}{phase\PYGZus{}3\PYGZus{}pPD} \PYG{o}{=} \PYG{l+m+mf}{0.0}
+\PYG{n}{he\PYGZus{}model\PYGZus{}params} \PYG{o}{=} \PYG{l+m+mi}{15}
+
+\PYG{c+c1}{\PYGZsh{}DETERMINISTIC MITOTIC MODE}
+\PYG{c+c1}{\PYGZsh{}Phase boundary shift parameters}
+\PYG{n}{phase\PYGZus{}1\PYGZus{}shape} \PYG{o}{=} \PYG{l+m+mi}{3}
+\PYG{n}{phase\PYGZus{}1\PYGZus{}scale} \PYG{o}{=} \PYG{l+m+mi}{2}
+\PYG{n}{phase\PYGZus{}2\PYGZus{}shape} \PYG{o}{=} \PYG{l+m+mi}{2}
+\PYG{n}{phase\PYGZus{}2\PYGZus{}scale} \PYG{o}{=} \PYG{l+m+mi}{2}
+\PYG{n}{phase\PYGZus{}sister\PYGZus{}shift\PYGZus{}widths} \PYG{o}{=} \PYG{o}{.}\PYG{l+m+mi}{25}
+\PYG{n}{phase\PYGZus{}offset} \PYG{o}{=} \PYG{l+m+mi}{0}
+\PYG{n}{det\PYGZus{}model\PYGZus{}params} \PYG{o}{=} \PYG{l+m+mi}{13}
+
+\PYG{c+c1}{\PYGZsh{}array \PYGZdq{}theta\PYGZus{}spsa\PYGZdq{} is manipulated during SPSA calculations, these are starting point references}
+\PYG{n}{stochastic\PYGZus{}theta\PYGZus{}zero} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{n}{mitotic\PYGZus{}mode\PYGZus{}phase\PYGZus{}2}\PYG{p}{,} \PYG{n}{mitotic\PYGZus{}mode\PYGZus{}phase\PYGZus{}3}\PYG{p}{,} \PYG{n}{phase\PYGZus{}2\PYGZus{}pPP}\PYG{p}{,} \PYG{n}{phase\PYGZus{}2\PYGZus{}pPD}\PYG{p}{,} \PYG{n}{phase\PYGZus{}3\PYGZus{}pPP} \PYG{p}{])}
+\PYG{n}{determinsitic\PYGZus{}theta\PYGZus{}zero} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{n}{phase\PYGZus{}1\PYGZus{}shape}\PYG{p}{,} \PYG{n}{phase\PYGZus{}1\PYGZus{}scale}\PYG{p}{,} \PYG{n}{phase\PYGZus{}2\PYGZus{}shape}\PYG{p}{,} \PYG{n}{phase\PYGZus{}2\PYGZus{}scale}\PYG{p}{,} \PYG{n}{phase\PYGZus{}sister\PYGZus{}shift\PYGZus{}widths}\PYG{p}{,} \PYG{n}{phase\PYGZus{}offset}\PYG{p}{])}
+
+\PYG{c+c1}{\PYGZsh{}scales ak gain sequence for probability variables}
+\PYG{n}{prob\PYGZus{}scale\PYGZus{}vector} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{1}\PYG{p}{])}
+\PYG{n}{shift\PYGZus{}scale\PYGZus{}vector} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{])}
+
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} HE ET AL EMPIRICAL RESULTS}
+\PYG{c+c1}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{}}
+
+\PYG{n}{count\PYGZus{}bin\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{32}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{count\PYGZus{}x\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{31}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{count\PYGZus{}trim\PYGZus{}value} \PYG{o}{=} \PYG{l+m+mi}{30}
+
+\PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{l+m+mi}{30}\PYG{p}{,}\PYG{l+m+mi}{85}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{n}{rate\PYGZus{}x\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{l+m+mi}{30}\PYG{p}{,}\PYG{l+m+mi}{80}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{n}{rate\PYGZus{}trim\PYGZus{}value} \PYG{o}{=} \PYG{l+m+mi}{10}
+
+\PYG{c+c1}{\PYGZsh{}Count probability arrays}
+\PYG{n}{raw\PYGZus{}counts} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/home/main/git/chaste/projects/ISP/empirical\PYGZus{}data/empirical\PYGZus{}counts.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{7}\PYG{p}{,}\PYG{l+m+mi}{8}\PYG{p}{,}\PYG{l+m+mi}{9}\PYG{p}{,}\PYG{l+m+mi}{10}\PYG{p}{))} \PYG{c+c1}{\PYGZsh{}collect the per\PYGZhy{}cell\PYGZhy{}type counts}
+\PYG{n}{raw\PYGZus{}counts\PYGZus{}24} \PYG{o}{=} \PYG{n}{raw\PYGZus{}counts}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{:}\PYG{l+m+mi}{64}\PYG{p}{,:]}
+\PYG{n}{raw\PYGZus{}counts\PYGZus{}32} \PYG{o}{=} \PYG{n}{raw\PYGZus{}counts}\PYG{p}{[}\PYG{l+m+mi}{64}\PYG{p}{:}\PYG{l+m+mi}{233}\PYG{p}{,:]}
+\PYG{n}{raw\PYGZus{}counts\PYGZus{}48} \PYG{o}{=} \PYG{n}{raw\PYGZus{}counts}\PYG{p}{[}\PYG{l+m+mi}{233}\PYG{p}{:}\PYG{l+m+mi}{396}\PYG{p}{,:]}
+
+\PYG{n}{prob\PYGZus{}24}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{raw\PYGZus{}counts\PYGZus{}24}\PYG{p}{,}\PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{count\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{}obtain probability density histogram for counts, retabulating by summing across types}
+\PYG{n}{prob\PYGZus{}32}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{raw\PYGZus{}counts\PYGZus{}32}\PYG{p}{,}\PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{count\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+\PYG{n}{prob\PYGZus{}48}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{raw\PYGZus{}counts\PYGZus{}48}\PYG{p}{,}\PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{n}{count\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{}extend histogram to 1000 \PYGZhy{} allows large lineages of some iterates to be included in AIC comparison}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}24} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{concatenate}\PYG{p}{([}\PYG{n}{prob\PYGZus{}24}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{number\PYGZus{}comparisons\PYGZus{}per\PYGZus{}induction}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{prob\PYGZus{}24}\PYG{o}{.}\PYG{n}{size}\PYG{p}{)])}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}32} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{concatenate}\PYG{p}{([}\PYG{n}{prob\PYGZus{}32}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{number\PYGZus{}comparisons\PYGZus{}per\PYGZus{}induction}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{prob\PYGZus{}32}\PYG{o}{.}\PYG{n}{size}\PYG{p}{)])}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}48} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{concatenate}\PYG{p}{([}\PYG{n}{prob\PYGZus{}48}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{number\PYGZus{}comparisons\PYGZus{}per\PYGZus{}induction}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{prob\PYGZus{}48}\PYG{o}{.}\PYG{n}{size}\PYG{p}{)])}
+
+\PYG{n}{count\PYGZus{}prob\PYGZus{}list} \PYG{o}{=} \PYG{p}{[}\PYG{n}{prob\PYGZus{}empirical\PYGZus{}24}\PYG{p}{,} \PYG{n}{prob\PYGZus{}empirical\PYGZus{}32}\PYG{p}{,} \PYG{n}{prob\PYGZus{}empirical\PYGZus{}48}\PYG{p}{]}
+
+\PYG{c+c1}{\PYGZsh{}no. of lineages observed per induction timepoint/event group}
+\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}24} \PYG{o}{=} \PYG{l+m+mi}{64}
+\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}32} \PYG{o}{=} \PYG{l+m+mi}{169}
+\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}48} \PYG{o}{=} \PYG{l+m+mi}{163}
+\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}events} \PYG{o}{=} \PYG{l+m+mi}{60}
+\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}list} \PYG{o}{=} \PYG{p}{[}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}24}\PYG{p}{,}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}32}\PYG{p}{,}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}48}\PYG{p}{]}
+
+\PYG{c+c1}{\PYGZsh{}Mitotic mode rate probability arrays}
+\PYG{n}{raw\PYGZus{}events} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/home/main/git/chaste/projects/ISP/empirical\PYGZus{}data/empirical\PYGZus{}lineages.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+m+mi}{8}\PYG{p}{))}
+\PYG{n}{observed\PYGZus{}events} \PYG{o}{=} \PYG{n}{raw\PYGZus{}events}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{raw\PYGZus{}events}\PYG{p}{[:,}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{1}\PYG{p}{)]} \PYG{c+c1}{\PYGZsh{}exclude any mitosis whose time was too early for recording}
+
+\PYG{n}{observed\PYGZus{}PP} \PYG{o}{=} \PYG{n}{observed\PYGZus{}events}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{observed\PYGZus{}events}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{0}\PYG{p}{)]}
+\PYG{n}{observed\PYGZus{}PD} \PYG{o}{=} \PYG{n}{observed\PYGZus{}events}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{observed\PYGZus{}events}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{1}\PYG{p}{)]}
+\PYG{n}{observed\PYGZus{}DD} \PYG{o}{=} \PYG{n}{observed\PYGZus{}events}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{observed\PYGZus{}events}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{==}\PYG{l+m+mi}{2}\PYG{p}{)]}
+
+\PYG{n}{histo\PYGZus{}PP}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{observed\PYGZus{}PP}\PYG{p}{,}\PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+\PYG{n}{histo\PYGZus{}PD}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{observed\PYGZus{}PD}\PYG{p}{,}\PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+\PYG{n}{histo\PYGZus{}DD}\PYG{p}{,}\PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{observed\PYGZus{}DD}\PYG{p}{,}\PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{}hourly per\PYGZhy{}lineage probabilities\PYGZhy{} NOT probability density function}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}PP} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{((}\PYG{n}{histo\PYGZus{}PP}\PYG{o}{/}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}events}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}PD} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{((}\PYG{n}{histo\PYGZus{}PD}\PYG{o}{/}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}events}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{n}{prob\PYGZus{}empirical\PYGZus{}DD} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{((}\PYG{n}{histo\PYGZus{}DD}\PYG{o}{/}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}events}\PYG{p}{)}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{)}
+
+\PYG{n}{event\PYGZus{}prob\PYGZus{}list} \PYG{o}{=} \PYG{p}{[}\PYG{n}{prob\PYGZus{}empirical\PYGZus{}PP}\PYG{p}{,}\PYG{n}{prob\PYGZus{}empirical\PYGZus{}PD}\PYG{p}{,}\PYG{n}{prob\PYGZus{}empirical\PYGZus{}DD}\PYG{p}{]}
+
+\PYG{c+c1}{\PYGZsh{}setup the log file, appending to any existing results}
+\PYG{n}{log\PYGZus{}filename} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+}\PYG{n}{directory\PYGZus{}name} \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{n}{log\PYGZus{}name}
+\PYG{n}{os}\PYG{o}{.}\PYG{n}{makedirs}\PYG{p}{(}\PYG{n}{os}\PYG{o}{.}\PYG{n}{path}\PYG{o}{.}\PYG{n}{dirname}\PYG{p}{(}\PYG{n}{log\PYGZus{}filename}\PYG{p}{),} \PYG{n}{exist\PYGZus{}ok}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+
+\PYG{n}{log} \PYG{o}{=} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n}{log\PYGZus{}filename}\PYG{p}{,}\PYG{l+s+s2}{\PYGZdq{}w\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{}plotting utility stuff}
+\PYG{c+c1}{\PYGZsh{}interactive plot mode}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{ion}\PYG{p}{()}
+\PYG{c+c1}{\PYGZsh{}setup new iterate plot}
+\PYG{n}{fig}\PYG{p}{,} \PYG{p}{((}\PYG{n}{plt0}\PYG{p}{,} \PYG{n}{plt1}\PYG{p}{,} \PYG{n}{plt2}\PYG{p}{),(}\PYG{n}{plt3}\PYG{p}{,} \PYG{n}{plt4}\PYG{p}{,} \PYG{n}{plt5}\PYG{p}{))} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{12}\PYG{p}{,}\PYG{l+m+mi}{6}\PYG{p}{))}
+\PYG{n}{plot\PYGZus{}list} \PYG{o}{=} \PYG{p}{[}\PYG{n}{plt0}\PYG{p}{,}\PYG{n}{plt1}\PYG{p}{,}\PYG{n}{plt2}\PYG{p}{,}\PYG{n}{plt3}\PYG{p}{,}\PYG{n}{plt4}\PYG{p}{,}\PYG{n}{plt5}\PYG{p}{]}
+
+
+\PYG{k}{def} \PYG{n+nf}{main}\PYG{p}{():}
+    \PYG{k}{global} \PYG{n}{theta\PYGZus{}spsa}\PYG{p}{,} \PYG{n}{a}\PYG{p}{,}\PYG{n}{c}\PYG{p}{,}\PYG{n}{file\PYGZus{}name}\PYG{p}{,}\PYG{n}{scale\PYGZus{}vector}\PYG{p}{,}\PYG{n}{end\PYGZus{}seed}\PYG{p}{,}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed}\PYG{p}{,}\PYG{n}{alpha}\PYG{p}{,}\PYG{n}{gamma}
+    
+    \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{deterministic\PYGZus{}modes}\PYG{p}{)):}
+        
+        \PYG{c+c1}{\PYGZsh{}traceable RNG}
+        \PYG{n}{p\PYGZus{}RNG} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{RandomState}\PYG{p}{(}\PYG{n}{seed}\PYG{o}{=}\PYG{l+m+mi}{786}\PYG{p}{)}
+
+        \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{=} \PYG{n}{deterministic\PYGZus{}modes}\PYG{p}{[}\PYG{n}{m}\PYG{p}{]}
+        \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+            \PYG{n}{theta\PYGZus{}spsa} \PYG{o}{=} \PYG{n}{stochastic\PYGZus{}theta\PYGZus{}zero}
+            \PYG{n}{a} \PYG{o}{=} \PYG{n}{a\PYGZus{}s}
+            \PYG{n}{c} \PYG{o}{=} \PYG{n}{c\PYGZus{}s}
+            \PYG{n}{file\PYGZus{}name} \PYG{o}{=} \PYG{n}{file\PYGZus{}name\PYGZus{}he}
+            \PYG{n}{scale\PYGZus{}vector} \PYG{o}{=} \PYG{n}{prob\PYGZus{}scale\PYGZus{}vector}
+            \PYG{n}{now} \PYG{o}{=} \PYG{n}{datetime}\PYG{o}{.}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{now}\PYG{p}{()}
+            \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Began SPSA optimisation of He model @}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{now}\PYG{p}{())} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}k}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{phase2}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{phase3}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{PP2}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{PD2}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{PP3}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{number\PYGZus{}params} \PYG{o}{=} \PYG{n}{he\PYGZus{}model\PYGZus{}params}
+        \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{theta\PYGZus{}spsa} \PYG{o}{=} \PYG{n}{determinsitic\PYGZus{}theta\PYGZus{}zero}
+            \PYG{n}{a} \PYG{o}{=} \PYG{n}{a\PYGZus{}d}
+            \PYG{n}{c} \PYG{o}{=} \PYG{n}{c\PYGZus{}d}
+            \PYG{n}{file\PYGZus{}name} \PYG{o}{=} \PYG{n}{file\PYGZus{}name\PYGZus{}det}
+            \PYG{n}{scale\PYGZus{}vector} \PYG{o}{=} \PYG{n}{shift\PYGZus{}scale\PYGZus{}vector}
+            \PYG{n}{now} \PYG{o}{=} \PYG{n}{datetime}\PYG{o}{.}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{now}\PYG{p}{()}
+            \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Began SPSA optimisation of deterministic model @}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{datetime}\PYG{o}{.}\PYG{n}{now}\PYG{p}{())} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}k}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{p1Sh}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{p1Sc}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{p2Sh}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{p2Sc}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{sisterShift}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{offset}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{number\PYGZus{}params} \PYG{o}{=} \PYG{n}{det\PYGZus{}model\PYGZus{}params}
+        
+        \PYG{c+c1}{\PYGZsh{}SPSA algorithm iterator k starts at 0}
+        \PYG{n}{k}\PYG{o}{=}\PYG{l+m+mi}{0}
+       
+        \PYG{k}{while} \PYG{n}{k} \PYG{o}{\PYGZlt{}=} \PYG{n}{max\PYGZus{}iterations}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{k} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{n}{end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{249}
+                \PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{99}
+        
+            \PYG{c+c1}{\PYGZsh{}@defined iterate, increase \PYGZsh{} of seed to decrease RNG noise to low level}
+            \PYG{k}{if} \PYG{n}{k} \PYG{o}{==} \PYG{l+m+mi}{169}\PYG{p}{:}
+                \PYG{n}{end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{999}
+                \PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{249}
+        
+        
+            \PYG{c+c1}{\PYGZsh{}@defined iterate, increase \PYGZsh{} of seeds to decrease RNG noise to close to nil, switch to asymptotically optimal alpha and gamma}
+            \PYG{k}{if} \PYG{n}{k} \PYG{o}{==} \PYG{l+m+mi}{189}\PYG{p}{:}
+                \PYG{n}{end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{4999}
+                \PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{=} \PYG{l+m+mi}{1249}
+                \PYG{n}{alpha} \PYG{o}{=} \PYG{l+m+mi}{1}
+                \PYG{n}{gamma} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{1}\PYG{o}{/}\PYG{l+m+mi}{6}\PYG{p}{)}
+            
+            \PYG{c+c1}{\PYGZsh{}write the parameter set to be evaluated to file}
+            \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        
+            \PYG{c+c1}{\PYGZsh{}populate the deltak perturbation vector with samples from a .5p bernoulli +1 \PYGZhy{}1 distribution}
+            \PYG{n}{delta\PYGZus{}k} \PYG{o}{=} \PYG{n}{bernoulli}\PYG{o}{.}\PYG{n}{rvs}\PYG{p}{(}\PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{n}{theta\PYGZus{}spsa}\PYG{o}{.}\PYG{n}{size}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{n}{p\PYGZus{}RNG}\PYG{p}{)}
+            \PYG{n}{delta\PYGZus{}k}\PYG{p}{[}\PYG{n}{delta\PYGZus{}k} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+        
+            \PYG{n}{ak} \PYG{o}{=} \PYG{n}{a} \PYG{o}{/} \PYG{p}{((}\PYG{n}{A} \PYG{o}{+} \PYG{n}{k} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{**}\PYG{n}{alpha}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{}calculate ak from gain sequence}
+            \PYG{n}{scaled\PYGZus{}ak} \PYG{o}{=} \PYG{n}{ak} \PYG{o}{*} \PYG{n}{scale\PYGZus{}vector} \PYG{c+c1}{\PYGZsh{}scale ak appropriately for parameters expressed in hrs \PYGZam{} percent}
+
+            \PYG{n}{ck} \PYG{o}{=} \PYG{n}{c} \PYG{o}{/} \PYG{p}{((}\PYG{n}{k} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{**}\PYG{n}{gamma}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{}calculate ck from gain sequence}
+            \PYG{n}{scaled\PYGZus{}ck} \PYG{o}{=} \PYG{n}{ck} \PYG{o}{*} \PYG{n}{scale\PYGZus{}vector}
+        
+            \PYG{c+c1}{\PYGZsh{}Project theta\PYGZus{}spsa into space bounded by ck to allow gradient sampling at bounds of probability space}
+            \PYG{n}{projected\PYGZus{}theta} \PYG{o}{=} \PYG{n}{project\PYGZus{}theta}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{,} \PYG{n}{scaled\PYGZus{}ck}\PYG{p}{,} \PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{)}
+
+            \PYG{c+c1}{\PYGZsh{}Calculate theta+ and theta\PYGZhy{} vectors for gradient estimate}
+            \PYG{n}{theta\PYGZus{}plus} \PYG{o}{=} \PYG{n}{projected\PYGZus{}theta} \PYG{o}{+} \PYG{n}{scaled\PYGZus{}ck} \PYG{o}{*} \PYG{n}{delta\PYGZus{}k}
+            \PYG{n}{theta\PYGZus{}minus} \PYG{o}{=} \PYG{n}{projected\PYGZus{}theta} \PYG{o}{\PYGZhy{}} \PYG{n}{scaled\PYGZus{}ck} \PYG{o}{*} \PYG{n}{delta\PYGZus{}k}
+
+            \PYG{n}{AIC\PYGZus{}gradient} \PYG{o}{=} \PYG{n}{evaluate\PYGZus{}AIC\PYGZus{}gradient}\PYG{p}{(}\PYG{n}{k}\PYG{p}{,} \PYG{n}{theta\PYGZus{}plus}\PYG{p}{,} \PYG{n}{theta\PYGZus{}minus}\PYG{p}{,} \PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{,} \PYG{n}{number\PYGZus{}params}\PYG{p}{,} \PYG{n}{file\PYGZus{}name}\PYG{p}{)}
+
+            \PYG{n}{ghat} \PYG{o}{=} \PYG{p}{((}\PYG{n}{AIC\PYGZus{}gradient}\PYG{p}{)} \PYG{o}{/} \PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{ck}\PYG{p}{))} \PYG{o}{*} \PYG{n}{delta\PYGZus{}k}
+
+            \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}ghat0: \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{ghat}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+            \PYG{c+c1}{\PYGZsh{}update new theta\PYGZus{}spsa}
+            \PYG{n}{theta\PYGZus{}spsa} \PYG{o}{=} \PYG{n}{theta\PYGZus{}spsa} \PYG{o}{\PYGZhy{}} \PYG{n}{scaled\PYGZus{}ak} \PYG{o}{*} \PYG{n}{ghat}
+
+            \PYG{c+c1}{\PYGZsh{}constrain updated theta\PYGZus{}spsa}
+            \PYG{n}{theta\PYGZus{}spsa} \PYG{o}{=} \PYG{n}{project\PYGZus{}theta}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{o}{.}\PYG{n}{size}\PYG{p}{),} \PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{)}
+
+            \PYG{n}{k}\PYG{o}{+=}\PYG{l+m+mi}{1}
+        
+        \PYG{c+c1}{\PYGZsh{}write final result and close log}
+        \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}spsa}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{log}\PYG{o}{.}\PYG{n}{close}
+
+\PYG{k}{def} \PYG{n+nf}{project\PYGZus{}theta}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{,} \PYG{n}{boundary}\PYG{p}{,} \PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{):}
+\PYG{c+c1}{\PYGZsh{} Required projection is onto unit triangle modified by boundary (ck value)}
+\PYG{c+c1}{\PYGZsh{} Values outside the lower bounds are reset first}
+\PYG{c+c1}{\PYGZsh{} Then, for phase 2 probabilities, we project (PPa,PDa)\PYGZhy{}\PYGZgt{}(PPb,PDb) such that if( (PPa+ck) + (PDa+ck) \PYGZgt{}1), PPb+ck + PDb +ck = 1.}
+\PYG{c+c1}{\PYGZsh{} This takes care of the upper bound}
+
+    \PYG{c+c1}{\PYGZsh{}project all negative parameters back into bounded space}
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{n+nb+bp}{False}\PYG{p}{:}
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{theta}\PYG{o}{.}\PYG{n}{size}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{i} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{l+m+mf}{4.0}\PYG{p}{:} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{l+m+mf}{4.0} \PYG{c+c1}{\PYGZsh{}project mitotic\PYGZus{}mode\PYGZus{}phase\PYGZus{}2 to a minimum of 4\PYGZhy{} below this param has no effect (due to refractory period after first division)}
+            \PYG{k}{else}\PYG{p}{:}
+                \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]:} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+                
+        \PYG{c+c1}{\PYGZsh{}if PP3 exceeds 1\PYGZhy{}boundary, project back to 1\PYGZhy{}boundary}
+        \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]:} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]}
+        
+        \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{+} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]:} \PYG{c+c1}{\PYGZsh{}if pPP2 + pPD2 gives a total beyond the current boundary\PYGZhy{}reduced total of 1.0}
+        
+            \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o+ow}{and} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZlt{}=} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]):} \PYG{c+c1}{\PYGZsh{} these (PP,PD) points will project into negative PD space}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+            
+            \PYG{k}{elif} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o+ow}{and} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZlt{}=} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]):} \PYG{c+c1}{\PYGZsh{} these (PP,PD) points will project into negative PP space}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+        
+            \PYG{k}{else}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} the (PP,PD) points can be projected onto the line PD = \PYGZhy{}PP + 1 and modified by the boundary;}
+                \PYG{n}{v1} \PYG{o}{=} \PYG{p}{[} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{p}{]} \PYG{c+c1}{\PYGZsh{} vector from (0,1) to (1,0)}
+                \PYG{n}{v2} \PYG{o}{=} \PYG{p}{[} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{p}{]} \PYG{c+c1}{\PYGZsh{}vector from (0,1) to (PP,PD)}
+                \PYG{n}{dot\PYGZus{}product} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{dot}\PYG{p}{(}\PYG{n}{v1}\PYG{p}{,}\PYG{n}{v2}\PYG{p}{)}
+                \PYG{n}{lengthv1} \PYG{o}{=} \PYG{l+m+mi}{2}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{n}{dot\PYGZus{}product} \PYG{o}{/} \PYG{n}{lengthv1}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+                \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{dot\PYGZus{}product} \PYG{o}{/} \PYG{n}{lengthv1}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}
+
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{n+nb+bp}{True}\PYG{p}{:}
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{theta}\PYG{o}{.}\PYG{n}{size}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{):} \PYG{c+c1}{\PYGZsh{}exclude offset param}
+            \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZlt{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]:} \PYG{n}{theta}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{boundary}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{l+m+mf}{0.1} \PYG{c+c1}{\PYGZsh{}prevents non\PYGZhy{}\PYGZgt{}0 arguments for deterministic mode}
+
+        \PYG{c+c1}{\PYGZsh{}projects sister shift value such that 95\PYGZpc{} of sister shift values will be less than smallest mean phase time}
+        \PYG{n}{minPhase} \PYG{o}{=} \PYG{n+nb}{min}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{*}\PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}
+        \PYG{k}{if} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{n}{minPhase}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]:} \PYG{n}{theta}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{n}{minPhase}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{o}{\PYGZhy{}} \PYG{n}{boundary}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]}
+
+    \PYG{k}{return} \PYG{n}{theta}
+
+\PYG{k}{def} \PYG{n+nf}{evaluate\PYGZus{}AIC\PYGZus{}gradient}\PYG{p}{(}\PYG{n}{k}\PYG{p}{,} \PYG{n}{theta\PYGZus{}plus}\PYG{p}{,} \PYG{n}{theta\PYGZus{}minus}\PYG{p}{,} \PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{,} \PYG{n}{number\PYGZus{}params}\PYG{p}{,} \PYG{n}{file\PYGZus{}name}\PYG{p}{):}
+    \PYG{c+c1}{\PYGZsh{}Form the simulator commands for current thetas and deterministic modes}
+    \PYG{n}{command\PYGZus{}list} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{n}{base\PYGZus{}command} \PYG{o}{=} \PYG{n}{executable}
+    
+    \PYG{n}{rate\PYGZus{}settings} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{event\PYGZus{}output\PYGZus{}mode}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{fixture}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{ath5founder}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{debug\PYGZus{}output}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{start\PYGZus{}seed}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{earliest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{earliest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{latest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{rate\PYGZus{}end\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}
+                    
+    \PYG{n}{count\PYGZus{}settings\PYGZus{}1} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{count\PYGZus{}output\PYGZus{}mode}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{fixture}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{ath5founder}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{debug\PYGZus{}output}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{start\PYGZus{}seed}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{end\PYGZus{}seed}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}
+    
+    \PYG{n}{count\PYGZus{}settings\PYGZus{}2} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{earliest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{latest\PYGZus{}lineage\PYGZus{}start\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{end\PYGZus{}time}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}
+    
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+        
+        \PYG{n}{stochastic\PYGZus{}params\PYGZus{}plus} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}1\PYGZus{}pPP}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}1\PYGZus{}pPD}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}3\PYGZus{}pPD}\PYG{p}{)}
+        
+        \PYG{n}{stochastic\PYGZus{}params\PYGZus{}minus} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}1\PYGZus{}pPP}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}1\PYGZus{}pPD}\PYG{p}{)}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{phase\PYGZus{}3\PYGZus{}pPD}\PYG{p}{)}
+        
+        \PYG{n}{command\PYGZus{}rate\PYGZus{}plus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                    \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+} \PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}RatePlus \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{rate\PYGZus{}settings}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{stochastic\PYGZus{}params\PYGZus{}plus}
+                        
+        \PYG{n}{command\PYGZus{}rate\PYGZus{}minus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                    \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+} \PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}RateMinus \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{rate\PYGZus{}settings}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{stochastic\PYGZus{}params\PYGZus{}minus}
+
+        \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}rate\PYGZus{}plus}\PYG{p}{)}
+        \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}rate\PYGZus{}minus}\PYG{p}{)}
+        
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{)):}
+            \PYG{n}{command\PYGZus{}plus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                        \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}Plus \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}1}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}2}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{stochastic\PYGZus{}params\PYGZus{}plus}
+                        
+            \PYG{n}{command\PYGZus{}minus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                        \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}Minus \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}1}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}2}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{stochastic\PYGZus{}params\PYGZus{}minus}
+                        
+            \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}plus}\PYG{p}{)}
+            \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}minus}\PYG{p}{)}
+                        
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+        
+        \PYG{n}{deterministic\PYGZus{}params\PYGZus{}plus} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])}
+                    
+        \PYG{n}{deterministic\PYGZus{}params\PYGZus{}minus} \PYG{o}{=} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])}
+        
+        \PYG{n}{command\PYGZus{}rate\PYGZus{}plus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                    \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+} \PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}RatePlus \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{rate\PYGZus{}settings}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{deterministic\PYGZus{}params\PYGZus{}plus}
+                
+        \PYG{n}{command\PYGZus{}rate\PYGZus{}minus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                    \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+} \PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}RateMinus \PYGZdq{}}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{rate\PYGZus{}settings}\PYGZbs{}
+                    \PYG{o}{+}\PYG{n}{deterministic\PYGZus{}params\PYGZus{}minus}
+
+        \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}rate\PYGZus{}plus}\PYG{p}{)}
+        \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}rate\PYGZus{}minus}\PYG{p}{)}
+        
+        \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{)):}
+            \PYG{n}{command\PYGZus{}plus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                        \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}Plus \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}1}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}2}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{deterministic\PYGZus{}params\PYGZus{}plus}
+                        
+            \PYG{n}{command\PYGZus{}minus} \PYG{o}{=} \PYG{n}{base\PYGZus{}command}\PYGZbs{}
+                        \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{directory\PYGZus{}name}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{o}{+}\PYG{n}{file\PYGZus{}name}\PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}Minus \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}1}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{count\PYGZus{}settings\PYGZus{}2}\PYGZbs{}
+                        \PYG{o}{+}\PYG{n}{deterministic\PYGZus{}params\PYGZus{}minus}
+                        
+            \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}plus}\PYG{p}{)}
+            \PYG{n}{command\PYGZus{}list}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{command\PYGZus{}minus}\PYG{p}{)}
+            
+
+    \PYG{c+c1}{\PYGZsh{} Use processes equal to the number of cpus available}
+    \PYG{n}{cpu\PYGZus{}count} \PYG{o}{=} \PYG{n}{multiprocessing}\PYG{o}{.}\PYG{n}{cpu\PYGZus{}count}\PYG{p}{()}
+
+    \PYG{k}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Starting simulations for iterate \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} with \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{cpu\PYGZus{}count}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} processes, \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{end\PYGZus{}seed}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} lineages simulated for counts, \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} lineages for events\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{log}\PYG{o}{.}\PYG{n}{flush}\PYG{p}{()} \PYG{c+c1}{\PYGZsh{}required to prevent pool from jamming up log for some reason}
+    
+    \PYG{c+c1}{\PYGZsh{} Generate a pool of workers}
+    \PYG{n}{pool} \PYG{o}{=} \PYG{n}{multiprocessing}\PYG{o}{.}\PYG{n}{Pool}\PYG{p}{(}\PYG{n}{processes}\PYG{o}{=}\PYG{n}{cpu\PYGZus{}count}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} Pass the list of bash commands to the pool, block until pool is complete}
+    \PYG{n}{pool}\PYG{o}{.}\PYG{n}{map}\PYG{p}{(}\PYG{n}{execute\PYGZus{}command}\PYG{p}{,} \PYG{n}{command\PYGZus{}list}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+    
+    \PYG{c+c1}{\PYGZsh{}these numpy arrays hold the individual RSS vals for timepoints + rates}
+    \PYG{n}{rss\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{rss\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{)}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{)}
+    
+    \PYG{c+c1}{\PYGZsh{}clear the plots on the interactive figure}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{plot\PYGZus{}list}\PYG{p}{)):}
+        \PYG{n}{plt}\PYG{o}{.}\PYG{n}{sca}\PYG{p}{(}\PYG{n}{plot\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}
+        \PYG{n}{plt}\PYG{o}{.}\PYG{n}{cla}\PYG{p}{()}
+    
+    \PYG{c+c1}{\PYGZsh{}calculate RSS for each induction timepoint}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{)):}
+        \PYG{n}{counts\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+} \PYG{n}{directory\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{n}{file\PYGZus{}name} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}Plus\PYGZdq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+        \PYG{n}{counts\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+} \PYG{n}{directory\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{n}{file\PYGZus{}name} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{induction\PYGZus{}times}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}Minus\PYGZdq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{counts\PYGZus{}plus}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{1000}\PYG{p}{,} \PYG{n+nb}{range}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1001}\PYG{p}{),}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{counts\PYGZus{}minus}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{1000}\PYG{p}{,} \PYG{n+nb}{range}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1001}\PYG{p}{),}\PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+        
+        \PYG{n}{residual\PYGZus{}plus} \PYG{o}{=} \PYG{n}{prob\PYGZus{}histo\PYGZus{}plus} \PYG{o}{\PYGZhy{}} \PYG{n}{count\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{residual\PYGZus{}minus} \PYG{o}{=} \PYG{n}{prob\PYGZus{}histo\PYGZus{}minus} \PYG{o}{\PYGZhy{}} \PYG{n}{count\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        
+        \PYG{n}{rss\PYGZus{}plus}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}plus}\PYG{p}{))}
+        \PYG{n}{rss\PYGZus{}minus}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}minus}\PYG{p}{))}
+        
+        \PYG{n}{plotter}\PYG{p}{(}\PYG{n}{plot\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],} \PYG{n}{counts\PYGZus{}plus}\PYG{p}{,} \PYG{n}{counts\PYGZus{}minus}\PYG{p}{,} \PYG{n}{count\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],} \PYG{l+m+mi}{0}\PYG{p}{)}
+
+        
+    \PYG{n}{rates\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+} \PYG{n}{directory\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{n}{file\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}RatePlus\PYGZdq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{))}
+    \PYG{n}{rates\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{loadtxt}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+} \PYG{n}{directory\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{n}{file\PYGZus{}name} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}RateMinus\PYGZdq{}}\PYG{p}{,} \PYG{n}{skiprows}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{usecols}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{))}
+    
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{):}
+        \PYG{n}{mode\PYGZus{}rate\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{rates\PYGZus{}plus}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{rates\PYGZus{}plus}\PYG{p}{[:,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{i}\PYG{p}{)])}
+        \PYG{n}{mode\PYGZus{}rate\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{rates\PYGZus{}minus}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{rates\PYGZus{}minus}\PYG{p}{[:,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{==}\PYG{n}{i}\PYG{p}{)])}
+
+        \PYG{n}{histo\PYGZus{}rate\PYGZus{}plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{mode\PYGZus{}rate\PYGZus{}plus}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+        \PYG{n}{histo\PYGZus{}rate\PYGZus{}minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{mode\PYGZus{}rate\PYGZus{}minus}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{}hourly per\PYGZhy{}lineage probabilities}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}rate\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{histo\PYGZus{}rate\PYGZus{}plus} \PYG{o}{/} \PYG{p}{((}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mi}{5}\PYG{p}{))}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}rate\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{histo\PYGZus{}rate\PYGZus{}plus} \PYG{o}{/} \PYG{p}{((}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mi}{5}\PYG{p}{))}
+        
+        \PYG{n}{residual\PYGZus{}plus} \PYG{o}{=} \PYG{n}{prob\PYGZus{}histo\PYGZus{}rate\PYGZus{}plus} \PYG{o}{\PYGZhy{}} \PYG{n}{event\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        \PYG{n}{residual\PYGZus{}minus} \PYG{o}{=} \PYG{n}{prob\PYGZus{}histo\PYGZus{}rate\PYGZus{}minus} \PYG{o}{\PYGZhy{}} \PYG{n}{event\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+        
+        \PYG{c+c1}{\PYGZsh{}PD RESIUDAL WEIGHTING}
+        \PYG{k}{if} \PYG{n}{i} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{rss\PYGZus{}plus}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}plus}\PYG{p}{))}
+            \PYG{n}{rss\PYGZus{}minus}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}minus}\PYG{p}{))}
+        
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n}{rss\PYGZus{}plus}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}plus}\PYG{p}{))}
+            \PYG{n}{rss\PYGZus{}minus}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{square}\PYG{p}{(}\PYG{n}{residual\PYGZus{}minus}\PYG{p}{))}
+        
+        \PYG{n}{plotter}\PYG{p}{(}\PYG{n}{plot\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{3}\PYG{p}{],} \PYG{n}{mode\PYGZus{}rate\PYGZus{}plus}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{mode\PYGZus{}rate\PYGZus{}minus}\PYG{p}{[:,}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{event\PYGZus{}prob\PYGZus{}list}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],}\PYG{n}{lineages\PYGZus{}sampled\PYGZus{}events}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+
+    \PYG{n}{AIC\PYGZus{}plus} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{number\PYGZus{}params} \PYG{o}{+} \PYG{n}{number\PYGZus{}comparisons} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{rss\PYGZus{}plus}\PYG{p}{))}
+    \PYG{n}{AIC\PYGZus{}minus} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{number\PYGZus{}params} \PYG{o}{+} \PYG{n}{number\PYGZus{}comparisons} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{rss\PYGZus{}minus}\PYG{p}{))}
+    
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{show}\PYG{p}{()}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{savefig}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/home/main/git/chaste/projects/ISP/python\PYGZus{}fixtures/testoutput/\PYGZdq{}} \PYG{o}{+}\PYG{n}{directory\PYGZus{}name} \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}SDmode\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{deterministic\PYGZus{}mode}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}iterate\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}.png\PYGZdq{}}\PYG{p}{)}
+    
+    \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}theta\PYGZus{}plus:}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}plus}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])} \PYG{o}{+}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}theta\PYGZus{}minus:}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{deterministic\PYGZus{}mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:} \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{theta\PYGZus{}minus}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{])} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{log}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}PositiveAIC: \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{AIC\PYGZus{}plus}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} NegativeAIC: \PYGZdq{}} \PYG{o}{+} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{AIC\PYGZus{}minus}\PYG{p}{)} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{AIC\PYGZus{}gradient\PYGZus{}sample} \PYG{o}{=} \PYG{n}{AIC\PYGZus{}plus} \PYG{o}{\PYGZhy{}} \PYG{n}{AIC\PYGZus{}minus}\PYG{p}{;}
+
+    \PYG{k}{return} \PYG{n}{AIC\PYGZus{}gradient\PYGZus{}sample}
+
+\PYG{c+c1}{\PYGZsh{}data plotter function for monitoring SPSA results}
+\PYG{k}{def} \PYG{n+nf}{plotter}\PYG{p}{(}\PYG{n}{subplot}\PYG{p}{,}\PYG{n}{plus}\PYG{p}{,}\PYG{n}{minus}\PYG{p}{,}\PYG{n}{empirical\PYGZus{}prob}\PYG{p}{,}\PYG{n}{samples}\PYG{p}{,}\PYG{n}{mode}\PYG{p}{):}
+    \PYG{k}{global} \PYG{n}{plt0}\PYG{p}{,}\PYG{n}{plt1}\PYG{p}{,}\PYG{n}{plt2}\PYG{p}{,}\PYG{n}{plt3}\PYG{p}{,}\PYG{n}{plt4}\PYG{p}{,}\PYG{n}{plt5}\PYG{p}{,} \PYG{n}{prob\PYGZus{}histo\PYGZus{}plus}\PYG{p}{,} \PYG{n}{prob\PYGZus{}histo\PYGZus{}minus}
+    \PYG{n}{bin\PYGZus{}sequence} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{n}{x\PYGZus{}sequence} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{n}{trim\PYGZus{}value} \PYG{o}{=} \PYG{l+m+mi}{0}
+    
+    \PYG{k}{if} \PYG{n}{mode} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+        \PYG{n}{bin\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{count\PYGZus{}bin\PYGZus{}sequence}
+        \PYG{n}{x\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{count\PYGZus{}x\PYGZus{}sequence}
+        \PYG{n}{trim\PYGZus{}value} \PYG{o}{=} \PYG{n}{count\PYGZus{}trim\PYGZus{}value}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+    
+    \PYG{k}{if} \PYG{n}{mode} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+        \PYG{n}{bin\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{rate\PYGZus{}bin\PYGZus{}sequence}
+        \PYG{n}{x\PYGZus{}sequence} \PYG{o}{=} \PYG{n}{rate\PYGZus{}x\PYGZus{}sequence}
+        \PYG{n}{trim\PYGZus{}value} \PYG{o}{=} \PYG{n}{rate\PYGZus{}trim\PYGZus{}value}
+        \PYG{n}{histo\PYGZus{}plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{plus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+        \PYG{n}{histo\PYGZus{}minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{minus}\PYG{p}{,} \PYG{n}{bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{False}\PYG{p}{)}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}plus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{histo\PYGZus{}plus} \PYG{o}{/} \PYG{p}{((}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mi}{5}\PYG{p}{))}
+        \PYG{n}{prob\PYGZus{}histo\PYGZus{}minus} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{histo\PYGZus{}plus} \PYG{o}{/} \PYG{p}{((}\PYG{n}{rate\PYGZus{}end\PYGZus{}seed} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mi}{5}\PYG{p}{))}
+    
+    \PYG{n}{trimmed\PYGZus{}prob} \PYG{o}{=} \PYG{n}{empirical\PYGZus{}prob}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{:}\PYG{n}{trim\PYGZus{}value}\PYG{p}{]}
+    
+    \PYG{n}{subplot}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{x\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{trimmed\PYGZus{}prob}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}k+\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{(}\PYG{l+m+mf}{0.0001}\PYG{p}{)}
+    
+    \PYG{n}{interval\PYGZus{}plus} \PYG{o}{=} \PYG{n}{sampler}\PYG{p}{(}\PYG{n}{plus}\PYG{p}{,}\PYG{n}{samples}\PYG{p}{,}\PYG{n}{bin\PYGZus{}sequence}\PYG{p}{)}
+    
+    \PYG{n}{subplot}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{x\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{prob\PYGZus{}histo\PYGZus{}plus}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}g\PYGZhy{}\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{(}\PYG{l+m+mf}{0.0001}\PYG{p}{)}
+    \PYG{n}{subplot}\PYG{o}{.}\PYG{n}{fill\PYGZus{}between}\PYG{p}{(}\PYG{n}{x\PYGZus{}sequence}\PYG{p}{,} \PYG{p}{(}\PYG{n}{prob\PYGZus{}histo\PYGZus{}plus} \PYG{o}{\PYGZhy{}} \PYG{n}{interval\PYGZus{}plus}\PYG{p}{),} \PYG{p}{(}\PYG{n}{prob\PYGZus{}histo\PYGZus{}plus} \PYG{o}{+} \PYG{n}{interval\PYGZus{}plus}\PYG{p}{),} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{n}{edgecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}008000\PYGZsq{}}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}00FF00\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{(}\PYG{l+m+mf}{0.0001}\PYG{p}{)}
+    
+    \PYG{n}{interval\PYGZus{}minus} \PYG{o}{=} \PYG{n}{sampler}\PYG{p}{(}\PYG{n}{minus}\PYG{p}{,}\PYG{n}{samples}\PYG{p}{,}\PYG{n}{bin\PYGZus{}sequence}\PYG{p}{)}
+    
+    \PYG{n}{subplot}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{x\PYGZus{}sequence}\PYG{p}{,}\PYG{n}{prob\PYGZus{}histo\PYGZus{}minus}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}m\PYGZhy{}\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{(}\PYG{l+m+mf}{0.0001}\PYG{p}{)}
+    \PYG{n}{subplot}\PYG{o}{.}\PYG{n}{fill\PYGZus{}between}\PYG{p}{(}\PYG{n}{x\PYGZus{}sequence}\PYG{p}{,} \PYG{p}{(}\PYG{n}{prob\PYGZus{}histo\PYGZus{}minus} \PYG{o}{\PYGZhy{}} \PYG{n}{interval\PYGZus{}minus}\PYG{p}{),} \PYG{p}{(}\PYG{n}{prob\PYGZus{}histo\PYGZus{}minus} \PYG{o}{+} \PYG{n}{interval\PYGZus{}minus}\PYG{p}{),} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{n}{edgecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}800080\PYGZsq{}}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}FF00FF\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{pause}\PYG{p}{(}\PYG{l+m+mf}{0.0001}\PYG{p}{)}
+    
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt0}\PYG{p}{:} \PYG{n}{plt0}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{((}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{20}\PYG{p}{))}
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt1}\PYG{p}{:} \PYG{n}{plt1}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{20}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt2}\PYG{p}{:} \PYG{n}{plt2}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{.}\PYG{l+m+mi}{7}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt3}\PYG{p}{:} \PYG{n}{plt3}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{30}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt4}\PYG{p}{:} \PYG{n}{plt4}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{15}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{subplot}\PYG{o}{==}\PYG{n}{plt5}\PYG{p}{:} \PYG{n}{plt5}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{.}\PYG{l+m+mi}{35}\PYG{p}{)}
+    
+\PYG{k}{def} \PYG{n+nf}{sampler}\PYG{p}{(}\PYG{n}{data}\PYG{p}{,}\PYG{n}{samples}\PYG{p}{,}\PYG{n}{bin\PYGZus{}sequence}\PYG{p}{):}
+    
+    \PYG{k}{if} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{data}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{}catches edge case w/ no entries for a mitotic mode}
+        \PYG{n}{data}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+    
+    \PYG{n}{base\PYGZus{}sample}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{((}\PYG{n}{error\PYGZus{}samples}\PYG{p}{,}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{bin\PYGZus{}sequence}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{))}
+
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{error\PYGZus{}samples}\PYG{p}{):}
+        \PYG{n}{new\PYGZus{}data\PYGZus{}sample} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{choice}\PYG{p}{(}\PYG{n}{data}\PYG{p}{,}\PYG{n}{samples}\PYG{p}{)}
+        \PYG{n}{new\PYGZus{}histo\PYGZus{}prob}\PYG{p}{,} \PYG{n}{bin\PYGZus{}edges} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{histogram}\PYG{p}{(}\PYG{n}{new\PYGZus{}data\PYGZus{}sample}\PYG{p}{,} \PYG{n}{bin\PYGZus{}sequence}\PYG{p}{,} \PYG{n}{density}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+        \PYG{n}{base\PYGZus{}sample}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,:]} \PYG{o}{=} \PYG{n}{new\PYGZus{}histo\PYGZus{}prob}
+        
+    \PYG{n}{sample\PYGZus{}95CI} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{std}\PYG{p}{(}\PYG{n}{base\PYGZus{}sample}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)))}
+    
+    \PYG{k}{return} \PYG{n}{sample\PYGZus{}95CI}
+
+\PYG{c+c1}{\PYGZsh{} This is a helper function for run\PYGZus{}simulation that runs bash commands in separate processes}
+\PYG{k}{def} \PYG{n+nf}{execute\PYGZus{}command}\PYG{p}{(}\PYG{n}{cmd}\PYG{p}{):}
+    \PYG{k}{return} \PYG{n}{subprocess}\PYG{o}{.}\PYG{n}{call}\PYG{p}{(}\PYG{n}{cmd}\PYG{p}{,} \PYG{n}{shell}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+    \PYG{n}{main}\PYG{p}{()}
+\end{Verbatim}

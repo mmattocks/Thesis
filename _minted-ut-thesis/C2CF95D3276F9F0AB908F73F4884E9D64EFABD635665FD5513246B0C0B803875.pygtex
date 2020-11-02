@@ -1,0 +1,99 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c}{\PYGZsh{}function to obtain positional likelihoods for a sequence under a given BHMM.}
+\PYG{k}{function} \PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{seq}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}\PYG{p}{)}
+    \PYG{n+nd}{@assert} \PYG{n}{size}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{==} \PYG{l+m+mi}{1}
+    \PYG{p}{(}\PYG{n}{seq}\PYG{o}{=}\PYG{k+kt}{Array}\PYG{p}{(}\PYG{n}{transpose}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)))} \PYG{c}{\PYGZsh{} one sequence at a time only}
+    \PYG{n}{symbol\PYGZus{}lhs} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{))}
+    \PYG{n}{length\PYGZus{}mask} \PYG{o}{=} \PYG{p}{[}\PYG{n}{length}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+    
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{bw\PYGZus{}llhs}\PYG{p}{(}\PYG{n}{hmm}\PYG{p}{,} \PYG{n}{seq}\PYG{p}{)} \PYG{c}{\PYGZsh{}obtain log likelihoods for sequences and states}
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{messages\PYGZus{}forwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,} \PYG{n}{length\PYGZus{}mask}\PYG{p}{)} \PYG{c}{\PYGZsh{}get forward messages}
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{messages\PYGZus{}backwards\PYGZus{}log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{A}\PYG{p}{,} \PYG{n}{lls}\PYG{p}{,} \PYG{n}{length\PYGZus{}mask}\PYG{p}{)} \PYG{c}{\PYGZsh{} get backwards messages}
+
+    \PYG{c}{\PYGZsh{}calculate observation probability and γ weights}
+    \PYG{n}{K}\PYG{p}{,}\PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{Strand} \PYG{o}{=} \PYG{n}{size}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{)} \PYG{c}{\PYGZsh{}the last T value is the 0 end marker of the longest T}
+
+    \PYG{c}{\PYGZsh{}transforms to cut down log\PYGZus{}ξ, log\PYGZus{}γ assignment times}
+    \PYG{n}{lls} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{lls}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{])} \PYG{c}{\PYGZsh{} from (K,T) to (T,K)}
+    \PYG{n}{log\PYGZus{}α} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{])}
+    \PYG{n}{log\PYGZus{}β} \PYG{o}{=} \PYG{n}{permutedims}\PYG{p}{(}\PYG{n}{log\PYGZus{}β}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{])}
+
+    \PYG{n}{log\PYGZus{}γ} \PYG{o}{=} \PYG{n}{fill}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{p}{,} \PYG{n}{Tmaxplus1}\PYG{p}{,}\PYG{n}{K}\PYG{p}{)}
+    \PYG{n}{log\PYGZus{}pobs} \PYG{o}{=} \PYG{n}{logsumexp}\PYG{p}{(}\PYG{n}{lps}\PYG{o}{.}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{],} \PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{o}{:}\PYG{p}{]))}
+
+    \PYG{n+nd}{@inbounds} \PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K}\PYG{p}{,} \PYG{n}{t} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length\PYGZus{}mask}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+            \PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}α}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],}\PYG{n}{log\PYGZus{}β}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{i}\PYG{p}{],}\PYG{o}{\PYGZhy{}}\PYG{n}{log\PYGZus{}pobs}\PYG{p}{)}
+    \PYG{k}{end}
+
+    \PYG{k}{for} \PYG{n}{t} \PYG{k+kp}{in} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{length\PYGZus{}mask}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{symbol\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{AbstractFloat} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf} \PYG{c}{\PYGZsh{}ie log(p=0)}
+        \PYG{k}{for} \PYG{n}{k} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{K} \PYG{c}{\PYGZsh{}iterate over states}
+                \PYG{n}{state\PYGZus{}symbol\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{AbstractFloat} \PYG{o}{=} \PYG{n}{lps}\PYG{p}{(}\PYG{n}{log\PYGZus{}γ}\PYG{p}{[}\PYG{n}{t}\PYG{p}{,}\PYG{n}{k}\PYG{p}{],} \PYG{n}{log}\PYG{p}{(}\PYG{n}{hmm}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{n}{k}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{[}\PYG{n}{seq}\PYG{p}{[}\PYG{n}{t}\PYG{p}{]]))} \PYG{c}{\PYGZsh{}state symbol likelihood is the γ weight * the state symbol probability (log implementation)}
+                \PYG{n}{symbol\PYGZus{}lh} \PYG{o}{=} \PYG{n}{logaddexp}\PYG{p}{(}\PYG{n}{symbol\PYGZus{}lh}\PYG{p}{,} \PYG{n}{state\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{)} \PYG{c}{\PYGZsh{}sum the probabilities over states}
+        \PYG{k}{end}
+        \PYG{n}{symbol\PYGZus{}lhs}\PYG{p}{[}\PYG{n}{t}\PYG{p}{]} \PYG{o}{=} \PYG{n}{symbol\PYGZus{}lh}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{symbol\PYGZus{}lhs}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{k}{end}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{c}{\PYGZsh{}remove trailing index position}
+\PYG{k}{end}
+
+\PYG{c}{\PYGZsh{}function to calculate BGHMM from an observation set and a dict of BGHMMs}
+\PYG{k}{function} \PYG{n}{BGHMM\PYGZus{}likelihood\PYGZus{}calc}\PYG{p}{(}\PYG{n}{observations}\PYG{o}{::}\PYG{n}{DataFrame}\PYG{p}{,} \PYG{n}{BGHMM\PYGZus{}dict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{,} \PYG{n}{code\PYGZus{}partition\PYGZus{}dict} \PYG{o}{=} \PYG{n}{get\PYGZus{}partition\PYGZus{}code\PYGZus{}dict}\PYG{p}{(}\PYG{k+kc}{false}\PYG{p}{);} \PYG{n}{symbol}\PYG{o}{=:}\PYG{n}{PadSeq}\PYG{p}{)}
+    \PYG{n}{lh\PYGZus{}matrix\PYGZus{}size} \PYG{o}{=} \PYG{p}{((}\PYG{n}{findmax}\PYG{p}{(}\PYG{n}{length}\PYG{o}{.}\PYG{p}{(}\PYG{n}{collect}\PYG{p}{(}\PYG{n}{values}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,} \PYG{n}{symbol}\PYG{p}{]))))[}\PYG{l+m+mi}{1}\PYG{p}{]),} \PYG{n}{length}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,} \PYG{n}{symbol}\PYG{p}{]))}
+    \PYG{n}{BGHMM\PYGZus{}lh\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{zeros}\PYG{p}{(}\PYG{n}{lh\PYGZus{}matrix\PYGZus{}size}\PYG{p}{)} \PYG{c}{\PYGZsh{}T, Strand, O}
+
+    \PYG{n}{BGHMM\PYGZus{}fragments} \PYG{o}{=} \PYG{n}{fragment\PYGZus{}observations\PYGZus{}by\PYGZus{}BGHMM}\PYG{p}{(}\PYG{n}{observations}\PYG{p}{[}\PYG{o}{!}\PYG{p}{,} \PYG{n}{symbol}\PYG{p}{],} \PYG{n}{observations}\PYG{o}{.}\PYG{n}{MaskMatrix}\PYG{p}{)}
+
+    
+    \PYG{c}{\PYGZsh{}@showprogress 1 \PYGZdq{}Writing frags to matrix..\PYGZdq{} }
+    \PYG{n}{Threads}\PYG{o}{.}\PYG{n+nd}{@threads} \PYG{k}{for} \PYG{p}{(}\PYG{n}{jobid}\PYG{p}{,} \PYG{n}{frag}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{BGHMM\PYGZus{}fragments}
+        \PYG{p}{(}\PYG{n}{frag\PYGZus{}start}\PYG{p}{,} \PYG{n}{o}\PYG{p}{,} \PYG{n}{partition}\PYG{p}{,} \PYG{n}{strand}\PYG{p}{)} \PYG{o}{=} \PYG{n}{jobid}
+
+        \PYG{n}{partition\PYGZus{}BGHMM}\PYG{o}{::}\PYG{n}{BHMM} \PYG{o}{=} \PYG{n}{BGHMM\PYGZus{}dict}\PYG{p}{[}\PYG{n}{code\PYGZus{}partition\PYGZus{}dict}\PYG{p}{[}\PYG{n}{partition}\PYG{p}{]]}
+        \PYG{n}{no\PYGZus{}symbols} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{partition\PYGZus{}BGHMM}\PYG{o}{.}\PYG{n}{B}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+        \PYG{n}{order} \PYG{o}{=} \PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{n}{no\PYGZus{}symbols}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{)}
+
+        \PYG{n}{order\PYGZus{}seq} \PYG{o}{=} \PYG{n}{get\PYGZus{}order\PYGZus{}n\PYGZus{}seqs}\PYG{p}{([}\PYG{n}{frag}\PYG{p}{],} \PYG{n}{order}\PYG{p}{)}
+        \PYG{n}{coded\PYGZus{}seq} \PYG{o}{=} \PYG{n}{code\PYGZus{}seqs}\PYG{p}{(}\PYG{n}{order\PYGZus{}seq}\PYG{p}{)}
+        
+        \PYG{n}{subseq\PYGZus{}symbol\PYGZus{}lh} \PYG{o}{=} \PYG{n}{get\PYGZus{}BGHMM\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{(}\PYG{n}{coded\PYGZus{}seq}\PYG{p}{,} \PYG{n}{partition\PYGZus{}BGHMM}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n}{strand} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+            \PYG{n}{subseq\PYGZus{}symbol\PYGZus{}lh} \PYG{o}{=} \PYG{n}{reverse}\PYG{p}{(}\PYG{n}{subseq\PYGZus{}symbol\PYGZus{}lh}\PYG{p}{)}
+        \PYG{k}{end} \PYG{c}{\PYGZsh{}positive, unstranded frags  are inserted as\PYGZhy{}is}
+        \PYG{n}{BGHMM\PYGZus{}lh\PYGZus{}matrix}\PYG{p}{[}\PYG{n}{frag\PYGZus{}start}\PYG{o}{:}\PYG{n}{frag\PYGZus{}start}\PYG{o}{+}\PYG{n}{length}\PYG{p}{(}\PYG{n}{frag}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{o}\PYG{p}{]} \PYG{o}{=} \PYG{n}{subseq\PYGZus{}symbol\PYGZus{}lh}
+    \PYG{k}{end}
+
+    \PYG{k}{return} \PYG{n}{BGHMM\PYGZus{}lh\PYGZus{}matrix}
+\PYG{k}{end}
+
+\PYG{k}{function} \PYG{n}{fragment\PYGZus{}observations\PYGZus{}by\PYGZus{}BGHMM}\PYG{p}{(}\PYG{n}{seqs}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{,} \PYG{n}{masks}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{)}
+    \PYG{n}{likelihood\PYGZus{}jobs} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{,}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}()}
+    \PYG{n+nd}{@showprogress} \PYG{l+m+mi}{1} \PYG{l+s}{\PYGZdq{}Fragmenting observations by partition...\PYGZdq{}} \PYG{k}{for} \PYG{p}{(}\PYG{n}{o}\PYG{p}{,} \PYG{n}{obs\PYGZus{}seq}\PYG{p}{)} \PYG{k+kp}{in} \PYG{n}{enumerate}\PYG{p}{(}\PYG{n}{seqs}\PYG{p}{)}
+        \PYG{n}{mask} \PYG{o}{=} \PYG{n}{masks}\PYG{p}{[}\PYG{n}{o}\PYG{p}{]}
+        \PYG{n}{frags} \PYG{o}{=} \PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}()} \PYG{c}{\PYGZsh{}container for all subsequences in observation}
+        \PYG{n}{frag} \PYG{o}{=} \PYG{n}{LongSequence}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}()}
+
+        \PYG{n}{frag\PYGZus{}end}\PYG{o}{=}\PYG{l+m+mi}{0}
+        \PYG{n}{frag\PYGZus{}start} \PYG{o}{=} \PYG{l+m+mi}{1}
+
+        \PYG{k}{while} \PYG{n}{frag\PYGZus{}start} \PYG{o}{\PYGZlt{}} \PYG{n}{length}\PYG{p}{(}\PYG{n}{obs\PYGZus{}seq}\PYG{p}{)} \PYG{c}{\PYGZsh{} while we\PYGZsq{}re not at the sequence end}
+            \PYG{n}{curr\PYGZus{}partition} \PYG{o}{=} \PYG{n}{mask}\PYG{p}{[}\PYG{n}{frag\PYGZus{}start}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{c}{\PYGZsh{}get the partition code of the frag start}
+            \PYG{n}{curr\PYGZus{}strand} \PYG{o}{=} \PYG{n}{mask}\PYG{p}{[}\PYG{n}{frag\PYGZus{}start}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{c}{\PYGZsh{}get the strand of the frag start}
+
+            \PYG{c}{\PYGZsh{}JOBID COMPOSED HERE}
+            \PYG{n}{jobid} \PYG{o}{=} \PYG{p}{(}\PYG{n}{frag\PYGZus{}start}\PYG{p}{,} \PYG{n}{o}\PYG{p}{,} \PYG{n}{curr\PYGZus{}partition}\PYG{p}{,} \PYG{n}{curr\PYGZus{}strand}\PYG{p}{)} \PYG{c}{\PYGZsh{}compose an identifying index for this frag}
+
+            \PYG{n}{findnext}\PYG{p}{(}\PYG{o}{!}\PYG{n}{isequal}\PYG{p}{(}\PYG{n}{curr\PYGZus{}partition}\PYG{p}{),}\PYG{n}{mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{frag\PYGZus{}start}\PYG{p}{)} \PYG{o}{!=} \PYG{n+nb}{nothing} \PYG{o}{?} \PYG{n}{frag\PYGZus{}end} \PYG{o}{=} \PYG{n}{findnext}\PYG{p}{(}\PYG{o}{!}\PYG{n}{isequal}\PYG{p}{(}\PYG{n}{curr\PYGZus{}partition}\PYG{p}{),}\PYG{n}{mask}\PYG{p}{[}\PYG{o}{:}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{n}{frag\PYGZus{}start}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{o}{:} \PYG{n}{frag\PYGZus{}end} \PYG{o}{=} \PYG{n}{length}\PYG{p}{(}\PYG{n}{obs\PYGZus{}seq}\PYG{p}{)} \PYG{c}{\PYGZsh{}find the next position in the frag that has a different partition mask value from hte current one and set that position\PYGZhy{}1 to frag end, alternately frag end is end of the overall  sequence }
+            \PYG{n}{frag} \PYG{o}{=} \PYG{n}{obs\PYGZus{}seq}\PYG{p}{[}\PYG{n}{frag\PYGZus{}start}\PYG{o}{:}\PYG{n}{frag\PYGZus{}end}\PYG{p}{]} \PYG{c}{\PYGZsh{}get the frag bases}
+            \PYG{k}{if} \PYG{n}{curr\PYGZus{}strand} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{c}{\PYGZsh{}if the fragment is reverse stranded}
+                \PYG{n}{reverse\PYGZus{}complement!}\PYG{p}{(}\PYG{n}{frag}\PYG{p}{)} \PYG{c}{\PYGZsh{}use the reverse complement sequence}
+            \PYG{k}{end}
+
+            \PYG{n}{push!}\PYG{p}{(}\PYG{n}{likelihood\PYGZus{}jobs}\PYG{p}{,(}\PYG{n}{jobid}\PYG{p}{,} \PYG{n}{frag}\PYG{p}{))} \PYG{c}{\PYGZsh{}put the frag in the jobs vec}
+            \PYG{n}{frag\PYGZus{}start} \PYG{o}{=} \PYG{n}{frag\PYGZus{}end} \PYG{o}{+} \PYG{l+m+mi}{1} \PYG{c}{\PYGZsh{}move on}
+        \PYG{k}{end}        
+    \PYG{k}{end}
+    \PYG{k}{return} \PYG{n}{likelihood\PYGZus{}jobs}
+\PYG{k}{end}
+\end{Verbatim}
