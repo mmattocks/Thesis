@@ -36,7 +36,27 @@ for t_df in groupby(a10df, "Time point (d)")
                 push!(pevec,mean(skipmissing(i_df."CMZ Sum"))*mean(ldvec)/14.)
             end
         end
-        length([skipmissing(i_df."Retina thickness")...])>0 && length([skipmissing(i_df."IPL")...])>0 && length([skipmissing(i_df."OPL")...])>0 && length([skipmissing(i_df."RPE length")...])>0 && push!(vevec,(mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL")))*mean(skipmissing(i_df."RPE length"))*(π/4))
+        if length([skipmissing(i_df."Retina thickness")...])>0 &&
+            length([skipmissing(i_df."IPL")...])>0 &&
+            length([skipmissing(i_df."OPL")...])>0 &&
+            length([skipmissing(i_df."RPE length")...])>0
+   
+               rthi=mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL"))
+               rpel=mean(skipmissing(i_df."RPE length"))
+               if length([skipmissing(i_df."Lens diameter")...])>0
+                   rcirc=rpel+mean(skipmissing(i_df."Lens diameter"))
+               else
+                   rcirc=rpel+mean(ldvec)
+               end
+   
+               or=rcirc/2π
+               ir=or-.5*rthi
+   
+               ov=(4/3)*π*(or^3)
+               iv=(4/3)*π*(ir^3)
+   
+               push!(vevec,(ov-iv)*(4/5))
+           end
     end
 
     push!(measure_dict["PopEst"],filter(p->p>0,pevec))

@@ -19,8 +19,8 @@ As a first pass at this question, we calculate the likelihood ratio for the hypo
     Lens diameter & {\bf -203.102} & -203.854 & -0.752\\ \hline
     CMZ annular pop.($\dagger$)  & -484.768 & {\bf -482.733} & 2.035\\ \hline
     RPE length & {\bf -368.232} & -368.609 & -0.377\\ \hline
-    CR thickness & {\bf -240.858} & -241.032 & -0.174\\ \hline
-    CR volume ($\dagger$) & -712.256 & {\bf -711.766} & 0.491\\ \hline
+    CR thickness ($\dagger$) & {\bf -240.858} & -241.032 & -0.174\\ \hline
+    CR volume ($\dagger$) & -1091.615 & {\bf -1091.146} & 0.469\\ \hline
     \end{tabular}
     \begin{flushleft} $\mathcal{N}$: Normal distribution. logLH: logarithm of p(D|M), the likelihood of the data given the model. logLR: logarithm of the likelihood ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Superior likelihoods are bolded. $\dagger$: Calculated quantities. Sectional PCNA+ve: population of PCNA-positive CMZ RPCs per 14$\mu$m cryosection. CMZ annular pop: population of annular CMZ. RPE: retinal pigmented epithelium. CR: cellular retina.
     \end{flushleft}
@@ -38,19 +38,19 @@ We have emphasized the danger of relying overmuch on the parameterisation of sin
     \begin{tabular}{|l|l|l|l|l|}
     \hline
     {\bf Parameter} & {\bf $\mathcal{N}$ logZ} & {\bf Log-$\mathcal{N}$ logZ} & {\bf logZR} & {\bf $\sigma$ significance}\\ \hline
-    CMZ annular pop. & -744.649 $\pm$ 0.012 & {\bf -629.957 $\pm$ 0.013} & 114.691 $\pm$ 0.018 & 6518.5\\ \hline
-    CR Volume & -1287.372 $\pm$ 0.018 & {\bf -959.578 $\pm$ 0.012} & 327.794 $\pm$ 0.021 & 15421.1\\ \hline
+    CMZ Population & -43982.0 $\pm$ 31.0 & -5527.2 $\pm$ 9.9 & 38454.0 $\pm$ 33.0 & 1180.2\\ \hline
+    Estimated Retinal Volume & -16651.0 $\pm$ 18.0 & -15226.0 $\pm$ 16.0 & 1424.0 $\pm$ 24.0 & 59.0\\ \hline
     \end{tabular}
     \begin{flushleft} $\mathcal{N}$: Normal distribution. logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest evidence values bolded. CR: cellular retina.
     \end{flushleft}
     \label{PZRtable}
 \end{table}
 
-Unsurprisingly, full estimation of the Bayesian evidence for the Normal vs. log-Normal hypotheses for our calculated parameters produces the same basic story as the rough calculation of likelihood ratio from the single-fit MAP models. However, the numerical results reveal the sense in which model comparison based on these simpler methods can be misleading. There are approximately 115 orders of magnitude more evidence for the log-Normal model of interindividual variation in estimated CMZ annulus RPC population over time. This result has greater than 6500 standard deviations of significance\footnote{The typical standard for a "discovery" in particle physics is >5$\sigma$ \cite{Lyons2013}. Assuming Normally distributed error, the probability that the models were, in fact, equally good at 3 standard deviations of significance would be about a tenth of a percent (i.e. .001). At 10 standard deviations the figure is \num{7.62e-24}. Assuming the sample is representative, we have nigh certainty about these results and no reason to pursue the matter further.}. However, there are 327 orders of magnitude more evidence for the log-Normal model for the variability in the cellular retinal volume estimate, with over 15400 standard deviations of significance. Given the likelihood ratios alone, we might have suspected that the log-Normal model was more justified for modelling the population data than for the volume data. In fact, with the full estimation of the evidence, it becomes clear that the converse is true. In any case, we need not have any compunction about modelling population outcomes for these parameters with log-Normal distributions, as the evidence supplied by our observations plainly supports it.
+Unsurprisingly, full estimation of the Bayesian evidence for the Normal vs. log-Normal hypotheses for our calculated parameters produces the same basic story as the rough calculation of likelihood ratio from the single-fit MAP models. There are approximately 38000 orders of magnitude more evidence for the log-Normal model of interindividual variation in estimated CMZ annulus RPC population over time. This result has greater than 1180 standard deviations of significance\footnote{The typical standard for a "discovery" in particle physics is >5$\sigma$ \cite{Lyons2013}. Assuming Normally distributed error, the probability that the models were, in fact, equally good at 3 standard deviations of significance would be about a tenth of a percent (i.e. .001). At 10 standard deviations the figure is \num{7.62e-24}. Assuming the sample is representative, we have nigh certainty about these results and no reason to pursue the matter further.}. There are approximately 1400 orders of magnitude more evidence for the log-Normal model for the variability in the cellular retinal volume estimate, with 59 standard deviations of significance. Based on these results, we need not have any compunction about modelling population outcomes for these parameters with log-Normal distributions, as the evidence supplied by our observations plainly supports it.
 
 If between-individual variation in retinal CMZ population and retinal volume are both well-modelled log-normally, the question of their independence immediately arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, upon central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these clusters vs. the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that either the retinal growth rate is well correlated with the size of the CMZ. Since both of these questions bear upon the manner in which we model the CMZ, we performed Bayesian model selection by the so-called Empirical Bayes method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
 
-Interestingly, we find that CMZ population and retinal volume estimates are better described by uncorrelated models at all in ages, with approximately 1-8 orders of magnitude of evidence in favour of the uncorrelated model at each age. These data are displayed in \autoref{corrtable}. It is interesting to note that the evidence in favour of non-correlation is weakest at 30dpf, which will be discussed below. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
+We find that individual CMZ population and retinal volume estimates are better described by uncorrelated models at in all ages, with the exception of 23.0 dpf. It is interesting to note that the evidence in favour of non-correlation is weakest between 17 and 30 dpf. These data are displayed in \autoref{corrtable}. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself, which suggests that the rate of retinal contribution from the CMZ is probably highest between 17 and 23 days. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
 
 \begin{table}[!ht]
     \centering
@@ -58,17 +58,17 @@ Interestingly, we find that CMZ population and retinal volume estimates are bett
     \begin{tabular}{|l|l|l|l|}
         \hline
         {\bf Age (dpf)} & {\bf Uncorrelated logZ} & {\bf Correlated logZ} & {\bf logZR}\\ \hline
-        3.0 & {\bf -60.089} & -65.078 & 4.989\\ \hline
-        5.0 & {\bf -61.349} & -64.873 & 3.524\\ \hline
-        8.0 & {\bf -60.181} & -67.639 & 7.458\\ \hline
-        12.0 & {\bf -60.768} & -68.041 & 7.273\\ \hline
-        17.0 & {\bf -63.503} & -67.344 & 3.841\\ \hline
-        23.0 & {\bf -69.24} & -76.044 & 6.804\\ \hline
-        30.0 & {\bf -68.858} & -70.278 & 1.42\\ \hline
-        60.0 & {\bf -75.769} & -79.67 & 3.901\\ \hline
-        90.0 & {\bf -74.973} & -83.883 & 8.91\\ \hline
-        180.0 & {\bf -76.244} & -83.948 & 7.704\\ \hline
-        360.0 & {\bf -79.822} & -87.628 & 7.805\\ \hline
+        3.0 & {\bf -87.651} & -91.902 & 4.252\\ \hline
+        5.0 & {\bf -90.0} & -92.362 & 2.362\\ \hline
+        8.0 & {\bf -90.918} & -96.013 & 5.095\\ \hline
+        12.0 & {\bf -91.183} & -99.049 & 7.866\\ \hline
+        17.0 & {\bf -94.818} & -96.668 & 1.85\\ \hline
+        23.0 & -103.386 & {\bf -103.219} & -0.167\\ \hline
+        30.0 & {\bf -103.511} & -104.092 & 0.581\\ \hline
+        60.0 & {\bf -115.025} & -118.169 & 3.144\\ \hline
+        90.0 & {\bf -113.533} & -122.427 & 8.894\\ \hline
+        180.0 & {\bf -116.778} & -124.547 & 7.769\\ \hline
+        360.0 & {\bf -121.016} & -128.637 & 7.621\\ \hline
         \end{tabular}
     \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the uncorrelated model. Largest evidence values bolded.
     \end{flushleft}

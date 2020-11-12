@@ -67,14 +67,11 @@ for t_df in groupby(a10df, "Time point (d)")
             ov=(4/3)*π*(or^3)
             iv=(4/3)*π*(ir^3)
 
-            push!(vevec, rthi * (rpel/2)^2 *π)
-
             push!(spvec,(ov-iv)*(4/5))
         end
     end
 
     push!(measure_dict["PopEst"],pevec)
-    push!(measure_dict["VolEst"],vevec)
     push!(measure_dict["SphEst"],spvec)
     push!(measure_dict["CircEst"],cvec)
     push!(measure_dict["ThiEst"],thivec)

@@ -52,15 +52,27 @@ for t_df in groupby(a10df, "Time point (d)")
 
         length([skipmissing(i_df."Dorsal CMZ (#)")...])>0 && push!(dvec,mean(skipmissing(i_df."Dorsal CMZ (#)")))
         length([skipmissing(i_df."Ventral CMZ (#)")...])>0 && push!(vvec,mean(skipmissing(i_df."Ventral CMZ (#)")))
-        length([skipmissing(i_df."Retina thickness")...])>0 &&
+        if length([skipmissing(i_df."Retina thickness")...])>0 &&
          length([skipmissing(i_df."IPL")...])>0 &&
          length([skipmissing(i_df."OPL")...])>0 &&
-         length([skipmissing(i_df."RPE length")...])>0 &&
-         (push!(vevec,
-             (mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL")))
-                *(mean(skipmissing(i_df."RPE length"))/2)^2
-                *π);
-                ivol=true)
+         length([skipmissing(i_df."RPE length")...])>0
+
+            rthi=mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL"))
+            rpel=mean(skipmissing(i_df."RPE length"))
+            if length([skipmissing(i_df."Lens diameter")...])>0
+                rcirc=rpel+mean(skipmissing(i_df."Lens diameter"))
+            else
+                rcirc=rpel+mean(ldvec)
+            end
+
+            or=rcirc/2π
+            ir=or-.5*rthi
+
+            ov=(4/3)*π*(or^3)
+            iv=(4/3)*π*(ir^3)
+
+            push!(vevec,(ov-iv)*(4/5))
+        end
         length([skipmissing(i_df."Retina thickness")...])>0 && push!(rtvec,mean(skipmissing(i_df."Retina thickness")))
         length([skipmissing(i_df."RPE length")...])>0 && push!(rptvec,mean(skipmissing(i_df."RPE length")))
         length([skipmissing(i_df."ON diameter")...])>0 && push!(ondvec,mean(skipmissing(i_df."ON diameter")))
