@@ -1,18 +1,12 @@
-using CSV,DataFrames,Distributions,NGRefTools,StatsBase,Plots,GMC_NS,Serialization, Measurements, BioSimpleStochastic, Random
+using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting
 
 Random.seed!(786)
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 e2ph="/bench/PhD/NGS_binaries/BSS/A10/e2ph"
 e3ph="/bench/PhD/NGS_binaries/BSS/A10/e3ph"
-e4ph="/bench/PhD/NGS_binaries/BSS/A10/e4ph"
-e5ph="/bench/PhD/NGS_binaries/BSS/A10/e5ph"
-e6ph="/bench/PhD/NGS_binaries/BSS/A10/e6ph"
-e7ph="/bench/PhD/NGS_binaries/BSS/A10/e7ph"
-e10ph="/bench/PhD/NGS_binaries/BSS/A10/e10ph"
 
-paths=[e2ph,e3ph,e4ph]
-#,e5ph,e6ph,e7ph,e10ph]
+paths=[e2ph,e3ph]
 
 a10df=DataFrame(CSV.read(a10pth))
 a10df.BSR=[string(row.Block,',',row.Slide,',',row.Row) for row in eachrow(a10df)]
@@ -25,7 +19,6 @@ measure_dict["VolEst"]=Vector{Vector{Float64}}()
 measure_dict["SphEst"]=Vector{Vector{Float64}}()
 measure_dict["CircEst"]=Vector{Vector{Float64}}()
 measure_dict["ThiEst"]=Vector{Vector{Float64}}()
-
 
 #EXTRACT ALL MEASUREMENTS FROM DF TO VECTORS
 for t_df in groupby(a10df, "Time point (d)")
@@ -99,19 +92,12 @@ voldist=fit(LogNormal,measure_dict["SphEst"][1])
 
 ph2_constants=[X, popdist, voldist, vol_const, mc_its, 2]
 ph3_constants=[X, popdist, voldist, vol_const, mc_its, 3]
-ph4_constants=[X, popdist, voldist, vol_const, mc_its, 4]
-ph5_constants=[X, popdist, voldist, vol_const, mc_its, 5]
-ph6_constants=[X, popdist, voldist, vol_const, mc_its, 6]
-ph7_constants=[X, popdist, voldist, vol_const, mc_its, 7]
-ph10_constants=[X,popdist,voldist,vol_const,mc_its,10]
-constants=ph2_constants,ph3_constants,ph4_constants
-#,ph5_constants,ph6_constants,ph7_constants,ph10_constants
+constants=ph2_constants,ph3_constants
 
 cycle_prior=[LogNormal(log(20),log(2)),LogNormal(log(.9),log(1.6))]
 end_prior=[Uniform(3,360)]
-#vol_prior=LogNormal(log(1500),log(2.2))
 
-phases=[2,3,4]#,5,6,7,10]
+phases=[2,3]
 
 function compose_priors(phases)
     prs=Vector{Vector{Distribution}}()
@@ -138,5 +124,12 @@ for (pth,prior,constants,box) in zip(paths,priors,constants,boxes)
         e=CMZ_Ensemble(pth,3000,obs, prior, constants, box, GMC_DEFAULTS)
     end
 
-    converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_factor=1e-3)
+    converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_criterion="compression", converge_factor=1.)
 end
+
+e2=deserialize(e2ph*"/ens")
+e3=deserialize(e3ph*"/ens")
+
+kde2=posterior_kde(e2)
+kde3=posterior_kde(e3)
+
