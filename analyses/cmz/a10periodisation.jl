@@ -79,13 +79,10 @@ sxvol_3d=(((π*or^2)-(π*ir^2))*14)*(4/5)
 vol_const=sxvol_3d/nucpop3d
 
 mc_its=Int64(1.e6)
-#noise_dist=Normal(0,.01)
 base_scale=[144.,5.]
 base_min=[10.,0.]
-volconst_scale=5000.
-vol_min=10.
 time_scale=360
-time_min=3.
+time_min=4.
 
 popdist=fit(LogNormal,measure_dict["PopEst"][1])
 voldist=fit(LogNormal,measure_dict["SphEst"][1])

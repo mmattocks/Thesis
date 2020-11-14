@@ -1,6 +1,4 @@
-using BayesianLinearRegression,CSV,DataFrames,Distributions
-gr()
-default(legendfont = (8,"courier"), guidefont = (10,"courier"), tickfont = (8,"courier"), guide = "x")
+using BayesianLinearRegression,CSV,DataFrames,Distributions,BioSimpleStochastic,GMC_NS, Serialization
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
@@ -22,24 +20,29 @@ measure_dict["Lens circumference"]=Vector{Vector{Float64}}()
 
 #EXTRACT ALL MEASUREMENTS FROM DF TO VECTORS
 for t_df in groupby(a10df, "Time point (d)")
-    push!(X,Float64(unique(t_df."Time point (d)")[1]))
-    tvec,dvec,vvec,lcirc = [zeros(0) for i in 1:4]
+    if !(Float64(unique(t_df."Time point (d)")[1]) in [180., 360.])
 
-    for i_df in groupby(t_df,"BSR")
-        length([skipmissing(i_df."Lens diameter")...])>0 && push!(lcirc,mean(skipmissing(i_df."Lens diameter"))*π)
+        push!(X,Float64(unique(t_df."Time point (d)")[1]))
+        tvec,dvec,vvec,lcirc = [zeros(0) for i in 1:4]
+
+        for i_df in groupby(t_df,"BSR")
+            length([skipmissing(i_df."Lens diameter")...])>0 && push!(lcirc,mean(skipmissing(i_df."Lens diameter"))*π)
+        end
+
+        for i_df in groupby(t_df,"BSR")
+            length([skipmissing(i_df."CMZ Sum")...])>0 && push!(tvec,mean(skipmissing(i_df."CMZ Sum")))
+            length([skipmissing(i_df."Dorsal CMZ (#)")...])>0 && mean(skipmissing(i_df."Dorsal CMZ (#)")) >0. && push!(dvec,mean(skipmissing(i_df."Dorsal CMZ (#)")))
+            length([skipmissing(i_df."Ventral CMZ (#)")...])>0 && push!(vvec,mean(skipmissing(i_df."Ventral CMZ (#)")))
+        end
+
+        push!(measure_dict["CMZ Sum"],tvec)
+        push!(measure_dict["Dorsal CMZ (#)"],dvec)
+        push!(measure_dict["Ventral CMZ (#)"],vvec)
+        push!(measure_dict["Lens circumference"],lcirc)
     end
-
-    for i_df in groupby(t_df,"BSR")
-        length([skipmissing(i_df."CMZ Sum")...])>0 && push!(tvec,mean(skipmissing(i_df."CMZ Sum")))
-        length([skipmissing(i_df."Dorsal CMZ (#)")...])>0 && push!(dvec,mean(skipmissing(i_df."Dorsal CMZ (#)")))
-        length([skipmissing(i_df."Ventral CMZ (#)")...])>0 && push!(vvec,mean(skipmissing(i_df."Ventral CMZ (#)")))
-    end
-
-    push!(measure_dict["CMZ Sum"],tvec)
-    push!(measure_dict["Dorsal CMZ (#)"],dvec)
-    push!(measure_dict["Ventral CMZ (#)"],vvec)
-    push!(measure_dict["Lens circumference"],lcirc)
 end
+
+obsset=[measure_dict["Dorsal CMZ (#)"],measure_dict["Ventral CMZ (#)"],measure_dict["CMZ Sum"]]
 
 dpopdist=fit(LogNormal,measure_dict["Dorsal CMZ (#)"][1])
 vpopdist=fit(LogNormal,measure_dict["Ventral CMZ (#)"][1])
@@ -57,14 +60,14 @@ power=w2.val
 lm1=Lens_Model(factor,power,14.)
 lm2=Lens_Model(factor,power,28.)
 
-mc_its=1e6
+mc_its=Int64(1e6)
 base_scale=[144.,5.]
 base_min=[10.,0.]
-time_scale=360
-time_min=3.
+time_scale=90
+time_min=4.
 
 cycle_prior=[LogNormal(log(20),log(2)),LogNormal(log(.9),log(1.6))]
-end_prior=[Uniform(3,360)]
+end_prior=[Uniform(4,90)]
 
 function compose_priors(phases)
     prs=Vector{Vector{Distribution}}()
@@ -79,7 +82,7 @@ function compose_priors(phases)
     return prs,bxes
 end
 
-priors,boxes=compose_priors(2)
+prior,box=compose_priors(2)
 
 d_constants=[X,dpopdist,lm1,mc_its,2]
 v_constants=[X,vpopdist,lm1,mc_its,2] 
@@ -89,12 +92,12 @@ constants=[d_constants,v_constants,dv_constants]
 uds=Vector{Vector{Function}}([[],[liwi_display],[convergence_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
 
-for (pth,prior,constants,box) in zip(paths,priors,constants,boxes)
+for (pth,constants,obs) in zip(paths,constants,obsset)
     if isfile(pth*"/ens")
         e=deserialize(pth*"/ens")
     else
-        e=CMZ_Ensemble(pth,3000,obs, prior, constants, box, GMC_DEFAULTS)
+        e=Slice_Ensemble(pth,3000,obs, prior..., constants, box..., GMC_DEFAULTS)
     end
 
-    converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_factor=1e-22)
+    converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_criterion="compression", converge_factor=1.)
 end
