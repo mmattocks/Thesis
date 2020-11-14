@@ -77,12 +77,7 @@ or=mean(measure_dict["CircEst"][1])/2π
 ir=or-.5*mean(measure_dict["ThiEst"][1])
 sxvol_3d=(((π*or^2)-(π*ir^2))*14)*(4/5)
 vol_const=sxvol_3d/nucpop3d
-
 mc_its=Int64(1.e6)
-base_scale=[144.,5.]
-base_min=[10.,0.]
-time_scale=360
-time_min=4.
 
 popdist=fit(LogNormal,measure_dict["PopEst"][1])
 voldist=fit(LogNormal,measure_dict["SphEst"][1])
@@ -91,10 +86,14 @@ ph2_constants=[X, popdist, voldist, vol_const, mc_its, 2]
 ph3_constants=[X, popdist, voldist, vol_const, mc_its, 3]
 constants=ph2_constants,ph3_constants
 
-cycle_prior=[LogNormal(log(20),log(2)),LogNormal(log(.9),log(1.6))]
-end_prior=[Uniform(3,360)]
+cycle_prior=[Uniform(10.,144.), Uniform(0.,6)]
+end_prior=[Uniform(4.,359.)]
 
 phases=[2,3]
+phase_max=[144.,6.]
+phase_min=[10.,0.]
+time_max=359
+time_min=4.
 
 function compose_priors(phases)
     prs=Vector{Vector{Distribution}}()
@@ -102,8 +101,8 @@ function compose_priors(phases)
     for p in phases
         pr=[repeat(cycle_prior,p)...,repeat(end_prior,p-1)...]
         push!(prs,pr)
-        bx=hcat([repeat(base_min,p)...,fill(time_min,p-1)...],
-        [repeat(base_scale,p)...,fill(time_scale,p-1)...])
+        bx=hcat([repeat(phase_min,p)...,fill(time_min,p-1)...],
+        [repeat(phase_max,p)...,fill(time_max,p-1)...])
         push!(bxes,GMC_NS.to_unit_ball.(bx,pr))
     end
     return prs,bxes

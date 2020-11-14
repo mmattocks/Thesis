@@ -50,11 +50,13 @@ end
 y=y[sortperm(X)]
 sort!(X)
 
+box_1_pop=[eps() ]
+
 single_pop_NG=fit(NormalInverseGamma,log.(popvec))
-r_prior=Normal(5,1)
+r_prior=Normal(5,1.5)
 tc_prior=NormalInverseGamma(3.,1.,5.,2.)
 s_prior=NormalInverseGamma(5,.2,5.,5.)
-sister_prior=Beta(8.,130.)
+sister_prior=Beta(8.,75.)
 
 priors_1_pop=[single_pop_NG, r_prior, tc_prior, s_prior, sister_prior]
 # priors_2_pop=[NormalGamma(params(single_pop_NG).*.1...), r_prior, tc_prior, sf_prior,
@@ -78,6 +80,15 @@ const mc_its=Int64(5e5)
 const end_time=10.5
 const retain_run=false
 constants=[X, pulse_time, mc_its, end_time, retain_run]
+
+function bound_θ!(θ)
+    npops=length(θ)/8
+    θ[findall(θi->θi<0., θ)].=nextfloat(0.)
+    for p in 1:npops
+        θ[Int64(8*p)]>1. && (θ[Int64(6*p)]=1.)
+    end
+    return θ
+end
 
 ensembles=Vector{Thymidine_Ensemble}()
 for (ps, ep) in zip(prior_sets,ensemble_paths)
