@@ -24,7 +24,7 @@ Because the more conventional methods to address the ineffiency of nested sampli
     \item\label{selectmodel} Select a random  model from the ensemble.
     \item\label{applyfunc} Apply a randomly selected permutation function from the instruction's function list according to the probability weights given to the functions by the instruction's weight vector.
     \item Repeat \ref{applyfunc} until a model more likely than the ensemble contour, given observations, is found, or the instruction's \path{func_limit} is reached.
-    \item If the \path{func_limit} is reached without a new model being found, return to \ref{selectmodel} and repeat \ref{applyfunc} until a model more likely than the ensemble's contour is found, or until the instruction's model_limit is reached.
+    \item If the \path{func_limit} is reached without a new model being found, return to \ref{selectmodel} and repeat \ref{applyfunc} until a model more likely than the ensemble's contour is found, or until the instruction's \path{model_limit} is reached.
 \end{enumerate}
 
 \section{Usage notes}
