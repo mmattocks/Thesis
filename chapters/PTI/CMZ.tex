@@ -121,6 +121,21 @@ To perform our model selection task, we wish to simulate the time-evolution of C
 
 A model "phase" can then be defined by the $CT$ and $exit$ parameters it applies to update the population and volume over its length. The full parameterisation of a model with $p$ phases is given by $p$ pairs of $CT$ and $exit$ values, $p-1$ phase transition times, and $\mu_{cv}$, which is taken to apply equally to all phases. Given an initial population and volume sampled from the log-Normal models of their interindividual distributions, \autoref{popeq} and \autoref{voleq} may be applied to these values difference equations can be applied to produce simulated sample values at the times actually observed. Many such samples obtained by Monte Carlo can be used to estimate log-Normal distributions for the model parameters, which can be used to score the model against observations. By defining prior distributions over the model parameters, we may sample from the prior to initialize a model ensemble. The ensemble can then be compressed by nested sampling, moving each model-particle over the parameter space by Galilean Monte Carlo, as described in \autoref{GMC}. Using the typical procedures applied in nested sampling \cite{Skilling2006}, we calculated the Bayesian evidence for each of 1, 2, and 3-phase models. These results are presented in, with output from maximum a posteriori parameterizations for each model plotted against observations in.
 
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pMAP.png}}    
+    \caption{{\bf Population and activity of the CMZ over the first year of \textit{D.rerio} life}}
+    Panel A: Marginal posterior mean CMZ annulus population. Panel B: Marginal posterior mean retinal volume estimate. Insets in Panels A \& B display data from 3-17 dpf. Panel C: Marginal posterior mean of the proliferative index of the CMZ annulus, assayed by specified retinal neurons with incorporated thymidine from an 8hr pulse at the indicated ages. Panel D: Mean daily rate of volumetric increase of the neural retina, calculated as the difference in volumes between two ages over the number of elapsed days. All means are displayed in a band representing the $\pm 95 \%$ credible interval for the marginal posterior distribution of the mean.
+    \label{CMZoverall}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pmarginals.svg}}    
+    \caption{{\bf Population and activity of the CMZ over the first year of \textit{D.rerio} life}}
+    Panel A: Marginal posterior mean CMZ annulus population. Panel B: Marginal posterior mean retinal volume estimate. Insets in Panels A \& B display data from 3-17 dpf. Panel C: Marginal posterior mean of the proliferative index of the CMZ annulus, assayed by specified retinal neurons with incorporated thymidine from an 8hr pulse at the indicated ages. Panel D: Mean daily rate of volumetric increase of the neural retina, calculated as the difference in volumes between two ages over the number of elapsed days. All means are displayed in a band representing the $\pm 95 \%$ credible interval for the marginal posterior distribution of the mean.
+    \label{CMZoverall}
+\end{figure}
+
+
 \section{Characterisation of asymmetrical CMZ population and retinal contribution dynamics}
 
 In the course of the preceding investigations, it became apparent that the population asymmetry mentioned in \autoref{chap:SMMEoutro} was not a static phenomenon, with the dorsal lobe of the CMZ annulus being consistently more populous than the ventral lobe, as generally implied by the sources covered in \autoref{chap:RPCreview}. Rather, both the extent and orientation of asymmetry seem to evolve over time. Sectional population totals for the dorsal and ventral CMZ are presented in \autoref{DVontology}, Panel A, alongside the related intra-individual asymmetry ratio in Panel B. The initially pronounced dorsal population and reduced ventral population both seem to go through the overall boom-bust progression of CMZ population, but their relative proportion within individuals reverses itself over the period from 17-90dpf. 
