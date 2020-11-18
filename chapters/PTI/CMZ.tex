@@ -95,7 +95,7 @@ If it is true that the majority of zebrafish retinogenesis occurs postembryonica
     \label{CMZoverall}
 \end{figure}
 
-An initial, relatively quiescent period in the population history of the CMZ can be inferred from the lack of growth observed in the first week of life, as well as the observations presented in \autoref{rysCycle}, which demonstrate that CMZ RPCs are proliferating too slowly to be labelled by a day's pulse of a thymidine analogue at 5dpf in the wild-type and heterozygote siblings of npat mutants. Interestingly, we have good confidence that retinal volume continues to grow over this time; 99.56\% of the marginal posterior mass of the mean 5dpf estimate is above the 3dpf mean, suggesting that this proliferative pause is too short to appear in the retinal volume data.
+An initial, relatively quiescent period in the population history of the CMZ can be inferred from the lack of growth observed in the first week of life, as well as the observations in \autoref{rysCMZontogeny}, which demonstrate that CMZ RPCs are proliferating too slowly to be labelled by a day's pulse of a thymidine analogue at 5dpf in the wild-type and heterozygote siblings of npat mutants. Interestingly, we have good confidence that retinal volume continues to grow over this time; 99.56\% of the marginal posterior mass of the mean 5dpf estimate is above the 3dpf mean, suggesting that this proliferative pause is too short to appear in the retinal volume data.
 
 In any case, the first two to three weeks of life (magnified in lens insets in panels A and C) appear to mark a relatively slow build in both estimated CMZ annulus population and retinal volume compared to the explosion which follows immediately thereafter. While zebrafish are better staged by size than age \cite{Parichy2009}, the onset of this explosive growth seems to come somewhat earlier than the typical metamorphic transition from larval to juvenile stages at ~45dpf \cite{Singleman2014}. This raises the question of the manner in which the CMZ contributes to the retina during the critical period of exponential growth of the organism, between about 45 and 90dpf. It is plausible, for instance, that the growth of the CMZ population mainly reflects the increased output of stem cells, with RPCs specifying at some steady rate, or that the CMZ builds itself up for a wave of specification somewhat later, similarly to the sequence of events in the embryonic central retina.
 
@@ -119,26 +119,70 @@ To perform our model selection task, we wish to simulate the time-evolution of C
     \label{voleq}
 \end{equation}
 
-A model "phase" can then be defined by the $CT$ and $exit$ parameters it applies to update the population and volume over its length. The full parameterisation of a model with $p$ phases is given by $p$ pairs of $CT$ and $exit$ values, $p-1$ phase transition times, and $\mu_{cv}$, which is taken to apply equally to all phases. Given an initial population and volume sampled from the log-Normal models of their interindividual distributions, \autoref{popeq} and \autoref{voleq} may be applied to these values difference equations can be applied to produce simulated sample values at the times actually observed. Many such samples obtained by Monte Carlo can be used to estimate log-Normal distributions for the model parameters, which can be used to score the model against observations. By defining prior distributions over the model parameters, we may sample from the prior to initialize a model ensemble. The ensemble can then be compressed by nested sampling, moving each model-particle over the parameter space by Galilean Monte Carlo, as described in \autoref{GMC}. Using the typical procedures applied in nested sampling \cite{Skilling2006}, we calculated the Bayesian evidence for each of 1, 2, and 3-phase models. These results are presented in, with output from maximum a posteriori parameterizations for each model plotted against observations in.
+A model "phase" can then be defined by the $CT$ and $\epsilon$ parameters it applies to update the population and volume, over the appropriate number of days. The full parameterisation of a model with $p$ phases is given by $p$ pairs of $CT$ and $\epsilon$ values, $p-1$ phase transition times. $\mu_{cv}$, which is taken to apply equally to all phases, is estimated from 3 dpf nuclear measurements, as described in \autoref{sec:CMZestimates}. Given an initial population and volume sampled from the log-Normal models of their interindividual distributions, \autoref{popeq} and \autoref{voleq} may be applied to these values difference equations can be applied to produce simulated sample values at the times actually observed. Many such samples obtained by Monte Carlo can be used to estimate log-Normal distributions for the model parameters, which can be used to score the model against observations. By defining prior distributions over the model parameters, we may sample from the prior to initialize a model ensemble. The ensemble can then be compressed by nested sampling, moving each model-particle over the parameter space by Galilean Monte Carlo, as described in \autoref{GMC}. Using the typical procedures applied in nested sampling \cite{Skilling2006}, we estimated the Bayesian evidence, maximum a posteriori, and marginal posterior distributions on parameters for 2 and 3-phase models.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pMAP.png}}    
-    \caption{{\bf Population and activity of the CMZ over the first year of \textit{D.rerio} life}}
-    Panel A: Marginal posterior mean CMZ annulus population. Panel B: Marginal posterior mean retinal volume estimate. Insets in Panels A \& B display data from 3-17 dpf. Panel C: Marginal posterior mean of the proliferative index of the CMZ annulus, assayed by specified retinal neurons with incorporated thymidine from an 8hr pulse at the indicated ages. Panel D: Mean daily rate of volumetric increase of the neural retina, calculated as the difference in volumes between two ages over the number of elapsed days. All means are displayed in a band representing the $\pm 95 \%$ credible interval for the marginal posterior distribution of the mean.
-    \label{CMZoverall}
+    \caption{{\bf Maximum a posteriori output of periodization models}}
+    \label{phaseMAPout}
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% posterior mass model output, for the 2-phase model (A panels) and 3-phase model (B panels). A1,B1: population estimates. A2,B2: volume estimates.
 \end{figure}
+
+It is useful to begin with the maximum a posteriori model output, as this plainly shows the primary problem with this simple model; the model relationship between changes in CMZ population and changes in volume breaks down after 30dpf. That is, the later volume estimates are too large for the CMZ to produce, given the calculated cellular volume at 3dpf. The result is that the models fit the early population and volume data quite well, but the population peak is dragged upward and forward to produce more-likely volume output. While it is possible that the later CMZ contributes more volume per neuron to the cellular retina, it is much more likely that the volume approximation applies better to more-nearly spherical eyes at younger ages, than to the flattened eyes of later ages. Although we had hoped that the estimated retinal volume data would constrain the $\epsilon$ exit rate parameters, this was not the case, as discussed below. When we tried floating $\mu_{cv}$ as a variable within the model, the MAP results were similar (data not shown), suggesting that a constant value for $\mu_{cv}$ across ages is the problem in achieving good model fits, not the particular value chosen. This reinforces the idea that the problem relates to the breakdown of the retinal volume estimate at later ages.
+
+While this limitation prevents either model from explaining the combined estimate datasets very well, they are in this sense under the same constraint, and so a reasonable inference about the number of phases justified by the data is still possible. Evidence estimates for the 2-phase and 3-phase models, given these data, are presented in \autoref{phasetable}. There are greater than 5600 orders of magnitude more evidence for the 2-phase model; this result has over 500 standard deviations of significance. This reflects the greatly expanded parameter space in the 3-phase model, which adds an additional 3 parameters to the 2-phase models' count of 5 parameters. The additional flexibility afforded by the 3rd phase in fitting the later volume data is unable to overcome the evidentiary penalty associated with the larger parameter space. We therefore conclude that, on the basis of these data, the 2-phase hypothesis must be accepted.
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Evidence favours a 2-phase periodization of CMZ activity}}
+    \begin{tabular}{|l|l|l|l|} \hline 
+        {\bf 2-phase logZ} & {\bf 3-phase logZ} & {\bf logZR} & {\bf $\sigma$ Significance}\\ \hline
+        {\bf -5583.1 $\pm$ 4.9} & -11247.0 $\pm$ 9.6 & 5664.0 $\pm$ 11.0 & 525.425\\ \hline 
+    \end{tabular}
+    \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the 2-phase model. Largest evidence value bolded.
+    \end{flushleft}
+    \label{phasetable}
+\end{table}
+
+While the parameter estimates associated with these models are clearly unreliable, they are useful to inspect in order to demonstrate some properties of nested sampling, and for comparison to the simulations to follow. To begin with, we present the parameterization of the MAP models displayed above in \autoref{phaseMAPtable}. Unsurprisingly, the selected 2-phase model begins with a first phase of rapid proliferation, with a $CT$ of 13.8 hr, followed by a second, slower phase of 27.2 hr. The imputed exit rate $\epsilon$ is greater than 200\% of the day's starting population in the first phase, suggesting that new cells exit the CMZ after about 12 hours, around one cycle, while the second phase exit rate is much less, with 86\% of the day's starting population exiting the CMZ, again suggesting a residency time of about one cycle. The imputed phase transition age is about 62dpf. Due to the volume estimate problem noted above, it is reasonable to believe that the $CT$ estimates are likely too short, the $\epsilon$ estimates too high, and the transition age too late; all favoured in order to produce higher volume estimates at later ages.
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Maximum a posteriori parameter estimates for periodization models}}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        {\bf Parameter} & {\bf 2-phase MAP} & {\bf 3-phase MAP}\\ \hline
+        Phase 1 $CT$ (h) & 13.8 & 14.3\\ \hline
+        Phase 1 $\epsilon$ & 2.28 & 2.18\\ \hline
+        Phase 2 $CT$ (h) & 27.2 & 35.4\\ \hline
+        Phase 2 $\epsilon$ & 0.86 & 0.66\\ \hline
+        Phase 3 $CT$ (h) & NA & 109.1\\ \hline
+        Phase 3 $\epsilon$ & NA & 0.12\\ \hline
+        Transition 1 age & 61.9 & 115.5\\ \hline
+        Transition 2 age & NA & 252.1\\ \hline
+        \end{tabular}
+    \begin{flushleft}
+    \end{flushleft}
+    \label{phaseMAPtable}
+\end{table}
+
+Because nested sampling naturally produces samples from the posterior, we can estimate posterior distributions using the evidence values for these samples. We performed this by kernel density estimation, specifically to investigate the extent to which the marginal posterior distributions for the selected model are polymodal; that is, the extent to which the evidence supports multiple hypotheses about the parameters of the two imputed phases. Kernel density estimates (KDEs) for marginal posterior distributions on the 2-phase models' parameters are presented in \autoref{phasemarginals}. 
+
+These estimates plainly reveal the polymodality of the posterior distributions, as well as the lack of constraint that the data impose on phase exit rates $\epsilon$. For instance, the first phase parameters (top left) display 3 major modes; the best evidentiated mode occurs between 15-20 hr $CT$, with the bulk of this posterior mass distributed above an exit rate of 1.0, but with a much larger range of $\epsilon$ supported than $CT$. The second phase parameters (bottom left) display even greater polymodality, with the bulk distributed around 140-150 hr $CT$, with an exit rate of less than .75. Plotting the two-dimensional marginal $CT$ from both phases (top right) reveals that these parameters are the best constrained by the data; still, the posterior is highly polymodal, with numerous combinations of $CT$ values receiving at least some support, although, obviously, shorter phase 1 $CT$ values combined with longer phase 2 $CT$ values are favoured. The marginal posterior distribution on the age at which the transition between phases occurs is plotted in the bottom right of \autoref{phasemarginals}; while the largest peaks of the KDE are at times greater than 50dpf, a substantial portion of the prior mass falls earlier than this, significant for the simulations to follow.
+
+It should be noted here that the maximum a priori model parameters are not perfectly reflected in the KDE. While the $CT$ and $\epsilon$ parameters for both phases do fall broadly within the best-evidentiated posterior modes, they are not centered therein; moreover, the MAP phase transition time does not occur in the best-evidentiated transition time mode. As discussed in \autoref{sec:NS}, an important property of nested sampling is that the accuracy of evidence calculations is traded off against the accuracy of estimating the posterior distribution. Since we have here prioritized evidence estimation, this is the cause of this discrepancy; the MAP models themselves have relatively little weight in the KDE estimates.
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pmarginals.svg}}    
-    \caption{{\bf Population and activity of the CMZ over the first year of \textit{D.rerio} life}}
-    Panel A: Marginal posterior mean CMZ annulus population. Panel B: Marginal posterior mean retinal volume estimate. Insets in Panels A \& B display data from 3-17 dpf. Panel C: Marginal posterior mean of the proliferative index of the CMZ annulus, assayed by specified retinal neurons with incorporated thymidine from an 8hr pulse at the indicated ages. Panel D: Mean daily rate of volumetric increase of the neural retina, calculated as the difference in volumes between two ages over the number of elapsed days. All means are displayed in a band representing the $\pm 95 \%$ credible interval for the marginal posterior distribution of the mean.
-    \label{CMZoverall}
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pmarginals.png}}    
+    \caption{{\bf Kernel density estimates of marginal posterior parameter distributions, 2-phase model}}
+    \label{phasemarginals}
 \end{figure}
 
+We conclude that, while our global model of CMZ population and volumetric retinal contribution is too badly flawed to make credible parameter estimates, a 2-phase model of this activity is far better substantiated by the evidence than a 3-phase model. We proceed on this basis, accepting the 2-phase model, and taking up the idea of the "slice model" introduced in \autoref{ssec:slice}, to investigate modelling the CMZ RPC population more concretely, directly from sectional observations, rather than from the calculated population and retinal volume estimates presented above.
 
-\section{Characterisation of asymmetrical CMZ population and retinal contribution dynamics}
+\section{Slice-model characterisation of asymmetrical CMZ population dynamics by Galilean Monte Carlo Nested Sampling}
 
-In the course of the preceding investigations, it became apparent that the population asymmetry mentioned in \autoref{chap:SMMEoutro} was not a static phenomenon, with the dorsal lobe of the CMZ annulus being consistently more populous than the ventral lobe, as generally implied by the sources covered in \autoref{chap:RPCreview}. Rather, both the extent and orientation of asymmetry seem to evolve over time. Sectional population totals for the dorsal and ventral CMZ are presented in \autoref{DVontology}, Panel A, alongside the related intra-individual asymmetry ratio in Panel B. The initially pronounced dorsal population and reduced ventral population both seem to go through the overall boom-bust progression of CMZ population, but their relative proportion within individuals reverses itself over the period from 17-90dpf. 
+In the course of the preceding investigations, it became apparent that the population asymmetry mentioned in \autoref{chap:SMMEoutro} was not a static phenomenon, with the dorsal lobe of the CMZ annulus being consistently more populous than the ventral lobe, as generally implied by the sources covered in \autoref{chap:RPCreview}. Rather, both the extent and orientation of asymmetry seem to evolve over time. Sectional population totals for the dorsal and ventral CMZ are presented in \autoref{DVontology}, Panel A, alongside the related intra-individual asymmetry ratio in Panel B. The initially pronounced dorsal population and reduced ventral population both seem to go through the overall boom-bust progression of CMZ population, but their relative proportion within individuals reverses itself over the period from 17-90dpf. We also observed a similar phenomenon occurring across the naso-temporal axis over the same time period (\autoref{NTontology}).
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/DVontology.png}}    
@@ -147,9 +191,73 @@ In the course of the preceding investigations, it became apparent that the popul
     \label{DVontology}
 \end{figure}
 
-Inspected closely, these data provide a possible rationale for the reversal of asymmetry in the proliferative dynamics of the niche itself: the sectional (or "slice") population of the dorsal CMZ is increasing beyond its postembryonic minimum by 12dpf, while the ventral CMZ takes until 17dpf to exhibit a noticeable increase in size; moreover, the peak dorsal population is achieved by 23dpf, whilst ventrally the peak is only achieved at 30dpf. This strongly suggests that the dorsal and ventral CMZ populations undergo similar, time-shifted processes of proliferation from different starting populations. If this is so, an explanation for this time-shifted phenomenon could have fundamental relevance to predicting and controlling the proliferative behaviour of peripheral RPCs and stem cells.
+Inspected closely, these data provide a possible rationale for the reversal of asymmetry in the proliferative dynamics of the niche itself: the sectional (or ``slice'') population of the dorsal CMZ is increasing beyond its postembryonic minimum by 12dpf, while the ventral CMZ takes until 17dpf to exhibit a noticeable increase in size; moreover, the peak dorsal population is achieved by 23dpf, whilst ventrally the peak is only achieved at 30dpf. This strongly suggests that the dorsal and ventral CMZ populations undergo similar, time-shifted processes of proliferation from different starting populations. If this is so, an explanation for this time-shifted phenomenon could have fundamental relevance to predicting and controlling the proliferative behaviour of peripheral RPCs and stem cells.
 
-As a crude way of assessing the possibility of variable cell cycle attributes across the dorsal-ventral axis, we used the Empirical Bayes approach to estimate the evidence for separate Nowakowski-style \cite{Nowakowski1989} linear models for the dorsal and ventral CMZ in a cumulative thymidine analogue labelling experiment at 3dpf, against a model for both subpopulations combined. While this model is inadequate for reasons described in \autoref{sec:Nowakowski}, it can serve as a guide as to whether further inferential calculations are likely to be productive here. These results are summarized in \autoref{cumEdUtable}, with the relevant linear regressions displayed in \autoref{cumEdUlinreg}.
+To test this hypothesis, we used a ``slice model'' of the CMZ, where the thickness of the slice is taken to be the same as the observed cryosection thickness (\SI{14}{\micro\metre}). The population of the CMZ is modelled with a difference equation, as above, but with an additional exit term representing lateral, circumferential contributions of the CMZ to the generation of new, adjacent ``slices''. The value of this term is calculated from the difference in CMZ annulus diameter over the calculated time period implied by a power-law model of lens growth fitted to observations, as discussed in \autoref{sec:lenspopest}. The resultant difference equation is \autoref{sliceeq}. Terms are as defined above, except that $p_n$ is the sectional population at $n$ dpf, and not the total CMZ annulus population; additionally, $\eta$ is defined as the daily circumferential exit rate implied by the power-law model.
+
+\begin{equation}
+    p_n=p_{n-1} \cdot 2^{\frac{24}{CT}} - p_{n-1} \cdot \epsilon - \eta
+    \label{sliceeq}
+\end{equation}
+
+We reasoned that, if the phase transition occurs earlier in the dorsal CMZ than in the ventral CMZ, there should be some informational gain in separating these observations vs. a combined total sum for both lobes of the slice annulus\footnote{The ``total'' model is required to supply double the circumferential exit rate of the dorsal or ventral models, to reflect the requirement for this ``full'' slice to grow both lobes of the eye}. In this case, the combination of two phase-shifted populations in the total model should produce a ``fuzzy'' peak relative to the separate modes. We therefore estimated the evidence, MAP, and posterior marginals for 2-phase models given the sectional sum, dorsal, and ventral populations. Given our belief that the whole-eye model presented above gives an over-long transition time, and in order to focus on the most informative subset of the data for our hypothesis, we restricted this analysis to the population data within the first three months of life.
+
+The slice model proves to have much greater success at explaining sectional counts than the whole-eye model does at explaining the annulus population estimates; maximum a posteriori model output is presented in \autoref{dvMAPout}. In particular, all of the models adequately represent the early decline in sectional populations, arising from rapid early growth of the eye that exceeds the CMZs' proliferative capacity, without further ado; if there is not sufficient evidence to justify a separate, slow, late phase of proliferation, there is clearly none to justify a separate, slow, early phase. 
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=.8\textwidth]{cmz/a10dvMAP.png}}    
+    \caption{{\bf Maximum a posteriori output of total, dorsal, and ventral CMZ slice models}}
+    \label{dvMAPout}
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% posterior mass model output, for the total CMZ population model (panel A), dorsal CMZ population model (panel B), and ventral CMZ population model (panel C).
+\end{figure}
+
+The hypothesis that there is a time-shift in the phase transition across the dorso-ventral axis is thoroughly refuted by these models, in two ways. First, the evidence estimates demonstrate that we are not epistemically justified in separating the dorsal and ventral populations. The total-population slice model receives greater than 500 orders of magnitude more evidence than the joint evidence for the separate dorsal and ventral models, with greater than 190 standard deviations of significance, as displayed in \autoref{dvtable}. It is interesting to note that the evidence for the dorsal model is substantially lower than either the total or ventral models. This may indicate a causal influence on the dorsal population that is neither in the model nor acting on the ventral population, or it may be an uninteresting sampling effect. 
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Evidence favours a combined slice model over separate dorsal and ventral models}}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        {\bf Total logZ} & {\bf Dorsal logZ} & {\bf Ventral logZ} & {\bf logZR} & {\bf $\sigma$ Significance}\\ \hline
+        {\bf -498.1 $\pm$ 1.6} & -638.3 $\pm$ 1.8 & -371.7 $\pm$ 1.0 & 512.0 $\pm$ 2.6 & 194.861\\ \hline
+        \end{tabular}
+    \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratio in favour of the combined model. Largest evidence value bolded.
+    \end{flushleft}
+    \label{dvtable}
+\end{table}
+
+A second line of evidence indicating that this hypothesis is unsupported are the MAP model parameter values, summarized in \autoref{dvMAPtable}. The MAP phase transition age for the total slice model is functionally identical to that for the ventral model, and within two days of the MAP transition for the dorsal model. Additionally, the dorsal MAP transition is actually later than the ventral date, which further suggests the original idea of a time-shifted late ventral phase change has no evidence. Reassuringly, the MAP parameters for the total slice model are similar to those found for the 2-phase MAP in \autoref{phasemarginals}. Interestingly, the MAP phase parameters differ markedly between the split dorsal\/ventral models and the total slice model, although all suggest a markedly longer $CT$ and lower $\epsilon$ for the second phase. This observation suggests that the additional noise incurred from splitting the sectional CMZ population into dorsal and ventral lobes has a strong effect on parameter estimates. This may provide a practical reason to prefer combining these counts in slice models, beyond the fact that it is epistemically unjustified on the support of these data. 
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Maximum a posteriori parameter estimates for slice models}}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        {\bf Parameter} & {\bf Total MAP} & {\bf Dorsal MAP} & {\bf Ventral MAP}\\ \hline
+        Phase 1 $CT$ (h) & 16.1 & 29.1 & 20.5\\ \hline
+        Phase 1 $\epsilon$ & 1.72 & 0.69 & 1.15\\ \hline
+        Phase 2 $CT$ (h) & 23.5 & 37.0 & 55.2\\ \hline
+        Phase 2 $\epsilon$ & 1.06 & 0.62 & 0.38\\ \hline
+        Transition age & 35.5 & 37.2 & 35.8\\ \hline
+        \end{tabular}
+    \begin{flushleft} 
+    \end{flushleft}
+    \label{dvMAPtable}
+\end{table}
+
+Examining the marginal posterior distributions of the total slice model, presented in \autoref{dvmarginals}, shows that exit rate posteriors are no less constrained than the whole-eye model, suggesting the retinal volume estimate supplies little additional  information, beyond the population estimate, regarding the rate at which RPCs leave the niche. However, the marginal posteriors on cycle length are less constrained than the whole-eye model, with noticeably less separation between modes, which suggests that the volume estimate may nonetheless narrow the range of credible $CT$ values. This suggests a rationale for pursuing better volumetric estimates for retinae from fish older than 30 dpf. The posterior distribution on the age of phase transition indicates that many values for this parameter retain some credibility, and, like the whole-eye model marginals in \autoref{phasemarginals}, the MAP estimate does not occupy the most probable KDE kernel for this value, for the same reason noted above.
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10dvmarginals.png}}    
+    \caption{{\bf Kernel density estimates of marginal posterior parameter distributions, total slice model}}
+    \label{dvmarginals}
+\end{figure}
+
+On the basis of this analysis, the best available hypothesis about the observed ontogeny of RPC population asymmetry across the dorsoventral axis is the pre-establishment of differential population size by asymmetrical progress of the embryonic specification wave, rather than differential proliferative schedules.
+
+\subsection{Cumulative thymidine labelling supports GMC-NS model predictions}
+
+The similarity of $CT$ and $\epsilon$ exit rate parameters in the whole-eye and total slice models, despite the defective cellular retinal volume estimate, suggests that these values may be relatively accurate. In order to partially validate this idea, we examined 3dpf CMZ RPCs labelled with a 10.5 hour pulse of the thymidine analogue EdU. We used the Empirical Bayes approach to estimate the evidence for separate Nowakowski-style \cite{Nowakowski1989} linear models for the dorsal and ventral CMZ, against a model for both subpopulations combined. While this model is inadequate for reasons described in \autoref{sec:Nowakowski}, it can serve to substantiate the first phase cycle time parameter. These results are summarized in \autoref{cumEdUtable}, with the relevant linear regressions displayed in \autoref{cumEdUlinreg}.
 
 \begin{table}[!ht]
     \centering
@@ -166,11 +274,11 @@ As a crude way of assessing the possibility of variable cell cycle attributes ac
     \label{cumEdUtable}
 \end{table}
 
-The estimated log evidence for the combined model, treating dorsal and ventral CMZ as a single, uniformly proliferative population, is 26.165. Compared to the joint log evidence for two models taking dorsal and ventral CMZs as separate homogenously proliferative populations, 22.980, there are approximately 3.19 orders of magnitude of evidence in favour of the combined model. There is no evidence, on this basis, for differing cell cycle characteristics across the D/V retinal axis of asymmetry at 3dpf. 3dpf was selected here for pragmatic reasons; the D/V asymmetry is large and the dorsal population seems to be, perhaps, proliferating more slowly, given its decline relative to the ventral population. It is possible that asymmetric cell cycle times would be better detected during the candidate "time-shift" period, around 15dpf. It is, in any case, plain from the implausibly short calculated cycle times that this model is inadequate. 
+Firstly, there are approximately 3 orders of magnitude of evidence in favour of the combined model. There is no evidence, on this basis, for differing cell cycle characteristics across the D/V retinal axis of asymmetry at 3dpf. Moreover, the Nowakowski-calculated cell cycle time $T_c$ for the combined model, 14.6 $\pm$ 1.1 hr, includes the whole-eye MAP first phase $TC$, 13.8 hr, within one standard deviation; the total slice-model first phase $TC$, 16.1, is within two. This confirms that the differing D/V MAP parameter estimates observed in the slice model are unsubstantiated; the evidence supports broadly similar cell cycle characteristics across anatomical axes in 3dpf CMZ RPCs. Moreover, at least the MAP cell cycle times implied by our model selection time seem realistic, given the assumptions of the of Nowakowski model. That said, the data clearly diverge from a linear trend toward the end of the pulse, and the calculated S phase lengths are unrealistically short, showing the limitations of this model.
 
 \section{Investigating CMZ RPC lineage outcomes}
 
-By labelling CMZ RPCs with the thymidine analogue EdU in an 8 hour pulse at 3, 23, and 90 dpf, followed by histochemical analysis for known zebrafish retinal neural lineage markers, we investigated the possibility that RPC lineage outcomes change over the life of the organism. This hypothesis is of particular interest, as differences in the mosaic organisation of embryonically-contributed central retina and CMZ-contributed peripheral retina remain unexplained \cite{Allison2010}. We used antibodies raised against Pax6 and Isl2b to mark retinal ganglion cells (RGCs) of the ganglion cell layer and amacrine cells of the inner nuclear layer. Anti-glutamine synthetase (GS) and anti-PKC$\beta$ were used to mark M\"{u}ller glia (MG) and bipolar cell (BPC) populations of the INL. The unique flattened nuclear morphology of horizontal neurons was used to identify them. Lastly, the antibody Zpr1, directed against an unknown antigen present in photoreceptors with double cone morphology, was used to mark these cells.
+By labelling CMZ RPCs with the thymidine analogue EdU in an 8 hour pulse at 3, 23, and 90 dpf, followed by histochemical analysis for known zebrafish retinal neural lineage markers, we investigated the possibility that RPC lineage outcomes change over the life of the organism. This hypothesis is of particular interest, as differences in the mosaic organisation of embryonically-contributed central retina and CMZ-contributed peripheral retina remain unexplained \cite{Allison2010}. It may, moreover, have clinical significance, were quiescent peripheral stem cells to be entrained for regnerative medical purposes, as their lineage outcomes are may be different than embryonic RPCs.  We used antibodies raised against Pax6 and Isl2b to mark retinal ganglion cells (RGCs) of the ganglion cell layer and amacrine cells of the inner nuclear layer. Anti-glutamine synthetase (GS) and anti-PKC$\beta$ were used to mark M\"{u}ller glia (MG) and bipolar cell (BPC) populations of the INL. The unique flattened nuclear morphology of horizontal neurons was used to identify them. Lastly, the antibody Zpr1, directed against an unknown antigen present in photoreceptors with double cone morphology, was used to mark these cells.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/lineage.png}}    

@@ -1,6 +1,6 @@
-using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots
+using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots, Gadfly
 gr()
-default(legendfont = (8,"courier"), guidefont = (10,"courier"), tickfont = (8,"courier"))
+default(legendfont = (8), guidefont = (10), tickfont = (8))
 
 Random.seed!(786)
 
@@ -128,8 +128,32 @@ end
 e2=deserialize(e2ph*"/ens")
 e3=deserialize(e3ph*"/ens")
 
+e2ev=measure_evidence(e2)
+e3ev=measure_evidence(e3)
+
+evidence_ratio=e2ev-e3ev
+
+println("\\begin{tabular}{|l|l|l|l|}")
+println("\\hline")
+println("{\\bf 2-phase logZ} & {\\bf 3-phase logZ} & {\\bf logZR} & {\\bf \$\\sigma\$ Significance}\\ \\hline")
+println("\\textbf{$(round(e2ev,digits=3))} & $(round(e3ev,digits=3)) & $(round(evidence_ratio,digits=3)) & $(round(evidence_ratio.val/evidence_ratio.err,digits=3))\\\\ \\hline")
+println("\\end{tabular}")
+
 map2=deserialize(e2.models[findmax([m.log_Li for m in e2.models])[2]].path)
 map3=deserialize(e3.models[findmax([m.log_Li for m in e3.models])[2]].path)
+
+println("\\begin{tabular}{|l|l|l|}")
+println("\\hline")
+println("{\\bf Parameter} & {\\bf 2-phase MAP} & {\\bf 3-phase MAP}\\ \\hline")
+println("Phase 1 \$CT\$ (h) & $(round(map2.θ[1], digits=1)) & $(round(map3.θ[1], digits=1))\\\\ \\hline")
+println("Phase 1 \$\\epsilon\$ & $(round(map2.θ[2], digits=2)) & $(round(map3.θ[2], digits=2))\\\\ \\hline")
+println("Phase 2 \$CT\$ (h) & $(round(map2.θ[3], digits=1)) & $(round(map3.θ[3], digits=1))\\\\ \\hline")
+println("Phase 2 \$\\epsilon\$ & $(round(map2.θ[4], digits=2)) & $(round(map3.θ[4], digits=2))\\\\ \\hline")
+println("Phase 3 \$CT\$ (h) & NA & $(round(map3.θ[5], digits=1))\\\\ \\hline")
+println("Phase 3 \$\\epsilon\$ & NA & $(round(map3.θ[6], digits=2))\\\\ \\hline")
+println("Transition 1 age & $(round(map2.θ[5], digits=1)) & $(round(map3.θ[7], digits=1))\\\\ \\hline")
+println("Transition 2 age & NA & $(round(map3.θ[8], digits=1))\\\\ \\hline")
+println("\\end{tabular}")
 
 X=e2.constants[1]
 catpobs=vcat([e2.obs[t][1] for t in 1:length(X)]...)
@@ -173,9 +197,6 @@ combined_map=Plots.plot(map2_popplt,map3_popplt,map2_volplt,map3_volplt,layout=g
 
 savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10pMAP.png")
 
-println("MAP 2ph θ: $(map2.θ)")
-println("MAP 3ph θ: $(map3.θ)")
-
 kde2=posterior_kde(e2)
 # kde3=posterior_kde(e3)
 
@@ -184,11 +205,11 @@ ph2marg=marginal(kde2,[3;4])
 ph12marg=marginal(kde2,[1;3])
 transmarg=marginal(kde2,[5])
 
-ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
-ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
-ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 cycle length (hr)","Phase 2 cycle length (hr)"],axis=[0. 144.; 0. 144.])
+ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["Phase 1 CT (hr)","Phase 1 ϵ rate"], axis=[0. 144.; 0. 4.])
+ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["Phase 2 CT (hr)","Phase 2 ϵ rate"], axis=[0. 144.; 0. 4.])
+ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 CT (hr)","Phase 2 CT (hr)"],axis=[0. 144.; 0. 144.])
 tmplt=KernelDensityEstimatePlotting.plotKDE(transmarg,xlbl="Phase transition age (dpf)", points=false, c=["green"])
 
-combined_marg=gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
+combined_marg=Gadfly.gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
 img=SVG("/bench/PhD/Thesis/images/cmz/a10pmarginals.svg",24cm,24cm)
 draw(img,combined_marg)

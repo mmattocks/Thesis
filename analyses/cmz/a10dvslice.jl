@@ -105,10 +105,31 @@ ed=deserialize(edpath*"/ens")
 ev=deserialize(evpath*"/ens")
 edv=deserialize(edvpath*"/ens")
 
+edev=measure_evidence(ed)
+evev=measure_evidence(ev)
+edvev=measure_evidence(edv)
+
+evidence_ratio=edvev-(edev+evev)
+
+println("\\begin{tabular}{|l|l|l|l|l|}")
+println("\\hline")
+println("{\\bf Total logZ} & {\\bf Dorsal logZ} & {\\bf Ventral logZ} & {\\bf logZR} & {\\bf \$\\sigma\$ Significance}\\\\ \\hline")
+println("\\textbf{$(round(edvev,digits=3))} & $(round(edev,digits=3)) & $(round(evev,digits=3)) & $(round(evidence_ratio,digits=3)) & $(round(evidence_ratio.val/evidence_ratio.err,digits=3))\\\\ \\hline")
+println("\\end{tabular}")
+
 mapd=deserialize(ed.models[findmax([m.log_Li for m in ed.models])[2]].path)
 mapv=deserialize(ev.models[findmax([m.log_Li for m in ev.models])[2]].path)
 mapdv=deserialize(edv.models[findmax([m.log_Li for m in edv.models])[2]].path)
 
+println("\\begin{tabular}{|l|l|l|l|}")
+println("\\hline")
+println("{\\bf Parameter} & {\\bf Total MAP} & {\\bf Dorsal MAP} & {\\bf Ventral MAP}\\ \\hline")
+println("Phase 1 \$CT\$ (h) & $(round(mapdv.θ[1], digits=1)) & $(round(mapd.θ[1], digits=1)) & $(round(mapv.θ[1], digits=1))\\\\ \\hline")
+println("Phase 1 \$\\epsilon\$ & $(round(mapdv.θ[2], digits=2)) & $(round(mapd.θ[2], digits=2)) & $(round(mapv.θ[2], digits=2))\\\\ \\hline")
+println("Phase 2 \$CT\$ (h) & $(round(mapdv.θ[3], digits=1)) & $(round(mapd.θ[3], digits=1)) & $(round(mapv.θ[3], digits=1))\\\\ \\hline")
+println("Phase 2 \$\\epsilon\$ & $(round(mapdv.θ[4], digits=2)) & $(round(mapd.θ[4], digits=2)) & $(round(mapv.θ[4], digits=2))\\\\ \\hline")
+println("Transition age & $(round(mapdv.θ[5], digits=1)) & $(round(mapd.θ[5], digits=1)) & $(round(mapv.θ[5], digits=1))\\\\ \\hline")
+println("\\end{tabular}")
 
 X=ed.constants[1]
 catdobs=vcat([ed.obs[t] for t in 1:length(X)]...)
@@ -154,11 +175,11 @@ ph2marg=marginal(kde,[3;4])
 ph12marg=marginal(kde,[1;3])
 transmarg=marginal(kde,[5])
 
-ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
-ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
-ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 cycle length (hr)","Phase 2 cycle length (hr)"],axis=[0. 144.; 0. 144.])
+ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["Phase 1 CT (hr)","Phase 1 ϵ rate"], axis=[0. 144.; 0. 4.])
+ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["Phase 2 CT (hr)","Phase 2 ϵ rate"], axis=[0. 144.; 0. 4.])
+ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 CT (hr)","Phase 2 CT (hr)"],axis=[0. 144.; 0. 144.])
 tmplt=KernelDensityEstimatePlotting.plotKDE(transmarg,xlbl="Phase transition age (dpf)", points=false, c=["green"])
 
-combined_marg=gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
+combined_marg=Gadfly.gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
 img=SVG("/bench/PhD/Thesis/images/cmz/a10dvmarginals.svg",24cm,24cm)
 draw(img,combined_marg)
