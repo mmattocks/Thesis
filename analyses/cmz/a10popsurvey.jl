@@ -147,8 +147,6 @@ ratedist23=MTDist_MC_func((a,b)->(exp(a)-exp(b))/6., [filter!(!isinf,log.(measur
 
 println("3dpf poprate mean: $(m3) 23dpf poprate mean $(mean(ratedist23))poprate 23dpf quantile : $(quantile(ratedist23,.025))")
 
-
-
 ve_logn_mts=[fit(MarginalTDist,log.(filter!(i->!iszero(i),measure_dict["VolEst"][n]))) for n in 1:length(X)]
 ve_mean=[exp(mean(mt)) for mt in ve_logn_mts]
 ve_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in ve_logn_mts]
@@ -158,7 +156,6 @@ vol_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["VolEst"][n])] for 
 plot!(vol_chart, X, ve_mean, ribbon=(ve_lower,ve_upper), color=:blue, label="Vol. mean")
 
 println("$(ccdf(ve_logn_mts[2],log(ve_mean[1]))) % of marginal posterior mass of 5dpf volume estimate is greater than the 3dpf estimated mean")
-
 
 volrate_mean,volrate_lower,volrate_upper=[Vector{Float64}() for i in 1:3]
 for (nx, x) in enumerate(X)

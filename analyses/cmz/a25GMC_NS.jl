@@ -50,53 +50,44 @@ end
 y=y[sortperm(X)]
 sort!(X)
 
-box_1_pop=[eps() ]
+sp_max_mean,sp_max_std=get_lognormal_desc(fit(LogNormal,popvec))
+sp_max_var=sp_max_std^2
 
-single_pop_NG=fit(NormalInverseGamma,log.(popvec))
+pop_mu_prior=Uniform(1.,sp_max_mean)
+pop_std_prior=Uniform(1.,sp_max_var)
 r_prior=Normal(5,1.5)
 tc_prior=NormalInverseGamma(3.,1.,5.,2.)
-s_prior=NormalInverseGamma(5,.2,5.,5.)
+s_prior=NormalInverseGamma(6.,2.5,1.,1.)
 sister_prior=Beta(8.,75.)
 
-priors_1_pop=[single_pop_NG, r_prior, tc_prior, s_prior, sister_prior]
-# priors_2_pop=[NormalGamma(params(single_pop_NG).*.1...), r_prior, tc_prior, sf_prior,
-#             NormalGamma(params(single_pop_NG).*.9...), r_prior, tc_prior, sf_prior]
-# priors_3_pop=[NormalGamma(params(single_pop_NG).*.1...), r_prior, tc_prior, sf_prior,
-#               NormalGamma(params(single_pop_NG).*.45...), r_prior, tc_prior, sf_prior,
-#              NormalGamma(params(single_pop_NG).*.45...), r_prior, tc_prior, sf_prior]
-#  priors_4_pop=[NormalGamma(params(single_pop_NG).*.1...), r_prior, tc_prior, sf_prior,
-#              NormalGamma(params(single_pop_NG).*.3...), r_prior, tc_prior, sf_prior,
-#              NormalGamma(params(single_pop_NG).*.3...), r_prior, tc_prior, sf_prior,
-#              NormalGamma(params(single_pop_NG).*.3...), r_prior, tc_prior, sf_prior]
+priors_1_pop=[pop_mu_prior, pop_std_prior, r_prior, marginals(tc_prior)..., marginals(s_prior)..., sister_prior]
+priors_2_pop=vcat(priors_1_pop,priors_1_pop)
 
-prior_sets=[priors_1_pop]
-ensemble_paths=["/bench/PhD/NGS_binaries/BSS/A25/1pop"] 
-                # "/bench/PhD/NGS_binaries/BSS/A25/2pop",
-                #  "/bench/PhD/NGS_binaries/BSS/A25/3pop",
-                #  "/bench/PhD/NGS_binaries/BSS/A25/4pop"]
+p1_box=[1. sp_max_mean
+        1. sp_max_var
+        1. 10.
+        1. 4.5
+        eps() .5
+        eps() .5]
 
+p2_box=vcat(p1_box,p1_box)
+
+prior_sets=[priors_1_pop,priors_2_pop]
+ensemble_paths=["/bench/PhD/NGS_binaries/BSS/A25/1pop", "/bench/PhD/NGS_binaries/BSS/A25/2pop"]
 const pulse_time=10.5
 const mc_its=Int64(5e5)
 const end_time=10.5
 const retain_run=false
 constants=[X, pulse_time, mc_its, end_time, retain_run]
 
-function bound_θ!(θ)
-    npops=length(θ)/8
-    θ[findall(θi->θi<0., θ)].=nextfloat(0.)
-    for p in 1:npops
-        θ[Int64(8*p)]>1. && (θ[Int64(6*p)]=1.)
-    end
-    return θ
-end
 
 ensembles=Vector{Thymidine_Ensemble}()
-for (ps, ep) in zip(prior_sets,ensemble_paths)
+for (ps, ep, box) in zip(prior_sets,ensemble_paths,boxes)
     if isfile(ep*"/ens")
         push!(ensembles,deserialize(ep*"/ens"))
     else
         @info "Assembling ensemble at $ep"
-        push!(ensembles,Thymidine_Ensemble(ep, 50, y, ps, constants, GMC_DEFAULTS))
+        push!(ensembles,Thymidine_Ensemble(ep, 50, y, ps, constants, box, GMC_DEFAULTS))
     end
 end
 

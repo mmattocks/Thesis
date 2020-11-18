@@ -1,4 +1,6 @@
-using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting
+using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots
+gr()
+default(legendfont = (8,"courier"), guidefont = (10,"courier"), tickfont = (8,"courier"))
 
 Random.seed!(786)
 
@@ -123,9 +125,70 @@ for (pth,prior,constants,box) in zip(paths,priors,constants,boxes)
     converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_criterion="compression", converge_factor=1.)
 end
 
-# e2=deserialize(e2ph*"/ens")
-# e3=deserialize(e3ph*"/ens")
+e2=deserialize(e2ph*"/ens")
+e3=deserialize(e3ph*"/ens")
 
-# kde2=posterior_kde(e2)
+map2=deserialize(e2.models[findmax([m.log_Li for m in e2.models])[2]].path)
+map3=deserialize(e3.models[findmax([m.log_Li for m in e3.models])[2]].path)
+
+X=e2.constants[1]
+catpobs=vcat([e2.obs[t][1] for t in 1:length(X)]...)
+catvobs=vcat([e2.obs[t][2] for t in 1:length(X)]...)
+Xs=vcat([[X[n] for i in 1:length(e2.obs[n][1])] for n in 1:length(X)]...)
+
+p2_mean=map2.disp_mat[:,2,1]
+p2_upper=map2.disp_mat[:,1,1].-map2.disp_mat[:,2,1]
+p2_lower=map2.disp_mat[:,2,1].-map2.disp_mat[:,3,1]
+
+map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", xaxis=nothing, showaxis=:y)
+plot!(map2_popplt, X, p2_mean, ribbon=(p2_lower,p2_upper), color=:magenta, label="2-phase model population")
+annotate!([(30,1.25e4,Plots.text("A1",18))])
+
+v2_mean=map2.disp_mat[:,2,2]
+v2_upper=map2.disp_mat[:,1,2].-map2.disp_mat[:,2,2]
+v2_lower=map2.disp_mat[:,2,2].-map2.disp_mat[:,3,2]
+
+map2_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:top)
+plot!(map2_volplt, X, v2_mean, ribbon=(v2_lower,v2_upper), color=:green, label="2-phase model volume")
+annotate!([(30,3.5e8,Plots.text("A2",18))])
+
+
+p3_mean=map3.disp_mat[:,2,1]
+p3_upper=map3.disp_mat[:,1,1].-map3.disp_mat[:,2,1]
+p3_lower=map3.disp_mat[:,2,1].-map3.disp_mat[:,3,1]
+
+map3_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", xaxis=nothing, showaxis=:y)
+plot!(map3_popplt, X, p3_mean, ribbon=(p3_lower,p3_upper), color=:magenta, label="3-phase model population")
+annotate!([(30,1.5e4,Plots.text("B1",18))])
+
+v3_mean=map3.disp_mat[:,2,2]
+v3_upper=map3.disp_mat[:,1,2].-map3.disp_mat[:,2,2]
+v3_lower=map3.disp_mat[:,2,2].-map3.disp_mat[:,3,2]
+
+map3_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:top)
+plot!(map3_volplt, X, v3_mean, ribbon=(v3_lower,v3_upper), color=:green, label="3-phase model volume")
+annotate!([(30,3.5e8,Plots.text("B2",18))])
+
+combined_map=Plots.plot(map2_popplt,map3_popplt,map2_volplt,map3_volplt,layout=grid(2,2), size=(900,600))
+
+savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10pMAP.png")
+
+println("MAP 2ph θ: $(map2.θ)")
+println("MAP 3ph θ: $(map3.θ)")
+
+kde2=posterior_kde(e2)
 # kde3=posterior_kde(e3)
 
+ph1marg=marginal(kde2,[1;2])
+ph2marg=marginal(kde2,[3;4])
+ph12marg=marginal(kde2,[1;3])
+transmarg=marginal(kde2,[5])
+
+ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
+ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
+ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 cycle length (hr)","Phase 2 cycle length (hr)"],axis=[0. 144.; 0. 144.])
+tmplt=KernelDensityEstimatePlotting.plotKDE(transmarg,xlbl="Phase transition age (dpf)", points=false, c=["green"])
+
+combined_marg=gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
+img=SVG("/bench/PhD/Thesis/images/cmz/a10pmarginals.svg",24cm,24cm)
+draw(img,combined_marg)

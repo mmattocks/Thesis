@@ -1,5 +1,4 @@
-using BayesianLinearRegression,CSV,DataFrames,Distributions,BioSimpleStochastic,GMC_NS, Serialization
-
+using BayesianLinearRegression,CSV,DataFrames,Distributions,BioSimpleStochastic,GMC_NS, Serialization, Plots, KernelDensityEstimate,KernelDensityEstimatePlotting, Gadfly
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
 edpath="/bench/PhD/NGS_binaries/BSS/A10/ed"
@@ -30,9 +29,9 @@ for t_df in groupby(a10df, "Time point (d)")
         end
 
         for i_df in groupby(t_df,"BSR")
-            length([skipmissing(i_df."CMZ Sum")...])>0 && push!(tvec,mean(skipmissing(i_df."CMZ Sum")))
+            length([skipmissing(i_df."CMZ Sum")...])>0 && mean(skipmissing(i_df."CMZ Sum")) >0. && push!(tvec,mean(skipmissing(i_df."CMZ Sum")))
             length([skipmissing(i_df."Dorsal CMZ (#)")...])>0 && mean(skipmissing(i_df."Dorsal CMZ (#)")) >0. && push!(dvec,mean(skipmissing(i_df."Dorsal CMZ (#)")))
-            length([skipmissing(i_df."Ventral CMZ (#)")...])>0 && push!(vvec,mean(skipmissing(i_df."Ventral CMZ (#)")))
+            length([skipmissing(i_df."Ventral CMZ (#)")...])>0 && mean(skipmissing(i_df."Ventral CMZ (#)")) >0. && push!(vvec,mean(skipmissing(i_df."Ventral CMZ (#)")))
         end
 
         push!(measure_dict["CMZ Sum"],tvec)
@@ -101,3 +100,65 @@ for (pth,constants,obs) in zip(paths,constants,obsset)
 
     converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_criterion="compression", converge_factor=1.)
 end
+
+ed=deserialize(edpath*"/ens")
+ev=deserialize(evpath*"/ens")
+edv=deserialize(edvpath*"/ens")
+
+mapd=deserialize(ed.models[findmax([m.log_Li for m in ed.models])[2]].path)
+mapv=deserialize(ev.models[findmax([m.log_Li for m in ev.models])[2]].path)
+mapdv=deserialize(edv.models[findmax([m.log_Li for m in edv.models])[2]].path)
+
+
+X=ed.constants[1]
+catdobs=vcat([ed.obs[t] for t in 1:length(X)]...)
+catvobs=vcat([ev.obs[t] for t in 1:length(X)]...)
+catdvobs=vcat([edv.obs[t] for t in 1:length(X)]...)
+
+dXs=vcat([[X[n] for i in 1:length(ed.obs[n])] for n in 1:length(X)]...)
+vXs=vcat([[X[n] for i in 1:length(ev.obs[n])] for n in 1:length(X)]...)
+dvXs=vcat([[X[n] for i in 1:length(edv.obs[n])] for n in 1:length(X)]...)
+
+d_mean=mapd.disp_mat[:,2]
+d_upper=mapd.disp_mat[:,3].-mapd.disp_mat[:,2]
+d_lower=mapd.disp_mat[:,2].-mapd.disp_mat[:,1]
+
+v_mean=mapv.disp_mat[:,2]
+v_upper=mapv.disp_mat[:,3].-mapv.disp_mat[:,2]
+v_lower=mapv.disp_mat[:,2].-mapv.disp_mat[:,1]
+
+dv_mean=mapdv.disp_mat[:,2]
+dv_upper=mapdv.disp_mat[:,3].-mapdv.disp_mat[:,2]
+dv_lower=mapdv.disp_mat[:,2].-mapdv.disp_mat[:,1]
+
+mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xaxis=nothing, ylabel="Population")
+plot!(mapd_plt, X, d_mean, ribbon=(d_lower,d_upper), color=:green, label="Dorsal model population")
+annotate!([(8,150,Plots.text("B",18))])
+
+mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population")
+plot!(mapv_plt, X, v_mean, ribbon=(v_lower,v_upper), color=:magenta, label="Ventral model population")
+annotate!([(8,175,Plots.text("C",18))])
+
+mapdv_plt=scatter(dvXs,catdvobs, marker=:cross, color=:black, markersize=3, label="Total CMZ population data", showaxis=:y, xaxis=nothing, ylabel="Population")
+plot!(mapdv_plt, X, dv_mean, ribbon=(dv_lower,dv_upper), color=:orange, label="Total model population")
+annotate!([(8,300,Plots.text("A",18))])
+
+combined_map=Plots.plot(mapdv_plt,mapd_plt,mapv_plt,layout=grid(3,1), size=(800,900))
+
+savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10dvMAP.png")
+
+kde=posterior_kde(edv)
+
+ph1marg=marginal(kde,[1;2])
+ph2marg=marginal(kde,[3;4])
+ph12marg=marginal(kde,[1;3])
+transmarg=marginal(kde,[5])
+
+ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
+ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["RPC cycle length (hr)","CMZ Exit rate"], axis=[0. 144.; 0. 4.])
+ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 cycle length (hr)","Phase 2 cycle length (hr)"],axis=[0. 144.; 0. 144.])
+tmplt=KernelDensityEstimatePlotting.plotKDE(transmarg,xlbl="Phase transition age (dpf)", points=false, c=["green"])
+
+combined_marg=gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
+img=SVG("/bench/PhD/Thesis/images/cmz/a10dvmarginals.svg",24cm,24cm)
+draw(img,combined_marg)
