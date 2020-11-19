@@ -15,29 +15,48 @@ measure_dict=Dict{String,Vector{Vector{Float64}}}()
 measure_dict["PopEst"]=Vector{Vector{Float64}}()
 measure_dict["VolEst"]=Vector{Vector{Float64}}()
 
-#EXTRACT MEASUREMENTS FROM DF TO VECTORS
+#EXTRACT ALL MEASUREMENTS FROM DF TO VECTORS
 for t_df in groupby(a10df, "Time point (d)")
     push!(X,Float64(unique(t_df."Time point (d)")[1]))
-    pevec,tvec,dvec,vvec,vevec, rtvec, rplvec, rptvec, ldvec, ondvec, onlvec, oplvec, inlvec, iplvec, gclvec = [zeros(0) for i in 1:15]
+    pevec,ldvec,spvec = [zeros(0) for i in 1:3]
 
     for i_df in groupby(t_df,"BSR")
         length([skipmissing(i_df."Lens diameter")...])>0 && push!(ldvec,mean(skipmissing(i_df."Lens diameter")))
     end
 
     for i_df in groupby(t_df,"BSR")
-        if length([skipmissing(i_df."CMZ Sum")...])>0
-            push!(tvec,mean(skipmissing(i_df."CMZ Sum")))
+        if length([skipmissing(i_df."CMZ Sum")...])>0 && mean(skipmissing(i_df."CMZ Sum")) > 0
             if length([skipmissing(i_df."Lens diameter")...])>0
                 push!(pevec,mean(skipmissing(i_df."CMZ Sum"))*mean(skipmissing(i_df."Lens diameter"))/14.)
             else
                 push!(pevec,mean(skipmissing(i_df."CMZ Sum"))*mean(ldvec)/14.)
             end
         end
-        length([skipmissing(i_df."Retina thickness")...])>0 && length([skipmissing(i_df."IPL")...])>0 && length([skipmissing(i_df."OPL")...])>0 && length([skipmissing(i_df."RPE length")...])>0 && push!(vevec,(mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL")))*mean(skipmissing(i_df."RPE length"))*(π/4))
+        if length([skipmissing(i_df."Retina thickness")...])>0 &&
+         length([skipmissing(i_df."IPL")...])>0 &&
+         length([skipmissing(i_df."OPL")...])>0 &&
+         length([skipmissing(i_df."RPE length")...])>0
+
+            rthi=mean(skipmissing(i_df."Retina thickness"))-mean(skipmissing(i_df."OPL"))-mean(skipmissing(i_df."IPL"))
+            rpel=mean(skipmissing(i_df."RPE length"))
+            if length([skipmissing(i_df."Lens diameter")...])>0
+                rcirc=rpel+mean(skipmissing(i_df."Lens diameter"))
+            else
+                rcirc=rpel+mean(ldvec)
+            end
+
+            or=rcirc/2π
+            ir=or-.5*rthi
+
+            ov=(4/3)*π*(or^3)
+            iv=(4/3)*π*(ir^3)
+
+            push!(spvec,(ov-iv)*(4/5))
+        end
     end
 
     push!(measure_dict["PopEst"],pevec)
-    push!(measure_dict["VolEst"],vevec)
+    push!(measure_dict["VolEst"],spvec)
 end
 
 gmc=GMC_DEFAULTS
@@ -51,14 +70,20 @@ lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display]])
 evdict=Dict{String,Measurement}()
 
 pmax_μ=2e5
-pmax_λ=1.
-vmax_μ=1e6
-vmax_λ=1e-3
+pmin_μ=1
+pmax_λ=1e-3
+pmin_λ=1e-10
+vmax_μ=1e10
+vmin_μ=100
+vmax_λ=1e-10
+vmin_λ=1e-20
 
-pn_priors=[Uniform(eps(),pmax_μ),Uniform(eps(),pmax_λ)]
-pn_box=[eps() pmax_μ;eps() pmax_λ]
-vn_priors=[Uniform(eps(),vmax_μ),Uniform(eps(),vmax_λ)]
-vn_box=[eps() vmax_μ;eps() vmax_λ]
+pn_priors=[Uniform(pmin_μ,pmax_μ),Uniform(pmin_λ,pmax_λ)]
+pn_box=[pmin_μ pmax_μ;pmin_λ pmax_λ]
+vn_priors=[Uniform(vmin_μ,vmax_μ),Uniform(vmin_λ,vmax_λ)]
+vn_box=[vmin_μ vmax_μ;vmin_λ vmax_λ]
+
+n_models=50
 
 for (pth,prior,box,eststring) in zip([pne_pth, vne_pth],[pn_priors, vn_priors],[pn_box,vn_box],["PopEst","VolEst"])
     for (nx,x) in enumerate(X)
@@ -66,33 +91,38 @@ for (pth,prior,box,eststring) in zip([pne_pth, vne_pth],[pn_priors, vn_priors],[
         if isfile(enspth*"/ens")
             e=deserialize(enspth*"/ens")
         else
-            e=Normal_Ensemble(enspth,100,measure_dict[eststring][nx], prior, box, gmc...)
+            e=Normal_Ensemble(enspth,n_models,filter(i->!iszero(i), measure_dict[eststring][nx]), prior, box, gmc...)
         end
 
-        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000))
+        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
     end
 end
 
-ln_pmax_μ=log(pmax_μ^2/sqrt(pmax_μ^2 + (1/pmax_λ)^2))
-ln_pmax_λ=1/log(1+((1/pmax_λ)^2)/pmax_μ^2)
-ln_vmax_μ=log(vmax_μ^2/sqrt(vmax_μ^2 + (1/vmax_λ)^2))
-ln_vmax_λ=1/log(1+((1/vmax_λ)^2)/vmax_μ^2)
+ln_pmax_μ=log(pmax_μ^2/sqrt(pmax_μ^2 + inv(pmax_λ)))
+ln_pmin_μ=log(pmin_μ^2/sqrt(pmin_μ^2 + inv(pmin_λ)))
+ln_pmax_λ=1/log(1+(inv(pmax_λ)/pmax_μ^2))
+ln_pmin_λ=1/log(1+(inv(pmin_λ)/pmin_μ^2))
 
-pln_priors=[Uniform(eps(),ln_pmax_μ),Uniform(eps(),ln_pmax_λ)]
-pln_box=[eps() ln_pmax_μ;eps() ln_pmax_λ]
-vln_priors=[Uniform(eps(),ln_vmax_μ),Uniform(eps(),ln_vmax_λ)]
-vln_box=[eps() ln_vmax_μ;eps() ln_vmax_λ]
+ln_vmax_μ=log(vmax_μ^2/sqrt(vmax_μ^2 + inv(vmax_λ)))
+ln_vmin_μ=log(vmin_μ^2/sqrt(vmin_μ^2 + inv(vmin_λ)))
+ln_vmax_λ=1/log(1+(inv(vmax_λ)/vmax_μ^2))
+ln_vmin_λ=1/log(1+(inv(vmin_λ)/vmin_μ^2))
 
-for (pth,prior,box,eststring) in zip([plne_pth, vlne_pth],[pln_priors, vln_priors],[pln_box,vln_box],["PopEst","VolEst"])
+pln_priors=[Uniform(ln_pmin_μ,ln_pmax_μ),Uniform(ln_pmin_λ,ln_pmax_λ)]
+pln_box=[ln_pmin_μ ln_pmax_μ;ln_pmin_λ ln_pmax_λ]
+vln_priors=[Uniform(ln_vmin_μ,ln_vmax_μ),Uniform(ln_vmin_λ,ln_vmax_λ)]
+vln_box=[ln_vmin_μ ln_vmax_μ;ln_vmin_λ ln_vmax_λ]
+
+for (pth,prior,box,eststring) in zip([plne_pth, vlne_pth],[pn_priors, vn_priors],[pn_box,vn_box],["PopEst","VolEst"])
     for (nx,x) in enumerate(X)
         enspth=pth*"/$x"
         if isfile(enspth*"/ens")
             e=deserialize(enspth*"/ens")
         else
-            e=LogNormal_Ensemble(enspth,100,filter(i->i>0,measure_dict[eststring][nx]), prior, box, gmc...)
+            e=LogNormal_Ensemble(enspth,n_models,filter(i->i>0,measure_dict[eststring][nx]), prior, box, gmc...)
         end
 
-        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000))
+        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
     end
 end
 
