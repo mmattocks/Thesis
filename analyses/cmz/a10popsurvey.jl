@@ -1,6 +1,6 @@
 using CSV,DataFrames,Distributions,NGRefTools,StatsBase,Plots
 gr()
-default(legendfont = (8,"courier"), guidefont = (10,"courier"), tickfont = (8,"courier"), guide = "x")
+default(legendfont = (8), guidefont = (10), tickfont = (8))
 
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
@@ -126,8 +126,12 @@ pe_mean=[exp(mean(mt)) for mt in pe_logn_mts]
 pe_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in pe_logn_mts]
 pe_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pe_logn_mts]
 
-ann_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["PopEst"][n])] for n in 1:length(X)]...),vcat(measure_dict["PopEst"]...), marker=:cross, color=:black, markersize=3, label="Pop. data")
+plotticks=[30*i for i in 1:12]
+
+ann_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["PopEst"][n])] for n in 1:length(X)]...),vcat(measure_dict["PopEst"]...), marker=:cross, color=:black, markersize=3, label="Pop. data", ylabel="Est. CMZ annulus population", showaxis=:y, xticks=plotticks, xformatter=_->"")
 plot!(ann_chart, X, pe_mean, ribbon=(pe_lower,pe_upper), color=:magenta, label="Pop. mean")
+lens!([2, 20], [500, 2500], inset = (1, bbox(0.3, 0.1, 0.45, 0.45)))
+annotate!([(8,4500,Plots.text("A",18))])
 
 poprate_mean,poprate_lower,poprate_upper=[Vector{Float64}() for i in 1:3]
 for (nx, x) in enumerate(X)
@@ -138,7 +142,8 @@ for (nx, x) in enumerate(X)
     end
 end
 
-poprate_chart=plot(X[2:end],poprate_mean,ribbon=(poprate_lower, poprate_upper), color=:grey, ylabel="Population growth (cells/d)", xlabel="Age (dpf)", label="Estimated mean growth rate", legend=:topright)
+poprate_chart=plot(X[2:end],poprate_mean,ribbon=(poprate_lower, poprate_upper), color=:grey, ylabel="Est. CMZ pop. rate of change (cells/d)", label="Simulated mean rate", legend=:topright, showaxis=:y, xticks=plotticks, xformatter=_->"")
+annotate!([(8,400,Plots.text("B",18))])
 
 
 l3,m3,u3=MTDist_MC_func((a,b)->(exp(a)-exp(b))/5., [filter!(!isinf,log.(measure_dict["PopEst"][2])), filter!(!isinf,log.(measure_dict["PopEst"][1]))], summary=true)
@@ -152,8 +157,10 @@ ve_mean=[exp(mean(mt)) for mt in ve_logn_mts]
 ve_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in ve_logn_mts]
 ve_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in ve_logn_mts]
 
-vol_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["VolEst"][n])] for n in 1:length(X)]...),vcat(measure_dict["VolEst"]...), marker=:cross, color=:black, markersize=3, label="Vol. data")
+vol_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["VolEst"][n])] for n in 1:length(X)]...),vcat(measure_dict["VolEst"]...), marker=:cross, color=:black, markersize=3, label="Vol. data", ylabel="Est. retinal volume (μm³)",  showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:bottomright)
 plot!(vol_chart, X, ve_mean, ribbon=(ve_lower,ve_upper), color=:blue, label="Vol. mean")
+lens!([2, 20], [2.5e6, 1e7], inset = (1, bbox(0.12, 0., 0.39, 0.40)))
+annotate!([(8,4.5e8,Plots.text("C",18))])
 
 println("$(ccdf(ve_logn_mts[2],log(ve_mean[1]))) % of marginal posterior mass of 5dpf volume estimate is greater than the 3dpf estimated mean")
 
@@ -168,7 +175,15 @@ end
 volrate_lower=volrate_mean.-volrate_lower
 volrate_upper=volrate_upper.-volrate_mean
 
-volrate_chart=plot(X[2:end],volrate_mean,ribbon=(volrate_lower, volrate_upper), color=:grey, label="Simulated volrate mean", legend=:topright)
+volrate_chart=plot(X[2:end],volrate_mean,ribbon=(volrate_lower, volrate_upper), color=:grey, label="Simulated mean rate", legend=:topright, xlabel="Age(dpf)", ylabel="Est. volume rate (μm³d⁻¹)", xticks=plotticks)
+annotate!([(8,4.5e6,Plots.text("D",18))])
+
+l=@layout [a{0.3h}
+            b{0.2h}
+            c{0.3h}
+            d]
+combined=plot(ann_chart,poprate_chart,vol_chart,volrate_chart,layout=(4,1),size=(1200,1200),link=:x)
+savefig(combined, "/bench/PhD/Thesis/images/cmz/CMZoverall.png")
 
 l30,m30,u30=MTDist_MC_func((a,b)->(exp(a)-exp(b))/7., [filter!(!isinf,log.(measure_dict["VolEst"][7])), filter!(!isinf,log.(measure_dict["VolEst"][6]))], summary=true)
 

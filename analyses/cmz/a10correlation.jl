@@ -1,7 +1,7 @@
 using BayesianLinearRegression,CSV,DataFrames,Distributions,NGRefTools,StatsBase,Plots,GMC_NS,Serialization, Measurements
 import Measurements:value,uncertainty
 
-default(legendfont = (8,"courier"), guidefont = (10,"courier"), tickfont = (8,"courier"), guide = "x")
+default(legendfont = (8), guidefont = (10,), tickfont = (8), guide = "x")
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 pne_pth="/bench/PhD/NGS_binaries/BSS/A10/pop_norm"
@@ -69,8 +69,6 @@ corrX3d=hcat(ones(length(x)),x)
 y=measure_dict["VolEst"][1]
 uncorrm=BayesianLinearRegression.fit!(BayesianLinReg(uncorrX3d,y))
 corrm=BayesianLinearRegression.fit!(BayesianLinReg(corrX3d,y))
-
-corr3dplt=scatter(x,y,marker=:cross,markersize=3,markercolor=:black,label="Data",ylabel="Estimated retinal volume",xlabel="Estimated CMZ Annulus Population",legend=:bottomleft)
 
 function blr_plt(x,y,Xs,blrs,colors,labels,q=.975)
     plt=scatter(x,y,marker=:diamond,markersize=8,markerstrokestyle=:bold,markercolor=:black,label="Data",ylabel="Estimated retinal volume",xlabel="Estimated CMZ Annulus Population",legend=:bottomleft)
