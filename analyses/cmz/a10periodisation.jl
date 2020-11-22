@@ -156,6 +156,8 @@ println("Transition 2 age & NA & $(round(map3.θ[8], digits=1))\\\\ \\hline")
 println("\\end{tabular}")
 
 X=e2.constants[1]
+plotticks=[30*i for i in 1:12]
+
 catpobs=vcat([e2.obs[t][1] for t in 1:length(X)]...)
 catvobs=vcat([e2.obs[t][2] for t in 1:length(X)]...)
 Xs=vcat([[X[n] for i in 1:length(e2.obs[n][1])] for n in 1:length(X)]...)
@@ -164,16 +166,18 @@ p2_mean=map2.disp_mat[:,2,1]
 p2_upper=map2.disp_mat[:,1,1].-map2.disp_mat[:,2,1]
 p2_lower=map2.disp_mat[:,2,1].-map2.disp_mat[:,3,1]
 
-map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", xaxis=nothing, showaxis=:y)
+map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:top)
 plot!(map2_popplt, X, p2_mean, ribbon=(p2_lower,p2_upper), color=:magenta, label="2-phase model population")
+lens!([2, 32], [300, 5700], inset = (1, bbox(0.6, 0.0, 0.38, 0.7)))
 annotate!([(30,1.25e4,Plots.text("A1",18))])
 
 v2_mean=map2.disp_mat[:,2,2]
 v2_upper=map2.disp_mat[:,1,2].-map2.disp_mat[:,2,2]
 v2_lower=map2.disp_mat[:,2,2].-map2.disp_mat[:,3,2]
 
-map2_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:top)
+map2_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:topleft, showaxis=:y, xticks=plotticks, xformatter=_->"")
 plot!(map2_volplt, X, v2_mean, ribbon=(v2_lower,v2_upper), color=:green, label="2-phase model volume")
+lens!([2, 32], [2e6, 3e7], inset = (1, bbox(0.55, 0.0, 0.36, 0.5)))
 annotate!([(30,3.5e8,Plots.text("A2",18))])
 
 
@@ -181,19 +185,21 @@ p3_mean=map3.disp_mat[:,2,1]
 p3_upper=map3.disp_mat[:,1,1].-map3.disp_mat[:,2,1]
 p3_lower=map3.disp_mat[:,2,1].-map3.disp_mat[:,3,1]
 
-map3_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", xaxis=nothing, showaxis=:y)
+map3_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:top)
 plot!(map3_popplt, X, p3_mean, ribbon=(p3_lower,p3_upper), color=:magenta, label="3-phase model population")
+lens!([2, 32], [300, 5700], inset = (1, bbox(0.6, 0.0, 0.38, 0.7)))
 annotate!([(30,1.5e4,Plots.text("B1",18))])
 
 v3_mean=map3.disp_mat[:,2,2]
 v3_upper=map3.disp_mat[:,1,2].-map3.disp_mat[:,2,2]
 v3_lower=map3.disp_mat[:,2,2].-map3.disp_mat[:,3,2]
 
-map3_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:top)
+map3_volplt=scatter(Xs,catvobs, marker=:cross, color=:black, markersize=3, label="Retinal volume estimate", ylabel="Volume (μm^3)", xlabel="Age (dpf)", legend=:topleft, xticks=plotticks)
 plot!(map3_volplt, X, v3_mean, ribbon=(v3_lower,v3_upper), color=:green, label="3-phase model volume")
+lens!([2, 32], [2e6, 3e7], inset = (1, bbox(0.55, 0.0, 0.36, 0.5)))
 annotate!([(30,3.5e8,Plots.text("B2",18))])
 
-combined_map=Plots.plot(map2_popplt,map3_popplt,map2_volplt,map3_volplt,layout=grid(2,2), size=(900,600))
+combined_map=Plots.plot(map2_popplt,map2_volplt,map3_popplt,map3_volplt,layout=grid(4,1), size=(1200,1200), link=:x)
 
 savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10pMAP.png")
 
