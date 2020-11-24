@@ -86,7 +86,7 @@ function blr_plt(x,y,Xs,blrs,colors,labels,q=.975)
     return plt
 end
 
-p=blr_plt(x,y,[corrX3d,uncorrX3d],[corrm,uncorrm],[:magenta,:green],["Correlated Model", "Uncorrelated Model"])
+p=blr_plt(x,y,[corrX3d,uncorrX3d],[corrm,uncorrm],[:darkmagenta,:green],["Correlated Model", "Uncorrelated Model"])
 
 savefig(p, "/bench/PhD/Thesis/images/cmz/3dcorr.png")
 @info "Saved fig."

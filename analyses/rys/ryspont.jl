@@ -1,6 +1,6 @@
 using CSV,DataFrames,Distributions,NGRefTools,StatsBase,StatsPlots
 gr()
-default(legendfont = (8,"courier"), guidefont = (12,"courier",:bold), tickfont = (8,"courier"), guide = "x")
+default(legendfont = (8), guidefont = (12,:bold), tickfont = (8), guide = "x")
 
 
 a38pth="/bench/PhD/datasets/A38.csv"
@@ -126,15 +126,15 @@ re_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in re_logn_mts]
 
 
 pcna_plt=plot(XCMZ,sp_mean,ribbon=(sp_lower,sp_upper),color=:green, label="sib mean",xlabel="Age (dpf)",ylabel="PCNA+ve CMZ Cells")
-plot!(pcna_plt,XCMZ,rp_mean,ribbon=(rp_lower,rp_upper),color=:magenta, label="rys mean",legend=:none)
+plot!(pcna_plt,XCMZ,rp_mean,ribbon=(rp_lower,rp_upper),color=:darkmagenta, label="rys mean",legend=:none)
 scatter!(pcna_plt,vcat([[XCMZ[n] for i in 1:length(sib_measure_dict["TCMZ"][n])] for n in 1:length(XCMZ)]...),vcat(sib_measure_dict["TCMZ"]...),marker=:circle,markersize=:3,color=:green,label="sib data")
-scatter!(pcna_plt,vcat([[XCMZ[n] for i in 1:length(rys_measure_dict["TCMZ"][n])] for n in 1:length(XCMZ)]...),vcat(rys_measure_dict["TCMZ"]...),marker=:dtriangle,markersize=:3,color=:magenta,label="rys data")
+scatter!(pcna_plt,vcat([[XCMZ[n] for i in 1:length(rys_measure_dict["TCMZ"][n])] for n in 1:length(XCMZ)]...),vcat(rys_measure_dict["TCMZ"]...),marker=:dtriangle,markersize=:3,color=:darkmagenta,label="rys data")
 annotate!([(4.5,175,Plots.text("A",18))])
 
 edu_plt=plot(XEdU,se_mean,ribbon=(se_lower,se_upper),color=:green, label="sib mean",xlabel="Age (dpf)",ylabel="EdU+ve CMZ Cells")
-plot!(edu_plt,XEdU,re_mean,ribbon=(re_lower,re_upper),color=:magenta, label="rys EdU")
+plot!(edu_plt,XEdU,re_mean,ribbon=(re_lower,re_upper),color=:darkmagenta, label="rys EdU")
 scatter!(edu_plt,vcat([[XEdU[n] for i in 1:length(sib_measure_dict["EdU"][n])] for n in 1:length(XEdU)]...),vcat(sib_measure_dict["EdU"]...),marker=:circle,markersize=:3,color=:green,label="sib data")
-scatter!(edu_plt,vcat([[XEdU[n] for i in 1:length(rys_measure_dict["EdU"][n])] for n in 1:length(XEdU)]...),vcat(rys_measure_dict["EdU"]...),marker=:dtriangle,markersize=:3,color=:magenta,label="rys data")
+scatter!(edu_plt,vcat([[XEdU[n] for i in 1:length(rys_measure_dict["EdU"][n])] for n in 1:length(XEdU)]...),vcat(rys_measure_dict["EdU"]...),marker=:dtriangle,markersize=:3,color=:darkmagenta,label="rys data")
 annotate!([(4.5,150,Plots.text("B",18))])
 
 

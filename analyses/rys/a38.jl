@@ -1,6 +1,6 @@
 using CSV,DataFrames,Distributions,NGRefTools,StatsBase,StatsPlots
 gr()
-default(legendfont = (8,"courier"), guidefont = (10,"courier",:bold), tickfont = (8,"courier"), guide = "x")
+default(legendfont = 10, guidefont = (12,:bold), tickfont = 10, guide = "x")
 
 
 pth="/bench/PhD/datasets/A38.csv"
@@ -51,26 +51,26 @@ for ms in ["DCMZ", "VCMZ", "NucPop", "Sphericity", "Volume"]
 end
 
 
-TCMZ_plt=plot_logn_MTDist([sib_measure_dict["TCMZ"],rys_measure_dict["TCMZ"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Sectional CMZ Population","Posterior mean lh.")
+TCMZ_plt=plot_logn_MTDist([sib_measure_dict["TCMZ"],rys_measure_dict["TCMZ"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Sectional CMZ Population","Posterior mean lh.")
 annotate!([(55,3.8,Plots.text("A",18))])
 
-PopRatio_plt=plot_logn_MTDist([sib_measure_dict["NucPop"]./sib_measure_dict["TCMZ"],rys_measure_dict["NucPop"]./rys_measure_dict["TCMZ"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Total Sectional Population per CMZ Cell","Posterior mean lh.")
+PopRatio_plt=plot_logn_MTDist([sib_measure_dict["NucPop"]./sib_measure_dict["TCMZ"],rys_measure_dict["NucPop"]./rys_measure_dict["TCMZ"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Total Sectional Population per CMZ Cell","Posterior mean lh.")
 annotate!([(7.5,3.,Plots.text("B",18))])
 
-DCMZ_plt=plot_logn_MTDist([sib_measure_dict["DCMZ"],rys_measure_dict["DCMZ"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Dorsal CMZ Population","Posterior mean lh.")
+DCMZ_plt=plot_logn_MTDist([sib_measure_dict["DCMZ"],rys_measure_dict["DCMZ"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Dorsal CMZ Population","Posterior mean lh.")
 annotate!([(35,4.5,Plots.text("C",18))])
 
 log_mean_mass_comparator(rys_measure_dict["DCMZ"],sib_measure_dict["DCMZ"],labels=["rys 5dpf sectional DCMZ population","sib 5dpf sectional DCMZ population"])
 log_mean_mass_comparator(rys_measure_dict["VCMZ"],sib_measure_dict["VCMZ"],labels=["rys 5dpf sectional VCMZ population","sib 5dpf sectional VCMZ population"])
 
-VCMZ_plt=plot_logn_MTDist([sib_measure_dict["VCMZ"],rys_measure_dict["VCMZ"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Ventral CMZ Population","Posterior mean lh.")
+VCMZ_plt=plot_logn_MTDist([sib_measure_dict["VCMZ"],rys_measure_dict["VCMZ"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Ventral CMZ Population","Posterior mean lh.")
 annotate!([(15,2.25,Plots.text("D",18))])
 
 
-Vol_plt=plot_n_MTDist([sib_measure_dict["Volume"],rys_measure_dict["Volume"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Mean nuclear volume","Posterior mean lh.")
+Vol_plt=plot_n_MTDist([sib_measure_dict["Volume"],rys_measure_dict["Volume"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Mean nuclear volume","Posterior mean lh.")
 annotate!([(.2,105,Plots.text("E",18))])
 
-Sph_plt=plot_n_MTDist([sib_measure_dict["Sphericity"],rys_measure_dict["Sphericity"]],[:green,:magenta],[:circle,:dtriangle],["sib","rys"],"Mean nuclear sphericity","Posterior mean lh.")
+Sph_plt=plot_n_MTDist([sib_measure_dict["Sphericity"],rys_measure_dict["Sphericity"]],[:green,:darkmagenta],[:circle,:dtriangle],["sib","rys"],"Mean nuclear sphericity","Posterior mean lh.")
 annotate!([(.65,325,Plots.text("F",18))])
 plot!(legend=:top)
 

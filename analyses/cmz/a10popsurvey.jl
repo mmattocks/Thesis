@@ -129,7 +129,7 @@ pe_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pe_logn_mts]
 plotticks=[30*i for i in 1:12]
 
 ann_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["PopEst"][n])] for n in 1:length(X)]...),vcat(measure_dict["PopEst"]...), marker=:cross, color=:black, markersize=3, label="Pop. data", ylabel="Est. CMZ annulus population", showaxis=:y, xticks=plotticks, xformatter=_->"")
-plot!(ann_chart, X, pe_mean, ribbon=(pe_lower,pe_upper), color=:magenta, label="Pop. mean")
+plot!(ann_chart, X, pe_mean, ribbon=(pe_lower,pe_upper), color=:darkmagenta, label="Pop. mean")
 lens!([2, 20], [500, 2500], inset = (1, bbox(0.3, 0.1, 0.45, 0.45)))
 annotate!([(8,4500,Plots.text("A",18))])
 

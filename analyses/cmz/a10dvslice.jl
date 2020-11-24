@@ -132,6 +132,9 @@ println("Transition age & $(round(mapdv.θ[5], digits=1)) & $(round(mapd.θ[5], 
 println("\\end{tabular}")
 
 X=ed.constants[1]
+
+plotticks=[10*i for i in 1:9]
+
 catdobs=vcat([ed.obs[t] for t in 1:length(X)]...)
 catvobs=vcat([ev.obs[t] for t in 1:length(X)]...)
 catdvobs=vcat([edv.obs[t] for t in 1:length(X)]...)
@@ -152,19 +155,19 @@ dv_mean=mapdv.disp_mat[:,2]
 dv_upper=mapdv.disp_mat[:,3].-mapdv.disp_mat[:,2]
 dv_lower=mapdv.disp_mat[:,2].-mapdv.disp_mat[:,1]
 
-mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xaxis=nothing, ylabel="Population")
+mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xticks=plotticks, xformatter=_->"", ylabel="Population")
 plot!(mapd_plt, X, d_mean, ribbon=(d_lower,d_upper), color=:green, label="Dorsal model population")
 annotate!([(8,150,Plots.text("B",18))])
 
-mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population")
-plot!(mapv_plt, X, v_mean, ribbon=(v_lower,v_upper), color=:magenta, label="Ventral model population")
+mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population", xticks=plotticks)
+plot!(mapv_plt, X, v_mean, ribbon=(v_lower,v_upper), color=:darkmagenta, label="Ventral model population")
 annotate!([(8,175,Plots.text("C",18))])
 
-mapdv_plt=scatter(dvXs,catdvobs, marker=:cross, color=:black, markersize=3, label="Total CMZ population data", showaxis=:y, xaxis=nothing, ylabel="Population")
-plot!(mapdv_plt, X, dv_mean, ribbon=(dv_lower,dv_upper), color=:orange, label="Total model population")
+mapdv_plt=scatter(dvXs,catdvobs, marker=:cross, color=:black, markersize=3, label="Total CMZ population data", showaxis=:y, xticks=plotticks, xformatter=_->"", ylabel="Population")
+plot!(mapdv_plt, X, dv_mean, ribbon=(dv_lower,dv_upper), color=:darkorange, label="Total model population")
 annotate!([(8,300,Plots.text("A",18))])
 
-combined_map=Plots.plot(mapdv_plt,mapd_plt,mapv_plt,layout=grid(3,1), size=(800,900))
+combined_map=Plots.plot(mapdv_plt,mapd_plt,mapv_plt,layout=grid(3,1), size=(800,900),  link=:x)
 
 savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10dvMAP.png")
 

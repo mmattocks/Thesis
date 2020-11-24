@@ -167,7 +167,7 @@ p2_upper=map2.disp_mat[:,1,1].-map2.disp_mat[:,2,1]
 p2_lower=map2.disp_mat[:,2,1].-map2.disp_mat[:,3,1]
 
 map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:top)
-plot!(map2_popplt, X, p2_mean, ribbon=(p2_lower,p2_upper), color=:magenta, label="2-phase model population")
+plot!(map2_popplt, X, p2_mean, ribbon=(p2_lower,p2_upper), color=:darkmagenta, label="2-phase model population")
 lens!([2, 32], [300, 5700], inset = (1, bbox(0.6, 0.0, 0.38, 0.7)))
 annotate!([(30,1.25e4,Plots.text("A1",18))])
 
@@ -186,7 +186,7 @@ p3_upper=map3.disp_mat[:,1,1].-map3.disp_mat[:,2,1]
 p3_lower=map3.disp_mat[:,2,1].-map3.disp_mat[:,3,1]
 
 map3_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:top)
-plot!(map3_popplt, X, p3_mean, ribbon=(p3_lower,p3_upper), color=:magenta, label="3-phase model population")
+plot!(map3_popplt, X, p3_mean, ribbon=(p3_lower,p3_upper), color=:darkmagenta, label="3-phase model population")
 lens!([2, 32], [300, 5700], inset = (1, bbox(0.6, 0.0, 0.38, 0.7)))
 annotate!([(30,1.5e4,Plots.text("B1",18))])
 
