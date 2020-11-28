@@ -1,6 +1,6 @@
 using CSV,DataFrames,Distributions,NGRefTools,StatsBase,Plots
 gr()
-default(legendfont = (8), guidefont = (10), tickfont = (8))
+default(legendfont = (10), guidefont = (11), tickfont = (10))
 
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"

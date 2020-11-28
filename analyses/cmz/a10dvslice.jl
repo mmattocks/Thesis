@@ -6,6 +6,8 @@ evpath="/bench/PhD/NGS_binaries/BSS/A10/ev"
 edvpath="/bench/PhD/NGS_binaries/BSS/A10/edv"
 paths=[edpath,evpath,edvpath]
 
+default(legendfont = (10), guidefont = (12), tickfont = (10))
+
 a10df=DataFrame(CSV.read(a10pth))
 a10df.BSR=[string(row.Block,',',row.Slide,',',row.Row) for row in eachrow(a10df)]
 

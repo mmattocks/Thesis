@@ -51,7 +51,7 @@ scatter!(vcat([[X[n] for i in 1:length(measure_dict["Ventral CMZ (#)"][n])] for 
 annotate!([(1.5,125,Plots.text("A",18))])
 lens!([2, 31], [10, 150], inset = (1, bbox(0.3, 0.1, 0.45, 0.6)))
 
-ratio_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["Ratio"][n])] for n in 1:length(X)]...),vcat(measure_dict["Ratio"]...), marker=:cross, color=:black, markersize=3, markerstrokecolor=:black, label="Ratio data", ylabel="Individual asymmetry ratio", xticks=plotticks)
+ratio_chart=scatter(vcat([[X[n] for i in 1:length(measure_dict["Ratio"][n])] for n in 1:length(X)]...),vcat(measure_dict["Ratio"]...), marker=:cross, color=:black, markersize=3, markerstrokecolor=:black, label="Ratio data", ylabel="Individual asymmetry ratio", xlabel="Age (dpf)", xticks=plotticks)
 plot!(X, r_mean, ribbon=(r_lower,r_upper), color=:green, label="Ratio mean")
 plot!(X, [1. for i in 1:length(X)], style=:dot, color=:black, label="Even ratio")
 annotate!([(1.5,.5,Plots.text("B",18))])
