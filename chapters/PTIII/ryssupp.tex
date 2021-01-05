@@ -1,14 +1,18 @@
 \chapter{Supplementary material for \autoref{chap:rys}}
 \section{Materials and methods}
 \subsection{Zebrafish husbandry}
+Zebrafish husbandry was performed as described in \autoref{ssec:husbandry}.
 
-\subsection{Generation of transgenic vsx2:eGFP line}
+\subsection{Generation of transgenic vsx2:eGFP \textit{rys} line}
+\autoref{progenitoridentity} makes use of coronal cryosections of \textit{Tg(vsx2:eGFP)} \textit{rys} animals. Transgenesis was performed using reagents from the Tol2kit \cite{Kwan2007}, which uses the Invitrogen Gateway plasmid construction system to assemble three-part constructs from donor plasmids. 
 
 \subsection{Morpholino injections}
  
 \subsection{Morphological photography}
 
 \subsection{PCNA and EdU proliferative histochemistry}
+
+\subsection{Progenitor identity marker immunohistochemistry}
 
 \subsection{BrdU pulse-chase assays}
 
@@ -27,12 +31,19 @@
 \subsection{\textit{rys} MNase digestions and NGS}
 
 \subsection{Nucleosome position calling}
+The nucleosome position calling pipeline used in \autoref{chap:rys} was automated using the Java machine learning framework KNIME \cite{Dietz2016} workspace incorporating KNIME4NGS nodes \cite{Hastreiter2017}. The pipeline is depicted in figureautoref. Node settings are largely default and are available in the \path{knime_workspace} \hyperref[sec:archive]{thesis archive}.
 
-\subsection{Analysis of \textit{rys} nucleosome position disposition}
+Briefly, FastQC (v0.11.8) \cite{Andrews2018} was used to characterise the quality of the fastq sequence files describing the nucleosome-protected fragment pool from the MNase digestions described above. No sequence from any of the two duplicates of the two pools was rejected due to low quality. Sequences were found to be of uniformly high quality, with low adapter content. These results are available in the \path{fastqc} \hyperref[sec:archive]{thesis git archive}. TrimGalore (v0.5.0) \cite{Andrews2018a} was used to remove trailing adapter bases, using Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR). The trim reports are available in the \hyperref[sec:archive]{thesis git archive}.  Bowtie 2 \cite{Langmead2012} with default settings was used to map reads to the zebrafish genome (GRCz11). Nucleosome positions were called from the resulting sequence alignment map (SAM) files by using DANPOS2 (v2.2.2) \cite{Chen2013}. As DANPOS2 is no longer supported, and the code contained errors preventing execution, a fixed version of this code has been uploaded to \path{https://github.com/mmattocks/DANPOS2fix} and filed in the \hyperref[sec:archive]{thesis HDD archive}, along with the called output positions.
 
-\subsection{Independent component analysis modelling of \textit{rys} nucleosome position sequence emission}
+The DANPOS nodes of the KNIME workflow are python nodes which execute DANPOS2 itself, as well as the nucleosome position analyses described below. 
+
+\subsection{Analyses of \textit{rys} nucleosome position disposition}
+\autoref{nucgendist} was produced from the DANPOS2-called positions for the pooled \textit{rys} sibling and mutant MNase-protected fragment datasets. For each numbered \textit{D. rerio} chromosomal scaffold (1-25), as well as for scaffolds not assigned to any chromsome (NC), the number of sibling positions was divided by the total length of the scaffold. These values were compared to the naively expected number of positions per scaffold, determined by dividing the total number of positions per kilobase of genomic material, then multiplying the particular scaffold length. The per-chromosome relative number of positions, as well as fold-differences from the naive expected value, are displayed in pie chart format in Panel A. The Panel C chart displays the result of normalizing these position values by relative occupancy, as determined by DANPOS2. 
 
 \subsubsection{Background Hidden Markov modelling of \textit{D. rerio} genomic sequence emission}
+The Julia package \path{BioBackgroundModels.jl} was used to perform background Hidden Markov Model selection on samples of \textit{D. rerio} genomic material, in order to serve as a model of genomic noise for subsequent \hyperref[ICA]{Independent Component Analysis} (ICA) modelling of nucleosome positions, described below. The general strategy pursued was to first train a zoo of 3 replicates each of all HMMs with 1-6 states, emitting 0\textsuperscript{th}-2\textsuperscript{nd} order DNA kmers, on each of three broad partitions of the GRCz11 zebrafish genome, as described in \autoref{chap:BBM}, and initializing the zoo's EM chains using the default \path{autotransition_init} function, which samples from an uninformative prior on state emission vectors, but a transition matrix prior heavily favouring state autotransition. This zoo was converged to an EM step likelihood delta of \num{1e-3} on \num{2e6} bp sampled without replacement from each of these partitions, then evaluated by testing against a further \num{2e6} bp sampled as a test set. The best model triplicate for each partition, in every case the 6 state, 0th order triplicate, was selected for further refinement by EM training on a new \num{8e6} bp sampled from the appropriate partitions. After this refinement process was complete, the triplicate chains were inspected using \path{BioBackgroundModels.jl}'s reports. The convergence of the triplicate on the same region of the parameter space, and the stationarity of the chains were verified before selecting the most likely models of the refined triplicate to represent \textit{D. rerio} genomic background noise in the \path{BioMotifInference.jl} ICA models.
+
+The code to sample GRCz11 for the initial zoo training task is available in \autoref{ssec:BBMsampleprep}, for the refinement task in \autoref{ssec:BBMrefinementprep}. EM execution code is found in \autoref{ssec:BBMsurvey} and \autoref{ssec:BBMsurveyrefinement}. Analysis code is given in \autoref{ssec:BBMsurveyanalysis} and \autoref{ssec:BBMrefinementanalysis}.
 
 \subsection{Evidence and maximum a posteriori estimation of ICA models of \textit{rys} nucleosome position sequence emission}
 

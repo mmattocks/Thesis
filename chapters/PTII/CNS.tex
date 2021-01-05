@@ -1,0 +1,63 @@
+\chapter{CMZNicheSims.jl: \textit{D. rerio} CMZ RPC niche simulators}
+\label{chap:CNS}
+\section{Introduction}
+\path{CMZNicheSims.jl} (hereafter \path{CNS.jl}) comprises a set of three simulators of zebrafish retinal progenitor cells (RPCs), representing the postembryonic Circumferential Marginal Zone niche at varying levels of abstraction. These simulators were used in \autoref{chap:CMZ}. This package extends \path{GMC_NS.jl}, described in \autoref{chap:GMC} and requires it. Prior distributions are specified by \path{Distributions.jl}, \path{ConjugatePriors.jl}, or other \path{Distribution}s. The simulators are organized around the nested sampling procedures implemented in that package. This means that simulations are executed as sample chains from the simulations' parameter space in an ensemble. The basic operation of this package is accomplished by assembling an ensemble of models from the appropriate simulator submodule of \path{CNS.jl}, then elongating the sample chains of this ensemble by Galilean Monte Carlo using \path{GMC_NS.jl}'s \path{converge_ensemble} function. Note that \path{GMC_NS.jl}'s sampler settings are specified by fields of the \path{CNS.jl} model ensemble struct and not as arguments to \path{converge_ensemble}; even if default sampler settings are used, sampler operation should be understood before model priors are selected.
+
+The three model ensemble types specified by \path{CNS.jl} are as follows:
+
+\begin{itemize}
+    \item \protect\path{CMZ_Ensemble}: Phased difference function models of CMZ population and overall retinal volume, intended to model total retinal CMZ population and its contributions to overall retinal volume over long time periods (months)
+    \item \protect\path{Slice_Ensemble}: Basic implementation of the ``slice model'' concept elaborated in \autoref{chap:SMMEoutro} for phased difference function CMZ models, uses a submodel of lens growth to determine ``out-of-slice'' growth contributions, intended to represent the population of a CMZ slice over long time periods (months)
+    \item \protect\path{Thymidine_Ensemble}: ``Slice model'' of proliferative CMZ population exposed to a pulse of thymidine analogue, intended to model cell cycle kinetics in the CMZ over short time periods (hours). 
+\end{itemize}
+
+The operation of these simulators is described in more detail below. In general, the workflow is to assemble the assemble, converge it, and to estimate the model evidence and posterior parameters from the converged ensemble. For more on evidence and posterior estimation by \path{GMC_NS.jl}, see \autoref{chap:GMC}.
+
+\section{\protect\path{CMZ_Ensemble} model and usage}
+A \path{CMZ_Ensemble} consists of \path{CMZ_Model}s whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of difference equations for simulated retinae initialized from independent samples from the population and volume distributions specified in the ensemble constants vector. The update functions are specified in general by \autoref{popeq} and \autoref{voleq}. However, the implementation of these functions in the model likelihood function (\path{CMZ_mc_llh}, found in \autoref{ssec:CMZlh}) differs from this presentation; the equations are not evaluated stepwise day-by-day, but are rather updated for the next model event, either an observation timepoint or a phase transition date. The specific equations used in this function are of the computationally efficient factorial form suggested by Langtangen \cite[p. 559]{Langtangen2012}:
+
+\[
+    p_n=p_{0} \cdot (2^{\frac{24}{CT}} - \epsilon)^{n}
+\]
+
+\[
+    v_n=v_{0} + p_{0} \cdot \epsilon \cdot \mu_{cv} \cdot \frac{1 - (2^{\frac{24}{CT} - \epsilon})^{n-1}}{1 - (2^{\frac{24}{CT} - \epsilon})}
+\]
+
+After Monte Carlo iterative simulation of many retinae, the resultant simulated population and volume distributions at the observed time points are estimated by fitting \path{LogNormal} \path{Distribution}s, after which the joint log likelihood of the observations given the simulation is calculated. The likelihood function is threaded so that the total number of Monte Carlo iterates for any given model parameter vector is divided equally between threads. For very large numbers of iterates, this can result in some load balancing inefficiency; in general, it is unneccessary to specify more than 5 million iterates in the ensemble constants vector (\autoref{constants} below). 1 million should be adequate for most purposes and allows the efficient sampling of $\geq$ 3 phase models on one performant machine.
+
+A \path{CMZ_Ensemble} may be assembled by specifying the path of the folder in which its constituent model files will be serialized, the starting number of chains in the ensemble (a few thousand may reasonably be expected to converge within a day or two on a single high performance machine), the observations to estimate the models against, a vector of prior distributions, a vector of constants, a box matrix, and the sampler settings vectors. The parameter vectors must follow these guidelines:
+
+\begin{enumerate}
+    \item Observations vector: Must be a vector of vector tuples. The first member of the tuple is the population observation vector (total CMZ population at the vector's date index, see \ref{constants}), the second member is the date's total retinal volume observation vector (in \si{cubic}{micro}{meters}). Ie. the observations vector takes the form of a \path{AbstractVector{<:Tuple{<:AbstractVector{<:Float64},<:AbstractVector{<:Float64}}}}; the tuple of population and volume data found at index \path{x} corresponds from animals measured on date \path{constants_vec[1][x]}.
+    \item Prior vector: For each desired phase of the model, the prior vector must contain a distribution over that phase's mean population cycle time (in hours) and its mean exit rate ($\geq$ 0., may exceed 1.). Paired cycle time and exit rate for each phase is followed by one less phase transition time in days than the number of phases. Ie. a two-phase prior vector might be, in pseudocode, \path{[Phase1CT, Phase1ER, Phase2CT, Phase2ER, Phase1End]}. 
+    \item\label{constants} Constants vector: A \path{Vector{<:Any}} containing, in order:
+    \begin{enumerate}
+        \item T vector: Vector of integers or round floats, age in days of animals for each observations tuple
+        \item Population distribution: \path{Distribution} defining the initial range of population values. Should normally be a fit from the initial population size observations
+        \item Volume distribution:  \path{Distribution} defining the initial range of retinal volume values. Should normally be a fit from the initial retinal volume observations
+        \item Monte Carlo iterates: Integer specifying the number of retinae to be simulated at each point sampled from the parameter space. \num{1e6}-\num{5e6} is usually fine.
+        \item Phases: Integer defining the number of phases specified by the prior vector
+    \end{enumerate}
+    \item Box matrix: Two columns each of the same length as the prior, defining the minimum (column 1) and maximum (column 2) bounds for each parameter dimension to be sampled.
+\end{enumerate}
+
+As an example, an ensemble with 3000 chains and using the default GMC sampler settings may be initialized and sampled as follows, where variable names correspond to the vectors described above:
+
+\begin{minted}[breaklines,
+    mathescape,
+    linenos,
+    numbersep=5pt,
+    frame=lines,
+    framesep=2mm]{julia}
+    e=CMZ_Ensemble(path, 3000, observations, prior, constants, box, GMC_DEFAULTS)
+    converge_ensemble!(e,backup=(true,50), mc_noise=.3)
+\end{minted}
+
+The \path{mc_noise} parameter can be estimated by calculating the standard deviation of repeated evaluations of a parameter vector with a reasonably high likelihood, given the data vectors. The suggested value is roughly appropriate for \num{1e6} Monte Carlo iterates, given the data vectors used in \autoref{ssec:a10periodisation}.
+
+\section{\protect\path{Slice_Ensemble} usage}
+A \path{Slice_Ensemble} consists of \path{Slice_Models}, whose likelihood is ass
+
+\section{\protect\path{Thymidine_Ensemble} usage}
+

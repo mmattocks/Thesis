@@ -3,21 +3,31 @@
 \subsection{Zebrafish husbandry}
 Zebrafish husbandry was performed as described in \autoref{ssec:husbandry}.
 
-\subsection{Immunohistochemistry}
+\subsection{PCNA Immunohistochemistry}
+Anti-PCNA immunohistochemistry was performed as described in \autoref{ssec:PCNA}.
+
+\subsection{Thymidine analogue histochemistry}
+
+\subsection{Lineage tracing immunohistochemistry}
+
+\subsection{4C4 immunohistochemistry}
 
 \subsection{Confocal micrograph acquisition and processing}
+All confocal micrographs presented in \autoref{chap:CMZ} were acquired on Leica TCS SP5 and SP8 microscopes, core equipment of the CSB Imaging Facility. Tableautoref summarizes these datasets and 
 
 \subsection{Estimation of overall CMZ population and retinal volume}
 
 \subsection{Monte Carlo estimation of CMZ population and retinal volume rates of change}
 
-\subsection{Evidence estimation by Galilean Monte Carlo nested sampling}
-
-\subsection{Evidence estimation by Empirical Bayes linear regression}
-
 \subsection{Simulation of phased CMZ activity by systems of difference equations}
 
 \subsection{Slice model simulations of phased CMZ activity}
+
+\subsection{Evidence estimation by Galilean Monte Carlo nested sampling}
+Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref{Nested}[nested sampling algorithm] \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Tableautoref summarizes the \autoref{chap:CMZ} figures which use this technique, along with links to model documentation and a the code used to produce the figure.
+
+\subsection{Evidence estimation by Empirical Bayes linear regression}
+Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the Empirical Bayes method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package
 
 \subsection{Estimation of posterior distributions of phase model parameters}
 

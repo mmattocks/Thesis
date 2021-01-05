@@ -1,5 +1,5 @@
-\chapter{GMC\_NS.jl: Nested sampling by Galilean Monte Carlo for biological models in Julia}
-\label{ch:GMC}
+\chapter{GMC\_NS.jl: Nested sampling by Galilean Monte Carlo for biological models}
+\label{chap:GMC}
 \path{GMC_NS.jl} implements a basic Galilean Monte Carlo nested sampler \cite{Skilling2012,Skilling2019} in pure Julia. It uses the updated Galilean reflection scheme of Skilling's later GMC publication \cite{Skilling2019}, which improves the algorithm's performance and preserves detailed balance. It uses the natural attrition of model-particles getting stuck in posterior modes to regulate the number of live particles in the model ensemble. This approach achieves the same end as algorithms which dynamically adjust the ensemble size based on parameters of the ensemble \cite{Feroz2009,Higson2019}, without any computational overhead or additional objective function. A minimum ensemble size may be supplied by the user, which is maintained by initializing a new trajectory isotropically from the position of an existing particle; this ensures that the ensemble may be sampled to convergence even if the number of trajectories started with is insufficient to guarantee this. 
 
 \section{Implementation notes}
