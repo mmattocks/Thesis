@@ -4,38 +4,46 @@
 Zebrafish husbandry was performed as described in \autoref{ssec:husbandry}.
 
 \subsection{Generation of transgenic vsx2:eGFP \textit{rys} line}
-\autoref{progenitoridentity} makes use of coronal cryosections of \textit{Tg(vsx2:eGFP)} \textit{rys} animals. Transgenesis was performed using reagents from the Tol2kit \cite{Kwan2007}, which uses the Invitrogen Gateway plasmid construction system to assemble three-part constructs from donor plasmids. 
+\autoref{progenitoridentity} makes use of coronal cryosections of \textit{Tg(vsx2:eGFP)} \textit{rys} animals. Transgenesis was performed using reagents from the Tol2kit \cite{Kwan2007}, which uses the Invitrogen Gateway plasmid construction system to assemble three-part constructs from donor plasmids. Briefly, the Gateway system uses BP clonase to introduce fragments of interest into sets of 3 entry vectors, which are recombined in predictable order by LR clonase. Tol2kit consists of a numbered, standardized set of preconstructed entry vectors intended for use in the construction of transposable Tol2 transgenesis vectors.
+
+The construct of interest was built from a $\sim$1.1kb fragment of the 5' promoter sequence of vsx2 in the 5' entry vector, an eGFP expression cassette in the middle entry vector (Tol2kit \#383), and a polyadenylation signal in the 3' entry vector (Tol2kit \#302), recombined into pdestTol2pA2 (Tol2kit \#394).
+
+The vsx2 promoter fragment was isolated by PCR amplification from the BAC (). BP clonase was bypassed in favour of restriction endonuclease sites inserted into the fragment's primers; this was necessitated by the instability of the ccd cassette in the BP vectors. The promoter fragment was amplified with a XhoI site 5' and a AgeI site 3'; the Tol2kit 5' Multiple Cloning Site entry vector (\#228) was digested with SalI and XmaI in order to produce compatible sites for ligation. All restriction enzymes and the Quick Ligation kit were from NEB.
+
+Injections into 1-2 cell embryos were conducted by standard techniques \cite{Westerfield2000}. Animals with stable expression of vsx2 in postembryonic peripheral RPCs and in central retinal bipolar cells, as expected, were identified and bred out. These animals were subsequently introgressed into \textit{rys} in order to produce \textit{Tg(vsx2:eGFP)} \textit{rys} animals.
 
 \subsection{Morpholino injections}
 Morpholino injections were performed by Maria Augusta Sartori by methods previously described \cite{Wong2015}.
  
 \subsection{Morphological photography}
-The photographs presented in \autoref{ryspic} were obtained with a Zeiss fluorescent stereoscope (SteREO Lumar.V12) and using ZEN Imaging software.
+The photographs presented in \autoref{ryspic} were obtained with the transmitted light optics of a Zeiss fluorescent stereoscope (SteREO Lumar.V12), using ZEN Imaging software.
 
 \subsection{PCNA and EdU proliferative histochemistry}
 PCNA and EdU proliferative histochemistry giving rise to the data presented in \autoref{rysCMZontogeny} was performed as described in \autoref{ssec:PCNA} and \autoref{ssec:SMMEcumedu}, except that the length of the EdU pulse was 24 hours, and was not administered to 5dpf animals, which were set aside for the nuclear morphology study presented in \autoref{nuclearstudy}.
 
-\subsection{BrdU pulse-chase assays}
+\subsection{BrdU pulse-chase assay}
+The BrdU pulse-chase assay presented in \autoref{contributionfailure} was conducted by soaking 3dpf \textit{rys} larvae in 10\si{\milli\mole} BrdU for 8 hours. After a subsequent 7 day chase period, the 10dpf larvae were sacrificed and processed as described in \autoref{ssec:SMMEwholeretina}.
 
 \subsection{Analysis of \textit{rys} nuclear parameters by Galilean Monte Carlo Nested Sampling}
+The estimation of evidence for separate and combined mutant and sibling models of nuclear parameters presented in \autoref{nuclearev} was produced using the Julia package GMC\_NS.jl, presented in \autoref{chap:GMC}. 
 
 \subsection{Progenitor identity marker immunohistochemistry}
+
 
 \subsection{Caspase-3 immunohistochemistry}
 Caspase-3 immunohistochemistry was performed by Monica Dixon. 
 
-\subsection{Pax6 immunohistochemistry}
-
-
 \subsection{In situ hybridization}
-
+In situ hybridization for npat transcript was performed by Monica Dixon.
 
 \subsection{Electron microscopy}
-
+Images presented in \autoref{rysEM} were produced from ultrathin sections for transmission electron microscopy, prepared as described previously \cite{Lindsey2012} by Monica Dixon and Audrey Darabie. These sections were imaged on a Hitachi H-7000 transmission electron microscope using AMT Image Capture Engine software. 
 
 \subsection{RT-PCR analysis of \textit{rys} npat expression}
+The RT-PCR analysis of \textit{rys} npat expression presented in \autoref{npatrtpcr} was conducted by Monica Dixon.
 
 \subsection{\textit{rys} MNase digestions and NGS}
+Two 10-animal pools each of 5dpf \textit{rys} sib and rys animals had fresh nucleosome-protected MNase fragments produced using the Takara Biotech micrococcal nuclease kit. These digests were submitted to the SickKids TCAG  facility for Illumina HiSeq 2500 NGS, with two lanes run per pool.
 
 \subsection{Nucleosome position calling}
 The nucleosome position calling pipeline used in \autoref{chap:rys} was automated using the Java machine learning framework KNIME \cite{Dietz2016} workspace incorporating KNIME4NGS nodes \cite{Hastreiter2017}. The pipeline is depicted in figureautoref. Node settings are largely default and are available in the \path{knime_workspace} \hyperref[sec:archive]{thesis archive}.
@@ -53,6 +61,13 @@ The Julia package \path{BioBackgroundModels.jl} was used to perform background H
 The code to sample GRCz11 for the initial zoo training task is available in \autoref{ssec:BBMsampleprep}, for the refinement task in \autoref{ssec:BBMrefinementprep}. EM execution code is found in \autoref{ssec:BBMsurvey} and \autoref{ssec:BBMsurveyrefinement}. Analysis code is given in \autoref{ssec:BBMsurveyanalysis} and \autoref{ssec:BBMrefinementanalysis}.
 
 \subsection{Evidence and maximum a posteriori estimation of ICA models of \textit{rys} nucleosome position sequence emission}
+The Julia package BioMotifInference.jl, presented in \autoref{chap:BMI} was used to perform \hyperref[ssec:BayesEpistemology]{evidence and MAP estimation} of \hyperref[ICA]{Independent Component Analysis} \hyperref[PWM]{PWM source} models of nucleosome position emission. The ICA models used had 8 PWM sources ranging from 3 to 10 positions in length. Model ensembles were initialized by sampling from uninformative source priors and an mixing prior of .07 (ie. for each source, mean 7\% of observations will begin mixed with that source).
+
+Observation sets comprised samples of 7092 nucleosome positions from each of the \textit{rys} mutant and sibling differential position sets, corresponding to approximately 1 Mbp for each of the mutant and sibling sets, and 2 Mbp for the combined set.
+
+Ensembles were converged to within 125 orders of magnitude likelihood compression. 
+
+The code used to produce the differential position set samples is available in \autoref{ssec:difpossampleprep}. Ensembles are assembled in \autoref{ssec:difposassembly}, and converged in \autoref{ssec:difposlearner}.
 
 \section{Supplementary figures}
 
@@ -68,7 +83,6 @@ The code to sample GRCz11 for the initial zoo training task is available in \aut
     \label{synteny}
 \end{sidewaysfigure}
 
-
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/npat transcripts.jpg}}    
     \caption{{\bf npat is overexpressed in \textit{rys}}} 
@@ -76,8 +90,8 @@ The code to sample GRCz11 for the initial zoo training task is available in \aut
 \end{figure}
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/cmzfailure.png}}    
-    \caption{{\bf 10dpf mutant \textit{rys} RPCs are mitotic}} MIP 14\si{\micro\metre} coronal cryosections through representative sib (left panels) and \textit{rys} eyes at 10dpf, 7 days after an 8hr BrdU pulse at 3dpf. Note that few labelled \textit{rys} cells have entered the specified retinal layers.
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/mitosis.png}}    
+    \caption{{\bf 10dpf mutant \textit{rys} RPCs are mitotic}} 3d volume reconstruction of a complete mitotic figure in a \textit{rys} mutant CMZ RPC at 10dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Blue channel: Hoechst 33258; Green channel: PCNA; Red channel: EdU.
     \label{rysmitosis}
 \end{figure}
 

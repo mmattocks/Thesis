@@ -57,7 +57,7 @@ for t_df in groupby(a10df, "Time point (d)")
             push!(cvec,rcirc)
 
             or=rcirc/2π
-            ir=or-.5*rthi
+            ir=or-rthi
 
             ov=(4/3)*π*(or^3)
             iv=(4/3)*π*(ir^3)
