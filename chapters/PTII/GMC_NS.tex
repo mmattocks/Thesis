@@ -4,11 +4,11 @@
 
 \section{Implementation notes}
 
-The basic sampling scheme followed is, first, to initialize an ensemble of models with parameters sampled evenly from across the prior, then to compress the ensemble to the posterior by applying GMC moves to the least-likely model in the ensemble at a given iterate, constrained by its current likelihood (which is the ensemble's likelihood contour for that iterate). GMC tends to move model-particles across the parameter space very efficiently, particularly in the initial portion of compression across the uninformative bulk of the prior mass. That said, GMC particles may get "stuck" in widely separated minima, so there are instances when the least-likely particle has no valid GMC moves. In this case, the trajectory is not continued. Instead, sampling continues, unless the number of particles in the ensemble would decline below the specified minimum. In this case, a new trajectory is begun by resampling from the remaining prior mass within the ensemble. This is accomplished by random "diffusive" proposals, in contrast to the ordinary, directed Galilean movements. This means a random particle remaining within the ensemble is selected, and isotropic velocity vectors are sampled from this particle to find a starting location for the new trajectory (this vector is conferred to the new particle).
+The basic sampling scheme followed is, first, to initialize an ensemble of models with parameters sampled evenly from across the prior, then to compress the ensemble to the posterior by applying GMC moves to the least-likely model in the ensemble at a given iterate, constrained by its current likelihood (which is the ensemble's likelihood contour for that iterate). GMC tends to move model-particles across the parameter space very efficiently, particularly in the initial portion of compression across the uninformative bulk of the prior mass. That said, GMC particles may get "stuck" in widely separated minima, so there are instances when the least-likely particle has no valid GMC moves. In this case, the trajectory is not continued. Instead, the trajectory is removed from the ensemble and sampling continues, unless the number of particles in the ensemble would decline below the specified minimum. In this case, a new trajectory is begun by resampling from the remaining prior mass within the ensemble. This is accomplished by random "diffusive" proposals, in contrast to the ordinary, directed Galilean movements. This means a random particle remaining within the ensemble is selected, and isotropic velocity vectors are sampled from this particle to find a starting location for the new trajectory (this vector is conferred to the new particle).
 
 \path{GMC_NS.jl} follows the common convention of transforming parameter space to a unit-standardized hypersphere. The user is responsible for ensuring that the density of the prior is uniform, that is $\pi(x) = 1$, over the -1:+1 range of the hypersphere dimension. Utility functions \path{to_unit_ball} and \path{to_prior} which accept the prior and transformed positions and the relevant prior probability distribution, returning the unit hypersphere or prior coordinate, respectively. In future versions, this scheme is likely to be modified to a 0:1 unit hypercube, which does not require additional operations beyond obtaining the cumulative probability of a parameter value on the prior distribution. The user may also specify a sampling "box" to bound particles from illegal or nonsensical areas of the parameter space (eg. negative values for continuous distributions on positive-valued physical variables). The box reflects particles specularly in the same manner as the likelihood boundary, with the exception that because the orientation of the $n$th-dimensional box "side" is known (eg. is the plane at $n=0$.), the reflection is performed by stopping the particle at the box side and giving it a new velocity vector identical to the old but with reversed sign in dimension $n$. 
 
-\path{GMC_NS.jl} attempts to maintain efficient GMC sampling by per-particle PID tuning of the GMC timestep. GMC treats models as particles defined by their parameter vectors, which give their positions in parameter space, as well as a velocity vector, normally chosen isotropically and only changed when the particle "reflects" off the ensemble's likelihood contour. In GMC, when a model-particle is to be moved through the parameter space (in this case, because it is the least likely particle in the ensemble), a new position is proposed by extending some distance along its velocity vector. This distance is determined by scaling the velocity vector by a "timestep" value, which defines the per-iterate rate at which the particle traverses the parameter space. As the model ensemble is compressed to the posterior, this timestep must decline fairly evenly in order for GMC to be efficient, as the amount of available parameter space declines rapidly. Additionally, GMC particles may enter convoluted regions of parameter space that form small likelihood-isthmuses to other, more likely regions. In order to deal with this, each trajectory is assigned its own PID tuner, which maintains an independent timestep for the trajectory, tuned to target a user-supplied unobstructed move rate (given as a fraction in the range 0:1). In short, this will reduce the timestep if the particle is repeatedly reflecting off the likelihood boundary (in which case it is crossing the remaining prior mass without sampling much from within it, or it is in a highly convoluted area of the local likelihood surface), and extend the timestep if it repeatedly moves without encountering the boundary, so that particles that are closely sampling an open region without encountering the boundary begin to "speed up".
+\path{GMC_NS.jl} attempts to maintain efficient GMC sampling by per-particle PID tuning of the GMC timestep. GMC treats models as particles defined by their parameter vectors, which give their positions in parameter space, as well as a velocity vector, normally chosen isotropically and only changed when the particle "reflects" off the ensemble's likelihood contour. In GMC, when a model-particle is to be moved through the parameter space (in this case, because it is the least likely particle in the ensemble), a new position is proposed by extending some distance along its velocity vector. This distance is determined by scaling the velocity vector by a "timestep" value, which defines the per-iterate rate at which the particle traverses the parameter space. As the model ensemble is compressed to the posterior, this timestep must decline fairly evenly in order for GMC to be efficient, as the amount of available parameter space declines rapidly. Additionally, GMC particles may enter convoluted regions of parameter space that form small likelihood-isthmuses to other, more likely regions. In order to deal with this, each trajectory is assigned its own PID tuner, which maintains an independent timestep for the trajectory, tuned to target a user-supplied unobstructed move rate (given as a floating point fraction in the range 0:1). In short, this will reduce the timestep if the particle is repeatedly reflecting off the likelihood boundary (in which case it is crossing the remaining prior mass without sampling much from within it, or it is in a highly convoluted area of the local likelihood surface), and extend the timestep if it repeatedly moves without encountering the boundary, so that particles that are closely sampling an open region without encountering the boundary begin to "speed up".
 
 \section{Ensemble, Model, and Model Record interfaces}
 In operation, \path{GMC_NS.jl} maintains an \path{GMC_NS_Ensemble} mutable struct in memory. The directory to which the sampler ought to save the ensemble is specified by its \path{path} field. \path{GMC_NS.jl} does not maintain calculated models in memory, instead serializing them to this directory. In order to track the positions and likelihoods of model-particles within the ensemble and as samples from the posterior, a \path{GMC_NS_Ensemble} maintains two vectors of \path{GMC_NS_Model_Records} as fields; \path{models} for live particles, and \path{posterior_samples} for the previous positions along trajectories. Observations against which models are being scored, prior distributions on model parameters, model constants (if any), and the sampling box are specified by the \path{GMC_NS_Ensemble}'s \path{obs}, \path{priors}, \path{constants}, and \path{box} fields, respectively. The \path{GMC_NS_Ensemble} also specifies settings for the GMC sampler and the PID tuner. Sensible defaults for these values may be passed en masse to an ensemble constructor with the \path{GMC_DEFAULTS} constant exported by \path{GMC_NS.jl}.
@@ -47,3 +47,57 @@ As noted, GMC particle timesteps are governed by individual PID controllers. The
 If desired, parameters of the ensemble and most-likely model can be monitored on-line, while \path{GMC_NS.jl} is working. This is done by specifying a vector of function vectors (ie a \path{Vector{Vector{Function}}}). One such vector may be supplied to specify the displays to be shown above the \path{ProgressMeter}, one for those below, supplied as the \path{upper_displays} or \path{lower_displays} keyword arguments to \path{converge ensemble!()}. \path{GMC_NS.jl} will rotate the upper and lower displays to the next vector of display functions every \path{disp_rot_its} sampling iterates, supplied as another \path{converge_ensemble!()} keyword argument. Default display functions are available in \path{/src/utilities/progress_displays.jl} and are exported for easy composition of the function vectors.
 
 \subsection{Example use}
+\path{GMC_NS.jl} is supplied with two simple, but useful, statistical models by default. These are the \path{Normal_Model} and \path{LogNormal_Model} subtypes of \path{GMC_NS_Model}. Users may familiarize themselves with \path{GMC_NS.jl}'s operation by the use of these models. A simple demonstration is supplied in the \path{/test} directory of the package. The program is detailed with additional comments below. The demonstration involves converging an ensemble of 10 \path{Normal_Model} chains initialized from an inaccurate \path{NormalGamma} prior on data generated from a known \path{Normal} distribution.
+
+\begin{minted}[breaklines,
+    mathescape,
+    linenos,
+    numbersep=5pt,
+    frame=lines,
+    framesep=2mm]{julia}
+#Import dependencies
+using GMC_NS, Distributions, ConjugatePriors
+
+#Generate some data from a Normal model with \mu 100. and \sigma 5. 
+sample_dist=Normal(100.,5.)
+samples=rand(sample_dist, 10000)
+
+#An inaccurate ConjugatePrior
+prior=NormalGamma(300.,2e-3,1.,10.) 
+
+#Box for the two parameters of the Normal model.
+#First column: parameter minimums.
+#Second column: parameter maximums
+#First row: \mu
+#Second row: precision, ie 1/sqrt(\sigma)
+#eps() is machine epsilon, ~1e-16; a small number
+box=[0. 1000.
+     1/1000. 1/eps()]
+
+#Start with the default sampler settings
+#Index 1: Lower the minimum number of ensemble particles to 5
+#Index 2: The minimum allowable particle timestep is set to a very small number; the likelihood of the model parameterisation can be determined precisely and is well behaved over the parameter space.
+gmc=GMC_DEFAULTS
+gmc[1]=5
+gmc[2]=1.e-15
+
+#Assemble the ensemble. Begin with 10 particles
+e=Normal_Ensemble("NE_test", 10, samples, prior, box, gmc...)
+
+#Define the upper displays to be rendered above the status line. Here we rotate a single display between three readouts.
+uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
+
+#Define the lower displays to be rendered below. We want to look at the most likely model in the ensemble plotted against the observations the whole time.
+lds=Vector{Vector{Function}}([[model_obs_display]])
+
+#Converge the ensemble, serializing to pwd/NE\_test every 100 iterates and rotating the chosen displays every 1000 iterates.
+converge_ensemble!(e,backup=(true,100),upper_displays=uds, lower_displays=lds, disp_rot_its=1000)
+\end{minted}
+
+Typical output after executing this program is presented in \autoref{GMCnormoutput}. The maximum a priori parameters may be read off the $\theta$ line of the \path{model_obs_display} below the status line. The algorithm estimates that the model from which the sample was drawn has a $\mu$ of $\sim$ 100.29 and a precision of $\sim$ .045, corresponding to a $\sigma$ of $\sim$ 4.7; the global optimum has been found despite the poor starting prior.
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics{BMI/output.png}}    
+    \caption{{\bf Example \protect\path{BMI.jl} Output}}
+    \label{GMCnormoutput}
+\end{figure}

@@ -14,11 +14,13 @@ The three model ensemble types specified by \path{CNS.jl} are as follows:
 The operation of these simulators is described in more detail below. In general, the workflow is to assemble the assemble, converge it, and to estimate the model evidence and posterior parameters from the converged ensemble. For more on evidence and posterior estimation by \path{GMC_NS.jl}, see \autoref{chap:GMC}.
 
 \section{\protect\path{CMZ_Ensemble} model and usage}
-A \path{CMZ_Ensemble} consists of \path{CMZ_Model}s whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of difference equations for simulated retinae initialized from independent samples from the population and volume distributions specified in the ensemble constants vector. The update functions are specified in general by \autoref{popeq} and \autoref{voleq}. However, the implementation of these functions in the model likelihood function (\path{CMZ_mc_llh}, found in \autoref{ssec:CMZlh}) differs from this presentation; the equations are not evaluated stepwise day-by-day, but are rather updated for the next model event, either an observation timepoint or a phase transition date. The specific equations used in this function are of the computationally efficient factorial form suggested by Langtangen \cite[p. 559]{Langtangen2012}:
+A \path{CMZ_Ensemble} consists of \path{CMZ_Model}s whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of a system of difference equations for simulated retinae, initialized from independent samples from the population and volume distributions specified in the ensemble constants vector. The update functions are specified in general by \autoref{popeq} and \autoref{voleq}. However, the implementation of these functions in the model likelihood function (\path{CMZ_mc_llh}, found in \autoref{ssec:CMZlh}) differs from this presentation; the equations are not evaluated stepwise day-by-day, but are rather updated for the next model event, either an observation timepoint or a phase transition date. The specific equations used in this function are of the computationally efficient factorial form suggested by Langtangen \cite[p. 559]{Langtangen2012}, so that the equation for the CMZ population $n$ days after some time 0 becomes:
 
 \[
     p_n=p_{0} \cdot (2^{\frac{24}{CT}} - \epsilon)^{n}
 \]
+
+while the equation for retinal volume becomes:
 
 \[
     v_n=v_{0} + p_{0} \cdot \epsilon \cdot \mu_{cv} \cdot \frac{1 - (2^{\frac{24}{CT} - \epsilon})^{n-1}}{1 - (2^{\frac{24}{CT} - \epsilon})}
@@ -54,10 +56,35 @@ As an example, an ensemble with 3000 chains and using the default GMC sampler se
     converge_ensemble!(e,backup=(true,50), mc_noise=.3)
 \end{minted}
 
-The \path{mc_noise} parameter can be estimated by calculating the standard deviation of repeated evaluations of a parameter vector with a reasonably high likelihood, given the data vectors. The suggested value is roughly appropriate for \num{1e6} Monte Carlo iterates, given the data vectors used in \autoref{ssec:a10periodisation}.
+The \path{mc_noise} parameter in this, and other models of the package, can be estimated by calculating the standard deviation of repeated evaluations of a parameter vector with a reasonably high likelihood, given the data vectors. The suggested value is roughly appropriate for \num{1e6} Monte Carlo iterates, given the data vectors used in \autoref{ssec:a10periodisation}.
 
 \section{\protect\path{Slice_Ensemble} usage}
-A \path{Slice_Ensemble} consists of \path{Slice_Models}, whose likelihood is ass
+A \path{Slice_Ensemble} consists of \path{Slice_Model}s, whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of a hybrid system of a difference equation and a power-law equation, representing a simulated CMZ RPC population in a retinal slice of arbitrary thickness. The \path{Slice_Model} likelihood function uses the same factorial solution to calculate the CMZ population after time steps of $n$ days as that described for \path{CMZ_Model}s. However, these population values are penalized by a value determined by using the power-law model of lens growth to determine the change in CMZ circumference over this time period, and the per-slice contribution required to expand the CMZ by this amount, given the present slice population and slice thickness (see \autoref{ssec:slicelensmodel} for this calculation).
 
-\section{\protect\path{Thymidine_Ensemble} usage}
+\path{Slice_Model}s are broadly similar to \path{CMZ_Model}s. The parameter vectors required to assemble a \path{Slice_Ensemble} differ from those mentioned for a \path{CMZ_Ensemble}, however, and are summarised below. 
 
+\begin{enumerate}
+    \item Observations vector: Must be a vector of vector tuples. The first member of the tuple is the population observation vector (total CMZ population at the vector's date index, see \ref{constants}), the second member is the date's total retinal volume observation vector (in \si{cubic}{micro}{meters}). Ie. the observations vector takes the form of a \path{AbstractVector{<:Tuple{<:AbstractVector{<:Float64},<:AbstractVector{<:Float64}}}}; the tuple of population and volume data found at index \path{x} corresponds from animals measured on date \path{constants_vec[1][x]}.
+    \item Prior vector: For each desired phase of the model, the prior vector must contain a distribution over that phase's mean population cycle time (in hours) and its mean exit rate ($\geq$ 0., may exceed 1.). Paired cycle time and exit rate for each phase is followed by one less phase transition time in days than the number of phases. Ie. a two-phase prior vector might be, in pseudocode, \path{[Phase1CT, Phase1ER, Phase2CT, Phase2ER, Phase1End]}. 
+    \item\label{constants} Constants vector: A \path{Vector{<:Any}} containing, in order:
+    \begin{enumerate}
+        \item T vector: Vector of integers or round floats, age in days of animals for each observations tuple
+        \item Population distribution: \path{Distribution} defining the initial range of population values. Should normally be a fit from the initial population size observations
+        \item Lens model:  \path{Lens_Model} defining the lens circumferential growth power law and the slice's sectional thickness.
+        \item Monte Carlo iterates: Integer specifying the number of retinae to be simulated at each point sampled from the parameter space. \num{1e6}-\num{5e6} is usually fine.
+        \item Phases: Integer defining the number of phases specified by the prior vector
+    \end{enumerate}
+    \item Box matrix: Two columns each of the same length as the prior, defining the minimum (column 1) and maximum (column 2) bounds for each parameter dimension to be sampled.
+\end{enumerate}
+
+As an example, an ensemble with 3000 chains and using the default GMC sampler settings may be initialized and sampled as follows, where variable names correspond to the vectors described above:
+
+\begin{minted}[breaklines,
+    mathescape,
+    linenos,
+    numbersep=5pt,
+    frame=lines,
+    framesep=2mm]{julia}
+    e=CMZ_Ensemble(path, 3000, observations, prior, constants, box, GMC_DEFAULTS)
+    converge_ensemble!(e,backup=(true,50), mc_noise=.3)
+\end{minted}

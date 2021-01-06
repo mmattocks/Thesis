@@ -2,18 +2,28 @@
 \section{Materials and methods}
 \subsection{Zebrafish husbandry}
 Zebrafish husbandry was performed as described in \autoref{ssec:husbandry}.
-
 \subsection{PCNA Immunohistochemistry}
 Anti-PCNA immunohistochemistry was performed as described in \autoref{ssec:PCNA}.
-
 \subsection{Thymidine analogue histochemistry}
+Both cumulative thymidine analogue histochemistry presented in \autoref{ssec:CMZcumedu}, as well as the pulse-chase histochemistry used for the study of neural fate in \autoref{sec:neuralfate} were performed by the methods described in \autoref{ssec:SMMEcumedu} and \autoref{ssec:SMMEwholeretina}, respectively, except that the data from the whole retinal labelling experiment derives from 14\si{micro}{metre} transverse and coronal cryosections (n=3-6 animals per axis, per age). 
 
 \subsection{Lineage tracing immunohistochemistry}
+Embryos from wild-type AB crosses (staining groups 2 and 3) and \textit{Tg(Isl2b:GFP)} crosses (staining group 1). The \textit{Tg(Isl2b:GFP)} line was the kind gift of the late Dr. Chi-Bin Chien. Embryos were collected and reared as described in \autoref{ssec:husbandry}. Embryos were divided into three groups, to be pulsed with EdU at 3, 23, and 90 dpf and sacrificed after a 7 day chase period. In all cases, animals were pulsed by allowing them to swim freely in a 10mM EdU solution for 2 hours. After 7 days, animals were sacrificed and coronal cryosections were obtained as described in \autoref{ssec:PCNA}. These cryosections were divided into staining groups according to their genetic origin, as mentioned above.
+
+Cryosections from all staining groups were allowed to dry briefly at room temperature (RT), before rehydration in PBS for 30 minutes at RT.  Subsequently, sections were blocked in 0.2\% Triton X-100 + 2\% goat serum in PBS for 30 minutes at RT. Primary antibody incubations were as follows for each numbered staining group:
+
+\begin{enumerate}
+    \item Covance rabbit anti-Pax6 primary antibody diluted 1:200 in blocking solution incubated at 4\degree C in fridge overnight.
+    \item Chemicon mouse anti-GS primary antibody diluted 1:500 in blocking solution at 4\degree C in fridge overnight.
+    \item ZIRC mouse anti-Zpr1 primary antibody diluted 1:400 in blocking solution at 4\degree C in fridge overnight.
+\end{enumerate}
+
+After these overnight incubations, primary antibodies were removed and all sections were rinsed five times in PDT (PBS + 1\% DMSO + 0.1\% Tween-20).
 
 \subsection{4C4 immunohistochemistry}
 
 \subsection{Confocal micrograph acquisition and processing}
-All confocal micrographs presented in \autoref{chap:CMZ} were acquired on Leica TCS SP5 and SP8 microscopes, core equipment of the CSB Imaging Facility. Tableautoref summarizes these datasets and 
+All confocal micrographs presented in \autoref{chap:CMZ} were acquired on a Leica TCS SP5 II microscope, operated using the LAS AF microscopy software (Leica). Data was assessed by using Bitplane Imaris software (v.). Specifically, the Imaris watershed segmentation algorithm was applied to the nuclear counterstain channel to segment cellular nuclei. Colocalisation of particular markers (ie. PCNA, EdU, or lineage markers) was assessed by overlap of signal from these channels with the segmented nuclear volumes. The resultant segmented Imaris scenes and the settings   Tableautoref summarizes these datasets and 
 
 \subsection{Estimation of overall CMZ population and retinal volume}
 
@@ -24,12 +34,13 @@ All confocal micrographs presented in \autoref{chap:CMZ} were acquired on Leica 
 \subsection{Slice model simulations of phased CMZ activity}
 
 \subsection{Evidence estimation by Galilean Monte Carlo nested sampling}
-Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref{Nested}[nested sampling algorithm] \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Tableautoref summarizes the \autoref{chap:CMZ} figures which use this technique, along with links to model documentation and a the code used to produce the figure.
+Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref{Nested}[nested sampling algorithm] \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Tableautoref summarizes the \autoref{chap:CMZ} figures which use this technique, along with links to model documentation and the code used to produce the figure.
 
 \subsection{Evidence estimation by Empirical Bayes linear regression}
-Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the Empirical Bayes method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package
+Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package \path{BayesianLinearRegression.jl}, which implements Bishop's algorithm in a high performance manner. Tableautoref summarizes the \autoref{chap:CMZ} figures which use this technique, along with links to model documentation and the code used to produce the figure.
 
 \subsection{Estimation of posterior distributions of phase model parameters}
+Posterior distributions presented in \autoref{phasemarginals} and \autoref{dvmarginals} were produced by Kernel Density Estimation (KDE) \cite[p. 122]{Bishop2006}. The KDE algorithm used was the implementation available in the Julia Robotics library \path{KernelDensityEstimate.jl}, described by Sudderth et al. \cite{Sudderth2010}. Briefly, this uses multiscale nonmparametric Gibbs sampling of supplied weighted ``point clouds'' to generate the kernel density estimate. Chains from \path{GMC_NS.jl} were used in this context by weighting the points in parameter space by their estimated evidence. It is important to note that, for this thesis, \path{GMC_NS.jl} was configured to prioritise the accuracy of evidence estimates over these posterior estimates; as a consequence, samples from around the maximum a posteriori have little weight in the KDE estimates presented herein \cite{Higson2018}. Alternatives to this scheme are possible; one such algorithm is described by Higson et al. \cite{Higson2019}. 
 
 \section{Supplementary Figures}
 

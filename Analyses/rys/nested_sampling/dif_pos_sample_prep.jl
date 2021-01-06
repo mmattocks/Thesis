@@ -1,5 +1,7 @@
-using BioSequences, Distributed, DataFrames, nucpos, BioBackgroundModels, CSV, Serialization
+using BioSequences, Distributed, DataFrames, BioBackgroundModels, CSV, Serialization
 import StatsBase:sample
+
+include("/bench/PhD/Thesis/Analyses/rys/position_analysis/position_overlap.jl")
 
 #JOB PATHS AND CONSTANTS
 
@@ -38,8 +40,8 @@ sib_df=CSV.read(sib_pos)
 rys_df=CSV.read(rys_pos)
 
 @info "Mapping..."
-nucpos.map_positions!(sib_df, rys_df)
-nucpos.map_positions!(rys_df, sib_df)
+map_positions!(sib_df, rys_df)
+map_positions!(rys_df, sib_df)
 
 @info "Making differential position dataframes..."
 sib_diff_df = deepcopy(sib_df[findall(iszero,sib_df.mapped_pos),:])
@@ -47,8 +49,8 @@ sib_diff_df = sib_diff_df[findall(!isequal("MT"), sib_diff_df.chr),:]
 rys_diff_df = deepcopy(rys_df[findall(iszero,rys_df.mapped_pos),:])
 rys_diff_df = rys_diff_df[findall(!isequal("MT"), rys_diff_df.chr),:]
 
-nucpos.add_position_sequences!(sib_diff_df, danio_genome_path, danio_gen_index_path)
-nucpos.add_position_sequences!(rys_diff_df, danio_genome_path, danio_gen_index_path)
+add_position_sequences!(sib_diff_df, danio_genome_path, danio_gen_index_path)
+add_position_sequences!(rys_diff_df, danio_genome_path, danio_gen_index_path)
 
 @info "Filtering ambiguous sequences..."
 deleterows!(sib_diff_df, [hasambiguity(seq) for seq in sib_diff_df.seq])
@@ -64,8 +66,8 @@ BioBackgroundModels.add_partition_masks!(sib_diff_df, danio_gff_path, 500, (:chr
 BioBackgroundModels.add_partition_masks!(rys_diff_df, danio_gff_path, 500, (:chr,:seq,:start))
 
 @info "Obtaining cluster data..."
-nucpos.get_cluster!(sib_diff_df, sib_fa, sib_arch)
-nucpos.get_cluster!(rys_diff_df, rys_fa, rys_arch)
+get_cluster!(sib_diff_df, sib_fa, sib_arch)
+get_cluster!(rys_diff_df, rys_fa, rys_arch)
 
 @info "Serializing dataframes..."
 combined_diff_df = vcat(sib_diff_df, rys_diff_df)
@@ -75,9 +77,9 @@ serialize(rys_df_binary, rys_diff_df)
 serialize(combined_df_binary, combined_diff_df)
 
 @info "Creating coded observation sets..."
-sib_codes = nucpos.observation_setup(sib_diff_df, order=0, symbol=:seq)
-rys_codes = nucpos.observation_setup(rys_diff_df, order=0, symbol=:seq)
-combined_codes = nucpos.observation_setup(combined_diff_df, order=0, symbol=:seq)
+sib_codes = observation_setup(sib_diff_df, order=0, symbol=:seq)
+rys_codes = observation_setup(rys_diff_df, order=0, symbol=:seq)
+combined_codes = observation_setup(combined_diff_df, order=0, symbol=:seq)
 
 @info "Serializing coded observation sets..."
 serialize(sib_code_binary, Matrix(transpose(sib_codes)))

@@ -53,6 +53,7 @@ types=Dict(
 
 filelabels=Dict(
     "CMZ_lh.jl" => "ssec:CMZlh",
+    "lens_model.jl" => "ssec:slicelensmodel",
     "a10periodisation.jl" => "ssec:a10periodisation",
     "BBM_sample_prep.jl" => "ssec:BBMsampleprep",
     "BBM_refinement_prep.jl" => "ssec:BBMrefinementprep",
