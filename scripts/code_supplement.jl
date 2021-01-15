@@ -62,7 +62,8 @@ filelabels=Dict(
     "BBM_survey.jl" => "ssec:BBMsurvey",
     "BBM_survey_refinement.jl" => "ssec:BBMsurveyrefinement",
     "BBM_survey_analysis.jl" => "ssec:BBMsurveyanalysis",
-    "BBM_refinement_analysis.jl" => "ssec:BBMrefinementanalysis"
+    "BBM_refinement_analysis.jl" => "ssec:BBMrefinementanalysis",
+    "IPM_likelihood.jl" => "ssec:IPMlikelihood"
 )
 
 crawl_minted(ca_pth,pls,types, filelabels)
