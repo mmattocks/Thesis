@@ -1,9 +1,9 @@
 using BayesianLinearRegression,CSV,DataFrames,Distributions,CMZNicheSims,GMC_NS, Serialization, Plots, KernelDensityEstimate,KernelDensityEstimatePlotting, Gadfly
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
-edpath="/bench/PhD/NGS_binaries/BSS/A10/ed"
-evpath="/bench/PhD/NGS_binaries/BSS/A10/ev"
-edvpath="/bench/PhD/NGS_binaries/BSS/A10/edv"
+edpath="/bench/PhD/NGS_binaries/CNS/A10/ed"
+evpath="/bench/PhD/NGS_binaries/CNS/A10/ev"
+edvpath="/bench/PhD/NGS_binaries/CNS/A10/edv"
 paths=[edpath,evpath,edvpath]
 
 default(legendfont = (10), guidefont = (12), tickfont = (10))
@@ -93,11 +93,14 @@ constants=[d_constants,v_constants,dv_constants]
 uds=Vector{Vector{Function}}([[],[liwi_display],[convergence_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
 
+gmc_settings=GMC_DEFAULTS
+gmc_settings[end]=25000
+
 for (pth,constants,obs) in zip(paths,constants,obsset)
     if isfile(pth*"/ens")
         e=deserialize(pth*"/ens")
     else
-        e=Slice_Ensemble(pth,3000,obs, prior..., constants, box..., GMC_DEFAULTS)
+        e=Slice_Ensemble(pth,3000,obs, prior..., constants, box..., gmc_settings)
     end
 
     converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_criterion="compression", converge_factor=1.)
