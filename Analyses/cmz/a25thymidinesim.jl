@@ -1,4 +1,4 @@
-using GMC_NS, BioSimpleStochastic, ConjugatePriors, CSV, DataFrames, Distributions, Serialization, NGRefTools
+using GMC_NS, CMZNicheSims, ConjugatePriors, CSV, DataFrames, Distributions, Serialization, NGRefTools
 
 a10path="/bench/PhD/datasets/A10 measurements 2018update.csv"
 a10df=DataFrame(CSV.File(a10path))

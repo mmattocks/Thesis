@@ -1,10 +1,10 @@
 using CSV,DataFrames,Distributions,NGRefTools,StatsBase,Plots,GMC_NS,Serialization, Measurements
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
-pne_pth="/bench/PhD/NGS_binaries/BSS/A10/pop_norm"
-plne_pth="/bench/PhD/NGS_binaries/BSS/A10/pop_lognorm"
-vne_pth="/bench/PhD/NGS_binaries/BSS/A10/vol_norm"
-vlne_pth="/bench/PhD/NGS_binaries/BSS/A10/vol_lognorm"
+pne_pth="/bench/PhD/NGS_binaries/GMC_NS/A10/pop_norm"
+plne_pth="/bench/PhD/NGS_binaries/GMC_NS/A10/pop_lognorm"
+vne_pth="/bench/PhD/NGS_binaries/GMC_NS/A10/vol_norm"
+vlne_pth="/bench/PhD/NGS_binaries/GMC_NS/A10/vol_lognorm"
 
 a10df=DataFrame(CSV.read(a10pth))
 a10df.BSR=[string(row.Block,',',row.Slide,',',row.Row) for row in eachrow(a10df)]

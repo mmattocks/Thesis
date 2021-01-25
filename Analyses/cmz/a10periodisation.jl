@@ -1,12 +1,12 @@
-using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, BioSimpleStochastic, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots, Gadfly
+using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, CMZNicheSims, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots, Gadfly
 gr()
 default(legendfont = (10), guidefont = (12), tickfont = (10))
 
 Random.seed!(786)
 
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
-e2ph="/bench/PhD/NGS_binaries/BSS/A10/e2ph"
-e3ph="/bench/PhD/NGS_binaries/BSS/A10/e3ph"
+e2ph="/bench/PhD/NGS_binaries/CNS/A10/e2ph"
+e3ph="/bench/PhD/NGS_binaries/CNS/A10/e3ph"
 
 paths=[e3ph]
 
@@ -204,7 +204,6 @@ combined_map=Plots.plot(map2_popplt,map2_volplt,map3_popplt,map3_volplt,layout=g
 savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10pMAP.png")
 
 kde2=posterior_kde(e2)
-# kde3=posterior_kde(e3)
 
 ph1marg=marginal(kde2,[1;2])
 ph2marg=marginal(kde2,[3;4])

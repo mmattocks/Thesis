@@ -1,4 +1,4 @@
-using BayesianLinearRegression,CSV,DataFrames,Distributions,BioSimpleStochastic,GMC_NS, Serialization, Plots, KernelDensityEstimate,KernelDensityEstimatePlotting, Gadfly
+using BayesianLinearRegression,CSV,DataFrames,Distributions,CMZNicheSims,GMC_NS, Serialization, Plots, KernelDensityEstimate,KernelDensityEstimatePlotting, Gadfly
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
 edpath="/bench/PhD/NGS_binaries/BSS/A10/ed"

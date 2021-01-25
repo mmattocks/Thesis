@@ -1,4 +1,4 @@
-using BayesianLinearRegression,CSV,DataFrames,Distributions,BioSimpleStochastic,GMC_NS, Serialization, Plots, NGRefTools
+using BayesianLinearRegression,CSV,DataFrames,Distributions, GMC_NS, Serialization, Plots, NGRefTools
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
 a10df=DataFrame(CSV.read(a10pth))
