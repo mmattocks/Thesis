@@ -8,7 +8,7 @@ a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 e2ph="/bench/PhD/NGS_binaries/CNS/A10/e2ph"
 e3ph="/bench/PhD/NGS_binaries/CNS/A10/e3ph"
 
-paths=[e3ph]
+paths=[e2ph, e3ph]
 
 a10df=DataFrame(CSV.read(a10pth))
 a10df.BSR=[string(row.Block,',',row.Slide,',',row.Row) for row in eachrow(a10df)]
@@ -86,7 +86,7 @@ voldist=fit(LogNormal,measure_dict["SphEst"][1])
 
 ph2_constants=[X, popdist, voldist, vol_const, mc_its, 2]
 ph3_constants=[X, popdist, voldist, vol_const, mc_its, 3]
-constants=[ph3_constants]
+constants=[ph2_constants, ph3_constants]
 
 cycle_prior=[Uniform(10.,144.), LogNormal(log(.9),log(2))]
 end_prior=[Uniform(4.,359.)]
@@ -109,14 +109,15 @@ function compose_priors(phases)
     return prs,bxes
 end
 
-phases=[3]
+phases=[2,3]
 priors,boxes=compose_priors(phases)
 
 uds=Vector{Vector{Function}}([[],[liwi_display],[convergence_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
 
 gmc_settings=GMC_DEFAULTS
-gmc_settings[end]=15000
+gmc_settings[end]=1000
+
 
 for (pth,prior,constants,box) in zip(paths,priors,constants,boxes)
     if isfile(pth*"/ens")
