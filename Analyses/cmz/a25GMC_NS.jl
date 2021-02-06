@@ -73,7 +73,7 @@ p1_box=[1. sp_max_mean
 p2_box=vcat(p1_box,p1_box)
 
 prior_sets=[priors_1_pop,priors_2_pop]
-ensemble_paths=["/bench/PhD/NGS_binaries/BSS/A25/1pop", "/bench/PhD/NGS_binaries/BSS/A25/2pop"]
+ensemble_paths=["/bench/PhD/NGS_binaries/CNS/A25/1pop", "/bench/PhD/NGS_binaries/CNS/A25/2pop"]
 const pulse_time=10.5
 const mc_its=Int64(5e5)
 const end_time=10.5

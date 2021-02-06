@@ -102,6 +102,7 @@ end
 gmc=GMC_DEFAULTS
 gmc[1]=5
 gmc[2]=1.e-15
+gmc[end]=2e4
 
 uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display]])
@@ -123,7 +124,7 @@ min_λ=1e-6
 prior=[Uniform(min_μ,max_μ),Uniform(min_λ,max_λ)]
 box=[min_μ max_μ;min_λ max_λ]
 
-gmcdir="/bench/PhD/NGS_binaries/BSS/A38/"
+gmcdir="/bench/PhD/NGS_binaries/GMC_NS/rysp/"
 
 for ms in ["TCMZ","EdU"]
     for (n,x) in enumerate(XCMZ)
@@ -135,7 +136,7 @@ for ms in ["TCMZ","EdU"]
             e=LogNormal_Ensemble(c_ens,n_models, c_obs, prior, box, gmc...)
         end
 
-        evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+        evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
 
 
         for (msd,p) in zip([sib_measure_dict,rys_measure_dict],["/s_","/r_"])
@@ -146,7 +147,7 @@ for ms in ["TCMZ","EdU"]
             else
                 e=LogNormal_Ensemble(ens,n_models, obs, prior, box, gmc...)
             end
-            evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+            evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
         end
     end
 end

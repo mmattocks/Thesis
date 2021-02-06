@@ -62,6 +62,7 @@ end
 gmc=GMC_DEFAULTS
 gmc[1]=5
 gmc[2]=1.e-15
+gmc[end]=2e4
 
 uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
 
@@ -94,7 +95,7 @@ for (pth,prior,box,eststring) in zip([pne_pth, vne_pth],[pn_priors, vn_priors],[
             e=Normal_Ensemble(enspth,n_models,filter(i->!iszero(i), measure_dict[eststring][nx]), prior, box, gmc...)
         end
 
-        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
+        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6))
     end
 end
 
@@ -122,7 +123,7 @@ for (pth,prior,box,eststring) in zip([plne_pth, vlne_pth],[pn_priors, vn_priors]
             e=LogNormal_Ensemble(enspth,n_models,filter(i->i>0,measure_dict[eststring][nx]), prior, box, gmc...)
         end
 
-        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
+        pth in keys(evdict) ? (evdict[pth] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)) :  (evdict[pth] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6))
     end
 end
 

@@ -45,26 +45,26 @@ mobs=vcat([v for v in values(mo1)]...)
 for (md, pstring) in zip([CR,mo1],["CR","mo1"])
     for (k,v) in md
         pfx=pstring*string(k)
-        enspth="/bench/PhD/NGS_binaries/BSS/A27/"*pfx
+        enspth="/bench/PhD/NGS_binaries/GMC_NS/A27/"*pfx
         if isfile(enspth*"/ens")
             e=deserialize(enspth*"/ens")
         else
             e=LogNormal_Ensemble(enspth,n_models,v, prior, box, gmc...)
         end
 
-        pstring in keys(evdict) ? (evdict[pstring]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) : (evdict[pstring]=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
+        pstring in keys(evdict) ? (evdict[pstring]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)) : (evdict[pstring]=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6))
     end
 end
 
 for (obs,pstring) in zip([cobs,mobs],["cCR","cmo1"])
-    enspth="/bench/PhD/NGS_binaries/BSS/A27/"*pstring
+    enspth="/bench/PhD/NGS_binaries/GMC_NS/A27/"*pstring
     if isfile(enspth*"/ens")
         e=deserialize(enspth*"/ens")
     else
         e=LogNormal_Ensemble(enspth,n_models,obs, prior, box, gmc...)
     end
 
-    evdict[pstring]=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    evdict[pstring]=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
 end
 
 for ms in ["CR","mo1"]

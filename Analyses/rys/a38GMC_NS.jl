@@ -44,7 +44,8 @@ end
 gmc=GMC_DEFAULTS
 gmc[1]=5
 gmc[2]=1.e-15
-gmcdir="/bench/PhD/NGS_binaries/BSS/A38"
+gmc[end]=2e4
+gmcdir="/bench/PhD/NGS_binaries/GMC_NS/A38"
 
 
 uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
@@ -82,7 +83,7 @@ for ms in popmsvec
         e=LogNormal_Ensemble(c_ens,n_models, c_obs, prior, box, gmc...)
     end
 
-    evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
 
     for (msd,p) in zip([sib_measure_dict,rys_measure_dict],["/s_","/r_"])
         ens=gmcdir*p*ms
@@ -92,7 +93,7 @@ for ms in popmsvec
         else
             e=LogNormal_Ensemble(ens,n_models, obs, prior, box, gmc...)
         end
-        evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+        evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
     end
 end
 
@@ -109,7 +110,7 @@ for ms in normmsvec
         end
     end
 
-    evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    evdict[ms*"_Combined"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
 
     for (msd,p) in zip([sib_measure_dict,rys_measure_dict],["/s_","/r_"])
         ens=gmcdir*p*ms
@@ -124,7 +125,6 @@ for ms in normmsvec
             end
         end
 
-        evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
     end
 end
 

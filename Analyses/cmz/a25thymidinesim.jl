@@ -70,7 +70,7 @@ p1_box=[3.3 5.8
 
 p1_box=GMC_NS.to_unit_ball.(p1_box,priors_1_pop)
 
-ep="/bench/PhD/NGS_binaries/BSS/A25/1pop"
+ep="/bench/PhD/NGS_binaries/CNS/A25/1pop"
 const pulse_time=10.5
 const mc_its=Int64(5e5)
 const end_time=10.5
