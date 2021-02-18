@@ -70,7 +70,7 @@ prior=[Uniform(min_μ,max_μ),Uniform(min_λ,max_λ)]
 box=[min_μ max_μ;min_λ max_λ]
 
 s_max_μ=1.;s_min_μ=0.
-s_max_λ=5e5;s_min_λ=1e3
+s_max_λ=5e5;s_min_λ=0.
 s_prior=[Uniform(s_min_μ,s_max_μ),Uniform(s_min_λ,s_max_λ)]
 s_box=[s_min_μ s_max_μ;s_min_λ s_max_λ]
 
@@ -125,6 +125,7 @@ for ms in normmsvec
             end
         end
 
+        evdict[ms*"_Separate"]+=converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6)
     end
 end
 

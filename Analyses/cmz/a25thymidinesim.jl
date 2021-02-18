@@ -52,19 +52,19 @@ sort!(X)
 
 pop_prior=fit(NormalInverseGamma,log.(popvec))
 
-r_prior=Normal(5,1.5)
-tc_prior=NormalInverseGamma(3.,1.,5.,2.)
-s_prior=NormalInverseGamma(6.,2.5,1.,1.)
+g1_prior=Normal(4.,2.)
+tc_prior=NormalInverseGamma(3.5,1.,5.,2.)
+s_prior=NormalInverseGamma(4.,2.,1.,1.)
 sister_prior=Beta(8.,75.)
 
-priors_1_pop=[marginals(pop_prior)..., r_prior, marginals(tc_prior)..., marginals(s_prior)..., sister_prior]
+priors_1_pop=[marginals(pop_prior)..., g1_prior, marginals(tc_prior)..., marginals(s_prior)..., sister_prior]
 
 p1_box=[3.3 5.8
         .07 .26
         1. 10.
         .1 10.
         eps() 2.7
-        4. 20.
+        eps() 20.
         .1 200.
         eps() .5]
 
@@ -72,7 +72,7 @@ p1_box=GMC_NS.to_unit_ball.(p1_box,priors_1_pop)
 
 ep="/bench/PhD/NGS_binaries/CNS/A25/1pop"
 const pulse_time=10.5
-const mc_its=Int64(5e5)
+const mc_its=Int64(1.5e5)
 const end_time=10.5
 constants=[X, pulse_time, mc_its, end_time]
 

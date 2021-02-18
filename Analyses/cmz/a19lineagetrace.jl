@@ -152,10 +152,10 @@ inl_mean=[mean(mt) for mt in inl_n_mts]
 inl_lower=[mean(mt)-quantile(mt,.025) for mt in inl_n_mts]
 inl_upper=[quantile(mt,.975)-mean(mt) for mt in inl_n_mts]
 
-gcl_n_mts=[fit(MarginalTDist,t_measure_dict["GCL"][n]) for n in 1:length(X)]
-gcl_mean=[mean(mt) for mt in gcl_n_mts]
-gcl_lower=[mean(mt)-quantile(mt,.025) for mt in gcl_n_mts]
-gcl_upper=[quantile(mt,.975)-mean(mt) for mt in gcl_n_mts]
+gcl_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["GCL"][n])) for n in 1:length(X)]
+gcl_mean=[exp(mean(mt)) for mt in gcl_ln_mts]
+gcl_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in gcl_ln_mts]
+gcl_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in gcl_ln_mts]
 
 layers_chart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["GCL"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["GCL"]...), marker=:utriangle, color=:darkmagenta, markersize=3, markerstrokecolor=:darkmagenta, label="GCL data", ylabel="Fraction of cohort in layer", xlabel="Age (dpf)", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:inside)
 plot!(X, gcl_mean, ribbon=(gcl_lower,gcl_upper), color=:darkmagenta, label="GCL mean")
@@ -165,13 +165,13 @@ scatter!(vcat([[X[n] for i in 1:length(t_measure_dict["ONL"][n])] for n in 1:len
 plot!(X, onl_mean,ribbon=(onl_lower,onl_upper), color=:green, label="ONL mean")
 annotate!([(15,.7,Plots.text("A",18))])
 
-isl_n_mts=[fit(MarginalTDist,t_measure_dict["Isl"][n]) for n in 1:length(X)]
-isl_mean=[mean(mt) for mt in isl_n_mts]
-isl_lower=[mean(mt)-quantile(mt,.025) for mt in isl_n_mts]
-isl_upper=[quantile(mt,.975)-mean(mt) for mt in isl_n_mts]
+isl_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Isl"][n])) for n in 1:length(X)]
+isl_mean=[exp(mean(mt)) for mt in isl_ln_mts]
+isl_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in isl_ln_mts]
+isl_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in isl_ln_mts]
 
 islchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Isl"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Isl"]...), marker=:square, color=:darkmagenta, markerstrokecolor=:darkmagenta, markersize=3, label="Isl+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom,  xformatter=_->"", showaxis=:y)
-plot!(X, isl_mean,ribbon=(isl_lower,isl_upper), color=:darkmagenta, label="Isl+ mean")
+plot!(X, isl_mean,ribbon=(isl_lower,isl_upper), color=:darkmagenta, label="Isl+ mean", ylims=[0,.5])
 annotate!([(15,.05,Plots.text("B",18))])
 
 pax6_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Pax6"][n])) for n in 1:length(X)]
@@ -181,12 +181,12 @@ pax6_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pax6_ln_mts]
 
 pax6chart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Pax6"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Pax6"]...), marker=:circle, color=:darkmagenta, markersize=3, markerstrokecolor=:darkmagenta, label="Pax6+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:top,  xformatter=_->"", showaxis=:y, ylabel="Fraction of GCL cohort labelled")
 plot!(X, pax6_mean,ribbon=(pax6_lower,pax6_upper), color=:darkmagenta, label="Pax6+ mean", ylims=[0,.6])
-annotate!([(15,.45,Plots.text("C(λ)",18))])
+annotate!([(15,.45,Plots.text("C",18))])
 
-islp_n_mts=[fit(MarginalTDist,t_measure_dict["Isl_Pax6"][n]) for n in 1:length(X)]
-islp_mean=[mean(mt) for mt in islp_n_mts]
-islp_lower=[mean(mt)-quantile(mt,.025) for mt in islp_n_mts]
-islp_upper=[quantile(mt,.975)-mean(mt) for mt in islp_n_mts]
+islp_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Isl_Pax6"][n])) for n in 1:length(X)]
+islp_mean=[exp(mean(mt)) for mt in islp_ln_mts]
+islp_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in islp_ln_mts]
+islp_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in islp_ln_mts]
 
 islpchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Isl_Pax6"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Isl_Pax6"]...), marker=:triangle, color=:darkmagenta, markersize=3, markerstrokecolor=:darkmagenta, label="Isl/Pax6+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom, xlabel="Age (dpf)")
 plot!(X, islp_mean,ribbon=(islp_lower,islp_upper), color=:darkmagenta, label="Isl/Pax6+ mean")
@@ -201,7 +201,7 @@ pax6i_upper=[quantile(mt,.975)-mean(mt) for mt in pax6i_n_mts]
 
 inlpax6chart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["INL_Pax6"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["INL_Pax6"]...), marker=:square, color=:blue, markersize=3, markerstrokecolor=:blue, label="Pax6+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom, xformatter=_->"", showaxis=:y)
 plot!(X, pax6i_mean,ribbon=(pax6i_lower,pax6i_upper), color=:blue, label="Pax6+ mean")
-annotate!([(15,.075,Plots.text("E",18))])
+annotate!([(15,.075,Plots.text("E(†)",18))])
 
 pkc_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["PKCB"][n])) for n in 1:length(X)]
 pkc_mean=[exp(mean(mt)) for mt in pkc_ln_mts]
@@ -210,7 +210,7 @@ pkc_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pkc_ln_mts]
 
 pkcchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["PKCB"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["PKCB"]...), marker=:circle, color=:blue, markersize=3, markerstrokecolor=:blue, label="PKCβ+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:top, xformatter=_->"", showaxis=:y, ylabel="Fraction of INL cohort labelled")
 plot!(X, pkc_mean,ribbon=(pkc_lower,pkc_upper), color=:blue, label="PKCβ+ mean", ylims=[0,.2])
-annotate!([(15,.18,Plots.text("F(λ†)",18))])
+annotate!([(15,.18,Plots.text("F(†)",18))])
 
 gs_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["GS"][n])) for n in 1:length(X)]
 gs_mean=[exp(mean(mt)) for mt in gs_ln_mts]
@@ -219,7 +219,7 @@ gs_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in gs_ln_mts]
 
 gschart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["GS"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["GS"]...), marker=:diamond, color=:blue, markersize=3, markerstrokecolor=:blue, label="GS+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:topright, xformatter=_->"", showaxis=:y)
 plot!(X, gs_mean,ribbon=(gs_lower,gs_upper), color=:blue, label="GS+ mean")
-annotate!([(15,.125,Plots.text("G(λ)",18))])
+annotate!([(15,.125,Plots.text("G(†)",18))])
 
 hm_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["HM"][n])) for n in 1:length(X)]
 hm_mean=[exp(mean(mt)) for mt in hm_ln_mts]
@@ -228,18 +228,18 @@ hm_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in hm_ln_mts]
 
 hmchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["HM"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["HM"]...), marker=:cross, color=:blue, markersize=3, markerstrokecolor=:blue, label="HM+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:topright, xlabel="Age (dpf)")
 plot!(X, hm_mean,ribbon=(hm_lower,hm_upper), color=:blue, label="HM+ mean")
-annotate!([(15,.13,Plots.text("H(λ)",18))])
+annotate!([(15,.13,Plots.text("H",18))])
 
 inl_subplot=plot(inlpax6chart, pkcchart, gschart, hmchart, layout=grid(4,1), link=:x)
 
-z_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Zpr1"][n])) for n in 1:length(X)]
-z_mean=[exp(mean(mt)) for mt in z_ln_mts]
-z_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in z_ln_mts]
-z_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in z_ln_mts]
+z_n_mts=[fit(MarginalTDist,t_measure_dict["Zpr1"][n]) for n in 1:length(X)]
+z_mean=[mean(mt) for mt in z_n_mts]
+z_lower=[mean(mt)-quantile(mt,.025) for mt in z_n_mts]
+z_upper=[quantile(mt,.975)-mean(mt) for mt in z_n_mts]
 
 zchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Zpr1"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Zpr1"]...), marker=:square, color=:green, markerstrokecolor=:green, markersize=3, label="Zpr1+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom, xlabel="Age (dpf)", ylabel="Frac. OPL labelled")
 plot!(X, z_mean,ribbon=(z_lower,z_upper), color=:green, label="HM+ mean", ylims=[0,.55])
-annotate!([(15,.15,Plots.text("I(λ†)",18))])
+annotate!([(15,.15,Plots.text("I(N†)",18))])
 
 l=@layout [[layers{0.5h};gcl] [inl{0.8h};opl]]
 combined=plot(layers_chart,gcl_subplot, inl_subplot,zchart, size=(1200,1200),layout=l)
@@ -276,7 +276,7 @@ box=[min_μ max_μ;min_λ max_λ]
 
 for ms in keys(t_measure_dict)
     for (n,ovec) in enumerate(t_measure_dict[ms])
-        e_basepth="/bench/PhD/NGS_binaries/BSS/A19/n_"*ms
+        e_basepth="/bench/PhD/NGS_binaries/GMC_NS/A19/n_"*ms
         x=X[n]
         enspth=e_basepth*"/$x"
         if isfile(enspth*"/ens")
@@ -285,11 +285,11 @@ for ms in keys(t_measure_dict)
             e=Normal_Ensemble(enspth,n_models,filter(i->i>0,ovec), prior, box, gmc...)
         end
 
-        "n_"*ms in keys(evdict) ? (evdict["n_"*ms] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict["n_"*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
+        "n_"*ms in keys(evdict) ? (evdict["n_"*ms] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6)) :  (evdict["n_"*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_factor=1e-6))
     end
 
     for (n,ovec) in enumerate(t_measure_dict[ms])
-        e_basepth="/bench/PhD/NGS_binaries/BSS/A19/ln_"*ms
+        e_basepth="/bench/PhD/NGS_binaries/GMC_NS/A19/ln_"*ms
         x=X[n]
         enspth=e_basepth*"/$x"
         if isfile(enspth*"/ens")
@@ -298,7 +298,7 @@ for ms in keys(t_measure_dict)
             e=LogNormal_Ensemble(enspth,n_models,filter(i->i>0,ovec), prior, box, gmc...)
         end
 
-        "ln_"*ms in keys(evdict) ? (evdict["ln_"*ms] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)) :  (evdict["ln_"*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6))
+        "ln_"*ms in keys(evdict) ? (evdict["ln_"*ms] += converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6)) :  (evdict["ln_"*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6))
     end
 end
 
@@ -319,7 +319,7 @@ for ms in keys(t_measure_dict)
     end
 
     ovec=vcat(t_measure_dict[ms]...)
-    e_basepth="/bench/PhD/NGS_binaries/BSS/A19/"*pf*ms
+    e_basepth="/bench/PhD/NGS_binaries/GMC_NS/A19/"*pf*ms
 
     if isfile(e_basepth*"/ens")
         e=deserialize(e_basepth*"/ens")
@@ -327,7 +327,7 @@ for ms in keys(t_measure_dict)
         e=efunc(e_basepth,n_models,filter(i->i>0,ovec), prior, box, gmc...)
     end
 
-    evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6)
 end
 
 for ms in keys(t_measure_dict)
@@ -355,7 +355,7 @@ for ms in keys(d_measure_dict)
     end
 
     ovec=vcat(d_measure_dict[ms]...)
-    e_basepth="/bench/PhD/NGS_binaries/BSS/A19/"*pf*ms
+    e_basepth="/bench/PhD/NGS_binaries/GMC_NS/A19/"*pf*ms
 
     if isfile(e_basepth*"/ens")
         e=deserialize(e_basepth*"/ens")
@@ -363,7 +363,7 @@ for ms in keys(d_measure_dict)
         e=efunc(e_basepth,n_models,filter(i->!isnan(i),ovec), prior, box, gmc...)
     end
 
-    dv_evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    dv_evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6)
 end
 
 for ms in keys(v_measure_dict)
@@ -376,7 +376,7 @@ for ms in keys(v_measure_dict)
     end
 
     ovec=vcat(d_measure_dict[ms]...)
-    e_basepth="/bench/PhD/NGS_binaries/BSS/A19/"*pf*ms
+    e_basepth="/bench/PhD/NGS_binaries/GMC_NS/A19/"*pf*ms
 
     if isfile(e_basepth*"/ens")
         e=deserialize(e_basepth*"/ens")
@@ -384,7 +384,7 @@ for ms in keys(v_measure_dict)
         e=efunc(e_basepth,n_models,filter(i->!isnan(i),ovec), prior, box, gmc...)
     end
 
-    dv_evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000, converge_criterion="compression", converge_factor=1e-6)
+    dv_evdict[pf*ms] = converge_ensemble!(e,backup=(true,10000),upper_displays=uds, lower_displays=lds, disp_rot_its=10000,  converge_factor=1e-6)
 end
 
 

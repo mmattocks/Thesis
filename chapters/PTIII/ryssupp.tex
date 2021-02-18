@@ -13,39 +13,52 @@ The vsx2 promoter fragment was isolated by PCR amplification from the BAC (). BP
 Injections into 1-2 cell embryos were conducted by standard techniques \cite{Westerfield2000}. Animals with stable expression of vsx2 in postembryonic peripheral RPCs and in central retinal bipolar cells, as expected, were identified and bred out. These animals were subsequently introgressed into \textit{rys} in order to produce \textit{Tg(vsx2:eGFP)} \textit{rys} animals.
 
 \subsection{Morpholino injections}
+\label{ssec:moinjxn}
 Morpholino injections were performed by Maria Augusta Sartori by methods previously described \cite{Wong2015}.
  
 \subsection{Morphological photography}
 The photographs presented in \autoref{ryspic} were obtained with the transmitted light optics of a Zeiss fluorescent stereoscope (SteREO Lumar.V12), using ZEN Imaging software.
 
 \subsection{PCNA and EdU proliferative histochemistry}
+\label{ssec:rysPCNAEdU}
 PCNA and EdU proliferative histochemistry giving rise to the data presented in \autoref{rysCMZontogeny} was performed as described in \autoref{ssec:PCNA} and \autoref{ssec:SMMEcumedu}, except that the length of the EdU pulse was 24 hours, and was not administered to 5dpf animals, which were set aside for the nuclear morphology study presented in \autoref{nuclearstudy}.
 
 \subsection{BrdU pulse-chase assay}
+\label{ssec:rysBrdUpulse}
 The BrdU pulse-chase assay presented in \autoref{contributionfailure} was conducted by soaking 3dpf \textit{rys} larvae in 10\si{\milli\mole} BrdU for 8 hours. After a subsequent 7 day chase period, the 10dpf larvae were sacrificed and processed as described in \autoref{ssec:SMMEwholeretina}.
 
 \subsection{Analysis of \textit{rys} nuclear parameters by Galilean Monte Carlo Nested Sampling}
+\label{ssec:rysnucev}
 The estimation of evidence for separate and combined mutant and sibling models of nuclear parameters presented in \autoref{nuclearev} was produced using the Julia package GMC\_NS.jl, presented in \autoref{chap:GMC}. 
 
 \subsection{Progenitor identity marker immunohistochemistry}
-
+\label{ssec:rysprogenIHC}
 
 \subsection{Caspase-3 immunohistochemistry}
+\label{ssec:ryscaspase}
 Caspase-3 immunohistochemistry was performed by Monica Dixon. 
 
 \subsection{In situ hybridization}
+\label{ssec:rysISH}
 In situ hybridization for npat transcript was performed by Monica Dixon.
 
 \subsection{Electron microscopy}
+\label{ssec:rysEM}
 Images presented in \autoref{rysEM} were produced from ultrathin sections for transmission electron microscopy, prepared as described previously \cite{Lindsey2012} by Monica Dixon and Audrey Darabie. These sections were imaged on a Hitachi H-7000 transmission electron microscope using AMT Image Capture Engine software. 
 
 \subsection{RT-PCR analysis of \textit{rys} npat expression}
+\autoref{ssec:rysPCR}
 The RT-PCR analysis of \textit{rys} npat expression presented in \autoref{npatrtpcr} was conducted by Monica Dixon.
+
+\subsection{qPCR analysis of \textit{rys} histone expression}
+\autoref{ssec:rysqPCR}
+The qPCR analysis of \textit{rys} histone expression presented in \autoref{histonertpcr} was conducted by Maria Augusta Sartori.
 
 \subsection{\textit{rys} MNase digestions and NGS}
 Two 10-animal pools each of 5dpf \textit{rys} sib and rys animals had fresh nucleosome-protected MNase fragments produced using the Takara Biotech micrococcal nuclease kit. These digests were submitted to the SickKids TCAG  facility for Illumina HiSeq 2500 NGS, with two lanes run per pool.
 
 \subsection{Nucleosome position calling}
+\label{ssec:rysposcall}
 The nucleosome position calling pipeline used in \autoref{chap:rys} was automated using the Java machine learning framework KNIME \cite{Dietz2016} workspace incorporating KNIME4NGS nodes \cite{Hastreiter2017}. The pipeline is depicted in figureautoref. Node settings are largely default and are available in the \path{knime_workspace} \hyperref[sec:archive]{thesis archive}.
 
 Briefly, FastQC (v0.11.8) \cite{Andrews2018} was used to characterise the quality of the fastq sequence files describing the nucleosome-protected fragment pool from the MNase digestions described above. No sequence from any of the two duplicates of the two pools was rejected due to low quality. Sequences were found to be of uniformly high quality, with low adapter content. These results are available in the \path{fastqc} \hyperref[sec:archive]{thesis git archive}. TrimGalore (v0.5.0) \cite{Andrews2018a} was used to remove trailing adapter bases, using Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR). The trim reports are available in the \hyperref[sec:archive]{thesis git archive}.  Bowtie 2 \cite{Langmead2012} with default settings was used to map reads to the zebrafish genome (GRCz11). Nucleosome positions were called from the resulting sequence alignment map (SAM) files by using DANPOS2 (v2.2.2) \cite{Chen2013}. As DANPOS2 is no longer supported, and the code contained errors preventing execution, a fixed version of this code has been uploaded to \path{https://github.com/mmattocks/DANPOS2fix} and filed in the \hyperref[sec:archive]{thesis HDD archive}, along with the called output positions.
@@ -53,6 +66,7 @@ Briefly, FastQC (v0.11.8) \cite{Andrews2018} was used to characterise the qualit
 The DANPOS nodes of the KNIME workflow are python nodes which execute DANPOS2 itself, as well as the nucleosome position analyses described below. 
 
 \subsection{Analyses of \textit{rys} nucleosome position disposition}
+\label{ssec:rysnucpos}
 \autoref{nucgendist} was produced from the DANPOS2-called positions for the pooled \textit{rys} sibling and mutant MNase-protected fragment datasets. For each numbered \textit{D. rerio} chromosomal scaffold (1-25), as well as for scaffolds not assigned to any chromsome (NC), the number of sibling positions was divided by the total length of the scaffold. These values were compared to the naively expected number of positions per scaffold, determined by dividing the total number of positions per kilobase of genomic material, then multiplying the particular scaffold length. The per-chromosome relative number of positions, as well as fold-differences from the naive expected value, are displayed in pie chart format in Panel A. The Panel C chart displays the result of normalizing these position values by relative occupancy, as determined by DANPOS2. 
 
 \subsubsection{Background Hidden Markov modelling of \textit{D. rerio} genomic sequence emission}
@@ -61,6 +75,7 @@ The Julia package \path{BioBackgroundModels.jl} was used to perform background H
 The code to sample GRCz11 for the initial zoo training task is available in \autoref{ssec:BBMsampleprep}, for the refinement task in \autoref{ssec:BBMrefinementprep}. EM execution code is found in \autoref{ssec:BBMsurvey} and \autoref{ssec:BBMsurveyrefinement}. Analysis code is given in \autoref{ssec:BBMsurveyanalysis} and \autoref{ssec:BBMrefinementanalysis}.
 
 \subsection{Evidence and maximum a posteriori estimation of ICA models of \textit{rys} nucleosome position sequence emission}
+\label{ssec:rysBMI}
 The Julia package BioMotifInference.jl, presented in \autoref{chap:BMI} was used to perform \hyperref[ssec:BayesEpistemology]{evidence and MAP estimation} of \hyperref[ICA]{Independent Component Analysis} \hyperref[PWM]{PWM source} models of nucleosome position emission. The ICA models used had 8 PWM sources ranging from 3 to 10 positions in length. Model ensembles were initialized by sampling from uninformative source priors and an mixing prior of .07 (ie. for each source, mean 7\% of observations will begin mixed with that source).
 
 Observation sets comprised samples of 7092 nucleosome positions from each of the \textit{rys} mutant and sibling differential position sets, corresponding to approximately 1 Mbp for each of the mutant and sibling sets, and 2 Mbp for the combined set.
