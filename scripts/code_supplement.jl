@@ -1,19 +1,21 @@
-function crawl_minted(apdx_pth::String, path_labels::Vector{Pair{String,String}}, types::Dict{String,String}, filelabels::Dict{String,String})
+function crawl_minted(apdx_pth::String, path_labels::Vector{Pair{String,Vector{String}}}, types::Dict{String,String}, filelabels::Dict{String,String})
     io = open(apdx_pth, "w")
     println(io, "\\chapter{Code Appendix}")
     println(io, "\\section{Code and Output Archive}")
     println(io, "\\label{sec:archive}")
 
     println(io, "\\setmonofont[Contextuals={Alternate}]{Fira Code}")
-    for (path,label) in path_labels
-        minty_walk(io, path, label, types, filelabels)
+    for (path,labels) in path_labels
+        label,gitlabel=labels
+        minty_walk(io, path, label, gitlabel, types, filelabels)
     end
     close(io) 
 end
 
-function minty_walk(io, path, label, types, filelabels)
+function minty_walk(io, path, label, gitlabel, types, filelabels)
     println(io)
     println(io, "\\section{\\protect\\path{$(basename(path))}}")
+    println(io, "Github repository: \\url{$gitlabel}")
     println(io, "\\label{$label}")
     for (root, dirs, files) in walkdir(path)
         for file in files
@@ -34,14 +36,14 @@ end
 
 ca_pth="/bench/PhD/Thesis/chapters/PTIII/code.tex"
 pls=[
-    "/srv/git/SMME" => "SMMEcode",
-    "/srv/git/NGRefTools" => "NGRefTools",
-    "/srv/git/GMC_NS" => "GMCNScode",
-    "/srv/git/CMZNicheSims" => "CMZNScode",
-    "/srv/git/BioBackgroundModels" => "BBMcode",
-    "/srv/git/BioMotifInference" => "BMIcode",
-    "/srv/git/AWSWrangler" => "AWSWrangler",
-    "/bench/PhD/Thesis/Analyses" => "analysiscode"
+    "/srv/git/SMME" => ["SMMEcode","https://github.com/mmattocks/SMME"],
+    "/srv/git/NGRefTools" => ["NGRefTools","https://github.com/mmattocks/NGRefTools.jl"],
+    "/srv/git/GMC_NS" => ["GMCNScode", "https://github.com/mmattocks/GMC_NS.jl"],
+    "/srv/git/CMZNicheSims" => ["CMZNScode", "https://github.com/mmattocks/CMZNicheSims.jl"],
+    "/srv/git/BioBackgroundModels" => ["BBMcode","https://github.com/mmattocks/BioBackgroundModels.jl"],
+    "/srv/git/BioMotifInference" => ["BMIcode", "https://github.com/mmattocks/BioMotifInference.jl"],
+    "/srv/git/AWSWrangler" => ["AWSWrangler", "https://github.com/mmattocks/AWSWrangler.jl"],
+    "/bench/PhD/Thesis/Analyses" => ["analysiscode", "https://github.com/mmattocks/Thesis/Analyses"]
     ]
 
 types=Dict(

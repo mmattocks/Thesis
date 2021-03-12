@@ -1,4 +1,4 @@
-using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, CMZNicheSims, Random, KernelDensityEstimate, KernelDensityEstimatePlotting, Plots, Gadfly
+using CSV,DataFrames,Distributions,StatsBase,GMC_NS,Serialization, CMZNicheSims, Random, Plots
 gr()
 default(legendfont = (10), guidefont = (12), tickfont = (10))
 
@@ -207,18 +207,30 @@ combined_map=Plots.plot(map2_popplt,map2_volplt,map3_popplt,map3_volplt,layout=g
 
 savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10pMAP.png")
 
-kde2=posterior_kde(e2)
+kdes=posterior_kde(e2)
 
-ph1marg=marginal(kde2,[1;2])
-ph2marg=marginal(kde2,[3;4])
-ph12marg=marginal(kde2,[1;3])
-transmarg=marginal(kde2,[5])
+ctmarg=plot(Uniform(10,144), color=:darkmagenta, fill=true, fillalpha=.5,xlims=[0,144], xlabel="Cycle Time (hr)", ylabel="Probability density", label="Prior")
+plot!(kdes[1].x,kdes[1].density,color=:green, fill=true, fillalpha=.5, label="Ph1 Posterior")
+plot!(kdes[3].x,kdes[3].density,color=:orange, fill=true, fillalpha=.5, label="Ph2 Posterior")
+plot!([map2.θ[1],map2.θ[1]],[0,maximum(kdes[1].density)],color=:darkgreen, label="Ph1 MAP")
+plot!([map2.θ[3],map2.θ[3]],[0,maximum(kdes[3].density)],color=:darkred, label="Ph2 MAP")
+annotate!([(0,.11,Plots.text("A",18))])
 
-ph1mplt=KernelDensityEstimatePlotting.plot(ph1marg;dimLbls=["Phase 1 CT (hr)","Phase 1 ϵ rate"], axis=[0. 144.; 0. 4.])
-ph2mplt=KernelDensityEstimatePlotting.plot(ph2marg;dimLbls=["Phase 2 CT (hr)","Phase 2 ϵ rate"], axis=[0. 144.; 0. 4.])
-ph12mplt=KernelDensityEstimatePlotting.plot(ph12marg; dimLbls=["Phase 1 CT (hr)","Phase 2 CT (hr)"],axis=[0. 144.; 0. 144.])
-tmplt=KernelDensityEstimatePlotting.plotKDE(transmarg,xlbl="Phase transition age (dpf)", points=false, c=["green"])
+ymarg=map(x->pdf(LogNormal(log(.9),log(2)),x),kdes[2].x)
 
-combined_marg=Gadfly.gridstack([ph1mplt ph12mplt; ph2mplt tmplt])
-img=SVG("/bench/PhD/Thesis/images/cmz/a10pmarginals.svg",24cm,24cm)
-draw(img,combined_marg)
+ermarg=plot(kdes[2].x, ymarg, color=:darkmagenta, fill=true, fillalpha=.5, xlims=[0,4], xlabel="Niche exit rate ϵ", ylabel="Probability density", label="Prior")
+plot!(kdes[2].x,kdes[2].density,color=:green, fill=true, fillalpha=.5, label="Ph1 Posterior")
+plot!(kdes[4].x,kdes[4].density,color=:orange, fill=true, fillalpha=.5, label="Ph2 Posterior")
+plot!([map2.θ[2],map2.θ[2]],[0,maximum(kdes[2].density)],color=:darkgreen, label="Ph1 MAP")
+plot!([map2.θ[4],map2.θ[4]],[0,maximum(kdes[4].density)],color=:darkred, label="Ph2 MAP")
+annotate!([(0,7.,Plots.text("B",18))])
+
+
+transmarg=plot(Uniform(4.,359.), color=:darkmagenta, fill=true, fillalpha=.5,xlims=[0,360], xlabel="Phase transition age (dpf)", ylabel="Probability density", label="Prior")
+plot!(kdes[5].x,kdes[5].density,color=:green, fill=true, fillalpha=.5, label="Ph1-2 posterior")
+plot!([map2.θ[5],map2.θ[5]],[0,maximum(kdes[5].density)],color=:darkgreen, label="Ph1-2 MAP")
+annotate!([(0,.04,Plots.text("C",18))])
+
+
+ph1c=plot(ctmarg,ermarg,transmarg, layout=grid(3,1),size=(1000,1200))
+savefig(ph1c,"/bench/PhD/Thesis/images/cmz/a10pmarginals.png")

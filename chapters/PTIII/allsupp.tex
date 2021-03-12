@@ -1,0 +1,19 @@
+\chapter{Supplementary materials for all chapters}
+\section{Notes on data presentation in all figures}
+
+
+\section{Thesis git archive}
+Most of the resources used to compile and typeset this document are available at \url{https://github.com/mmattocks/Thesis}. These include the observational datasets referred to in
+
+\section{Building the thesis}
+
+\section{Thesis HDD data archive}
+\label{sec:archive}
+A hard drive containing all of the data, protocols, computational output etc. generated in my PhD work is available in the Tropepe lab at the Department of Cell and Systems Biology, kept with Dr. Vince Tropepe. This includes the raw reads for the nucleosome-protected fragments from \textit{rys} collected in \autoref{chap:rys}, as well as saved ensembles in \path{GMC_NS.jl} or \path{BMI.jl} formats, used to calculate model evidence, etc. Where underlying data was too large to include within the thesis git archive, or mostly irrelevant, methods sections reference this HDD archive. 
+
+\section{Code notes and discussion}
+Most of the code used in this thesis is presented in \autoref{chap:code}. Three languages are represented: C++ for the CHASTE simulators presented in \autoref{chap:SMME}, Python for the SPSA optimization algorithm and general scripting in \autoref{chap:SMME}, as well as for the generation of \autoref{nucgendist} in \autoref{chap:rys}, and Julia for everything else. We also used the Java-based KNIME scripting framework to manage the execution of the bioinformatics pipeline for calling nucleosome positions in \autoref{chap:rys}. This made use of the KNIME4NGS package \cite{Hastreiter2017}. The KNIME workspace used is available in the HDD archive at \path{/knime_workspace}. This workspace includes a THiCweed analysis pipeline \cite{Agrawal2017}, which is not presented in this thesis.
+
+The C++ code requires the CHASTE framework \cite{Mirams2013} to be compiled. If replication of the simulation pipeline in \autoref{chap:SMME} is required, CHASTE can be downloaded from \url{https://www.cs.ox.ac.uk/chaste/index.html} and used to compile the simulators in the \
+
+\section{Computational cluster description and discussion}

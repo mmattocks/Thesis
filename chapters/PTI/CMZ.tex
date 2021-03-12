@@ -1,97 +1,14 @@
 \chapter{Bayesian periodization of postembryonic CMZ activity}
 \label{chap:CMZ}
+\section{Synopsis}
+This study was organized to determine how postembryonic CMZ RPCs differ, if at all, from their embryonic counterparts. Because of the decreasing optical accessibility of the retina, and difficulties associated with marking cohorts of cells in live fish, we used CMZ RPC data from cryosections, which were related to the whole retina in a series of simulations. 
 
 \section{Preliminaries: Calculation of Bayesian evidence supports independent Log-Normal modelling of CMZ parameters}
-To take up the question of how CMZ RPC activity evolves over time, we measured CMZ and retinal parameters in histological studies of cryosections of zebrafish eyes harvested over the first year of the animal's life. We wish to extract as much information as possible about the structure and time-evolution of the CMZ population as a whole, in order to know how to best model its constituent RPCs. The initial approach is to estimate parameters of the whole-eye CMZ from sample cryosections, and to use these estimates as the dataset which will inform our selection of appropriate models.
+To take up the question of how CMZ RPC activity evolves over time, we measured CMZ and retinal parameters in histological studies of cryosections of zebrafish eyes harvested over the first year of the animal's life. We wish to extract as much information as possible about the structure and time-evolution of the CMZ population as a whole, in order to know how to best model its constituent RPCs. The initial approach is to geometrically impute measurements whole-eye CMZ and retinal volume from sample central cryosections, calculated as described in \autoref{sec:lenspopest}. These derived measurements form the first dataset we consider.
 
-While it remains common to assume that population census data are Normally distributed, and so simply to calculate means and standard deviations as the statistical representation of the underlying population, it has long been known \cite{Heath1967} that Log-Normal distributions are usually better models of the outcomes produced by additive processes with small, variable steps (like population sizes or income distributions). We therefore start with the selection of appropriate models for the CMZ- and retina-level population measurements critical to the inferences that follow.
+While it remains common to assume that population census data are Normally distributed, and so simply to calculate means and standard deviations as the statistical representation of the underlying population, it has long been known \cite{Heath1967} that Log-Normal distributions are usually better models of the outcomes produced by additive processes with small, variable steps (like population sizes or income distributions). Since all of our models require modelling distributions of population data, we start by selecting the most explanatory population model.
 
-As a first pass at this question, we calculate the likelihood ratio for the hypothesis that the parameter measurements, and the calculated quantities derived from them, are Log-Normally distributed against the the one that they are simply Normally distributed. These results are displayed in Table \ref{PLHRtable}.
-
-\begin{table}[!ht]
-    \centering
-    \caption{
-    {\bf Likelihood ratio comparison between Normal and Log-Normal models of retinal population parameters}}
-    \begin{tabular}{|l|l|l|l|}
-    \hline
-    {\bf Parameter} & {\bf $\mathcal{N}$ logLH} & {\bf Log-$\mathcal{N}$ logLH} & {\bf logLR} \\ \hline
-    Sectional PCNA+ve & -285.611 & {\bf -283.214} & 2.397\\ \hline
-    Lens diameter & {\bf -203.102} & -203.854 & -0.752\\ \hline
-    CMZ annular pop.($\dagger$)  & -484.768 & {\bf -482.733} & 2.035\\ \hline
-    RPE length & {\bf -368.232} & -368.609 & -0.377\\ \hline
-    CR thickness ($\dagger$) & {\bf -240.858} & -241.032 & -0.174\\ \hline
-    CR volume ($\dagger$) & -1091.615 & {\bf -1091.146} & 0.469\\ \hline
-    \end{tabular}
-    \begin{flushleft} $\mathcal{N}$: Normal distribution. logLH: logarithm of p(D|M), the likelihood of the data given the model. logLR: logarithm of the likelihood ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest likelihoods are bolded. $\dagger$: Calculated quantities. Sectional PCNA+ve: population of PCNA-positive CMZ RPCs per 14$\mu$m cryosection. CMZ annular pop: population of annular CMZ. RPE: retinal pigmented epithelium. CR: cellular retina.
-    Methods in \autoref{ssec:PCNA} and \autoref{ssec:CMZretmeas}.
-    Code in \autoref{ssec:a10popsurvey}.
-    \end{flushleft}
-    \label{PLHRtable}
-\end{table}
-
-These results suggest that the organism-level population distribution of eye-level CMZ population counts, as assayed by PCNA immunostaining, is better modelled Log-Normally than Normally. This is true whether we test the primary per-section count meaurements, or the estimated whole-annulus population, calculated as described in \autoref{sec:lenspopest}, even though this quantity is calculated using the Normally-distributed lens diameter\footnote{The apparent superiority of the Normal model for lens diameter may be due to the paucity of data at later time points; as described in \autoref{ssec:CMZretmeas}, lenses are difficult to retain in this histological context.}. The most likely Log-Normal representations of the CMZ populations are about two orders of magnitude more likely than the Normal alternative. Additionally, although Normal models are slightly favoured for describing the population-level distributions of RPE length and cellular retina thickness, the derived cellular retina volume quantity is better modeled by a Log-Normal distribution. As the two calculated quantities will be the primary ones used in our inferences about population-level CMZ dynamics, we are most concerned with these measures; at this point, the Log-Normal distribution seems better for both.
-
-We have emphasized the danger of relying overmuch on the parameterisation of single most-likely model fits in \autoref{chap:SMMEoutro}, which is what the simple likelihood ratios above represent: the joint likelihood of the maximum a posteriori distribution fitted to the measurements taken from each age cohort. Since the choice of model describing the estimated annular population and retinal volume is critical to the success of later inferences, we used Galilean Monte Carlo-Nested Sampling (GMC-NS) to estimate the Bayesian evidence (the marginal probability of the data over all model parameterisations) for these hypotheses. Although it is very unlikely that GMC-NS will result in conclusions from the likelihood ratio, this simple test serves to prove the function of the \path{GMC_NS.jl} package, and demonstrate the inferential logic. Evidence estimates and ratios are presented in Table \ref{PZRtable}.
-
-\begin{table}[!ht]
-    \centering
-    \caption{
-    {\bf Evidence favours Log-Normal models of retinal population parameters}}
-    \begin{tabular}{|l|l|l|l|l|}
-    \hline
-    {\bf Parameter} & {\bf $\mathcal{N}$ logZ} & {\bf Log-$\mathcal{N}$ logZ} & {\bf logZR} & {\bf $\sigma$ significance}\\ \hline
-    CMZ Population & -6127.3 ± 7.7 & {\bf -1077.2 ± 1.1} & 5050.1 ± 7.8 & 650.2406109326922\\ \hline
-    Estimated Retinal Volume & -19516.0 ± 12.0 & {\bf -2017.4 ± 1.1} & 17499.0 ± 12.0 & 1409.504095031284\\ \hline
-    \end{tabular}
-    \begin{flushleft} $\mathcal{N}$: Normal distribution. logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest evidence values bolded. CR: cellular retina.
-        Methods in \autoref{ssec:CMZpopvolest}.
-        Code in \autoref{ssec:a10nvln}.
-    \end{flushleft}
-    \label{PZRtable}
-\end{table}
-
-Unsurprisingly, full estimation of the Bayesian evidence for the Normal vs. Log-Normal hypotheses for our calculated parameters produces basically similar results to the rough calculation of likelihood ratio from the single-fit MAP models. There are approximately 5000 orders of magnitude more evidence for the Log-Normal model of interindividual variation in estimated CMZ annulus RPC population over time. This result has greater than 600 standard deviations of significance\footnote{The typical standard for a "discovery" in particle physics is >5$\sigma$ \cite{Lyons2013}. Assuming Normally distributed error, the probability that the models were, in fact, equally good at 3 standard deviations of significance would be about a tenth of a percent (i.e. .001). At 10 standard deviations the figure is \num{7.62e-24}. Assuming the sample is representative, we have nigh certainty about these results and no reason to pursue the matter further.}. However, there are approximately 17000 orders of magnitude more evidence for the Log-Normal model for the variability in the cellular retinal volume estimate, with 1400 standard deviations of significance. Given the likelihood ratios alone, we might have suspected that the Log-Normal model was more justified for modelling the population data than for the volume data. In fact, with the full estimation of the evidence, it becomes clear that the converse is true, demonstrating how evidence measurements can supply a fuller picture than maximum likelihood methods. In any case the evidence supplied by our observations best supports Log-Normal modelling of these parameters.
-
-If between-individual variation in retinal CMZ population and retinal volume are both well-modelled Log-Normally, the question of their independence arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, after postembryonic central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these clusters vs. the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that this volume is well correlated with the size of the CMZ. Since the manner in which we model the CMZ differ depending on our assessment of the dependence of these retinal parameters, we performed Bayesian model selection by the so-called \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
-
-We find that individual CMZ population and retinal volume estimates are best described by uncorrelated models at in all ages, with the exception of 23.0 dpf, where the evidence weakly favours correlation. It is interesting that the evidence in favour of non-correlation is weakest between 17 and 30 dpf, suggesting the correlation at 23.0 dpf is not spurious, but is related to CMZ activity at this time. These data are displayed in \autoref{corrtable}. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself, which suggests that the rate of retinal contribution from the CMZ is probably highest between 17 and 23 days. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
-
-\begin{table}[!ht]
-    \centering
-    \caption{{\bf Evidence favours uncorrelated linear models of CMZ-population and retinal volume over time}}
-    \begin{tabular}{|l|l|l|l|}
-        \hline
-        {\bf Age (dpf)} & {\bf Uncorrelated logZ} & {\bf Correlated logZ} & {\bf logZR}\\ \hline
-        3.0 & {\bf -87.651} & -91.902 & 4.252\\ \hline
-        5.0 & {\bf -90.0} & -92.362 & 2.362\\ \hline
-        8.0 & {\bf -90.918} & -96.013 & 5.095\\ \hline
-        12.0 & {\bf -91.183} & -99.049 & 7.866\\ \hline
-        17.0 & {\bf -94.818} & -96.668 & 1.85\\ \hline
-        23.0 & -103.386 & {\bf -103.219} & 0.167\\ \hline
-        30.0 & {\bf -103.511} & -104.092 & 0.581\\ \hline
-        60.0 & {\bf -115.025} & -118.169 & 3.144\\ \hline
-        90.0 & {\bf -113.533} & -122.427 & 8.894\\ \hline
-        180.0 & {\bf -116.778} & -124.547 & 7.769\\ \hline
-        360.0 & {\bf -121.016} & -128.637 & 7.621\\ \hline
-        \end{tabular}
-    \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the uncorrelated model. Largest evidence values bolded.
-    Methods in \autoref{ssec:CMZpopvolest}, \autoref{ssec:CMZEmpBayes}.
-    Code in \autoref{ssec:a10correlation}.
-    
-    \end{flushleft}
-    \label{corrtable}
-\end{table}
-
-\begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=.75\textwidth]{cmz/3dcorr.png}}    
-    \caption{{\bf CMZ population and retinal volume estimates are uncorrelated at 3dpf}}
-    Individual CMZ population estimate vs retinal volume estimate for 3dpf animals. Uncorrelated and correlated linear models of these variables are plotted as the mean$\pm$95\% CI of the predictive distribution of the fitted model. 
-    Methods in \autoref{ssec:CMZpopvolest}, \autoref{ssec:CMZEmpBayes}.
-    Code in \autoref{ssec:a10correlation}.
-    \label{gausscorrelation}
-\end{figure}
-
-We conclude that interorganismal variability in the CMZ population and retinal volume estimates are best described by independent Log-Normal distributions. Because Log-Normal distributions are simply transformed Normal Gaussian distributions, we may model our uncertainty about their parameters with Normal-Gamma distributions over the mean and variance of the underlying Normal distribution of the Log-Normal population model ("the underlying"). That is, our prior and posterior belief about the relative likelihood of values of the mean of the underlying may be modelled with a Normal distribution, and our beliefs about its variance with a Gamma, such that our joint uncertainty is the product of the two distributions. This is explained in more detail in \autoref{sec:NormalGamma}. A useful analytic feature of the Normal-Gamma prior is that the marginal posterior distribution of the mean, assuming an uninformative (ignorance) prior, is a location-scaled T distribution; this is so because the weighted sum of an infinite series of Normal distributions (i.e. the likelihood-weighted sum of all the Normal distributions that could underly the Log-Normal models), is a T distribution. T distributions are notably more resistant to outlier distortion than Normal distributions themselves are. Most of the descriptive statistics in the next section, therefore, calculate the credible interval for the posterior mean of the underlying by T distributions (with the correct change of variables by exponential transformation to produce the features of the correct Log-Normal distribution). Unfortunately, differences of T distributions are not, themselves, necessarily T-distributed, so we have relied on Monte Carlo estimation of rates of change of the these posterior means over time. With our Log-Normal models selected, and the descriptive tool of the posterior mean T distribution in hand, we turn now to a survey of the zebrafish CMZ in the first year of life.
+As described in more detail in \autoref{ssec:NormalModels}, we conclude that population variability in CMZ census and retinal volume estimates are best described by independent Log-Normal distributions. Because Log-Normal distributions are simply transformed Normal Gaussian distributions, we may model our uncertainty about their parameters with Normal-Gamma distributions over the mean and variance of the underlying Normal distribution of the Log-Normal population model \cite{}. That is, our prior and posterior belief about the relative likelihood of values of the mean of the underlying may be modelled with a Normal distribution, and our beliefs about its variance with a Gamma, such that our joint uncertainty is the product of the two distributions. This is explained in more detail in \autoref{sec:NormalGamma}. A useful analytic feature of the Normal-Gamma prior is that the marginal posterior distribution of the mean, assuming an uninformative (ignorance) prior, is a location-scaled T distribution; this is so because the weighted sum of an infinite series of Normal distributions (i.e. the likelihood-weighted sum of all the Normal distributions that could underly the Log-Normal models), is a T distribution. T distributions are notably more resistant to outlier distortion than Normal distributions themselves are. Most of the descriptive statistics in the next section, therefore, calculate the credible interval for the posterior mean of the underlying by T distributions (with the correct change of variables by exponential transformation to produce the features of the correct Log-Normal distribution). Unfortunately, differences of T distributions are not, themselves, necessarily T-distributed, so we have relied on Monte Carlo estimation of rates of change of the these posterior means over time. With our Log-Normal models selected, and the descriptive tool of the posterior mean T distribution in hand, we turn now to a survey of the zebrafish CMZ in the first year of life.
 
 \section{Survey of CMZ population and gross retinal contribution}
 
@@ -136,7 +53,7 @@ A model "phase" can then be defined by the $CT$ and $\epsilon$ parameters it app
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/a10pMAP.png}}    
     \caption{{\bf Maximum a posteriori output of periodization models}}
     \label{phaseMAPout}
-    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% posterior mass model output, for the 2-phase model (A panels) and 3-phase model (B panels). A1,B1: population estimates. A2,B2: volume estimates. Insets provide magnified views of data from the first 30dpf.
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% probability density model output, for the 2-phase model (A panels) and 3-phase model (B panels). A1,B1: population estimates. A2,B2: volume estimates. Insets provide magnified views of data from the first 30dpf.
     Methods in \autoref{ssec:GMCev}.
     Code in \autoref{ssec:a10periodisation}.
 \end{figure}
@@ -192,17 +109,18 @@ These estimates reveal monomodal posterior distributions over the parameters. $C
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10pmarginals.png}}    
     \caption{{\bf Kernel density estimates of marginal posterior parameter distributions, 2-phase model}}
-    Line height (bottom right panels) or color (other panels) indicates the estimated marginal posterior mass present at the indicated parameter value.
-    Top left panel: Phase 1 $\epsilon$ exit rate vs Phase 1 $CT$ cycle time (hr).
-    Bottom left panel: Phase 2 $\epsilon$ exit rate vs Phase 2 $CT$ cycle time (hr).
-    Top right panel: Phase 2 $CT$ cycle time (hr) vs Phase 1 $CT$ cycle time (hr).
-    Bottom right panel: Estimated marginal posterior mass vs. phase transition age (dpf)
+    Prior distributions (magenta) apply to parameters of both phases. Maximum a posteriori model parameterisation indicated by vertical lines.
+    Panel A: Marginal posterior distributions on Phase 1 and 2 $CT$ cycle time parameters. 
+    Panel B: Marginal posterior distributions on Phase 1 and 2 $\epsilon$ niche exit rate parameters.
+    Panel C: Marginal posterior distribution on Phase 1 to 2 transition age parameter.
     \label{phasemarginals}
     Methods in \autoref{ssec:GMCkde}.
     Code in \autoref{ssec:a10periodisation}.    
 \end{figure}
 
 We conclude that, while our global model of CMZ population and volumetric retinal contribution is too flawed to make good parameter estimates, a 2-phase model of this activity is far better substantiated by the evidence than a 3-phase model. We proceed on this basis, accepting the 2-phase model, and taking up the idea of the "slice model" introduced in \autoref{ssec:slice}, to investigate modelling the CMZ RPC population more concretely, directly from sectional observations, rather than from the calculated population and retinal volume estimates presented above.
+
+\FloatBarrier
 
 \section{Slice-model characterisation of asymmetrical CMZ population dynamics demonstrates anatomical homogeneity of proliferative schedule}
 \label{sec:sliceGMC}
@@ -235,20 +153,21 @@ The slice model proves to have much greater success at explaining sectional coun
     \makebox[\textwidth][c]{\includegraphics[width=1.0\textwidth]{cmz/a10dvMAP.png}}    
     \caption{{\bf Maximum a posteriori output of total, dorsal, and ventral CMZ slice models}}
     \label{dvMAPout}
-    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% posterior mass model output, for the total CMZ population model (panel A), dorsal CMZ population model (panel B), and ventral CMZ population model (panel C).
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% probability density model output, for the total CMZ population model (panel A), dorsal CMZ population model (panel B), and ventral CMZ population model (panel C).
     Methods in \autoref{ssec:GMCev}.
     Code in \autoref{ssec:a10dvslice}. 
 \end{figure}
 
-The hypothesis that there is a time-shift in the phase transition across the dorso-ventral axis is thoroughly refuted by these models, in two ways. First, the evidence estimates demonstrate that we are not justified in separating the dorsal and ventral populations. The total-population slice model receives greater than 500 orders of magnitude more evidence than the joint evidence for the separate dorsal and ventral models, with greater than 180 standard deviations of significance, as displayed in \autoref{dvtable}. It is interesting to note that the evidence for the dorsal model is substantially less than for either the total or ventral models. This may indicate a causal influence on the dorsal population that is neither in the model nor acting on the ventral population, or it may be an uninformative sampling effect. 
+The hypothesis that there is a time-shift in the phase transition across the dorso-ventral axis is thoroughly refuted by these models, in two ways. First, the evidence estimates demonstrate that we are not justified in separating the dorsal and ventral populations. The total-population slice model receives greater than 500 orders of magnitude more evidence than the joint evidence for the separate dorsal and ventral models, with greater than 180 standard deviations of significance, as displayed in \autoref{dvtable}. It is interesting to note that the evidence for the dorsal model (
+-673.5 ± 1.9) is substantially less than for the ventral model (-405.4 ± 1.2). This may indicate a causal influence on the dorsal population that is neither in the model nor acting on the ventral population, or it may be an uninformative sampling effect. 
 
 \begin{table}[!ht]
     \centering
     \caption{{\bf Evidence favours a combined slice model over separate dorsal and ventral models}}
     \begin{tabular}{|l|l|l|l|l|}
         \hline
-        {\bf Total logZ} & {\bf Dorsal logZ} & {\bf Ventral logZ} & {\bf logZR} & {\bf $\sigma$ Significance}\\ \hline
-        \textbf{-547.6 ± 1.8} & -673.5 ± 1.9 & -405.4 ± 1.2 & 531.2 ± 2.9 & 182.214\\ \hline
+        {\bf Combined D/V model logZ} & {\bf Separate D/V model logZ} & {\bf logZR} & {\bf $\sigma$ Significance}\\ \hline
+        \textbf{-1019.31 ± 0.86} & -1078.9 ± 2.3 & 59.6 ± 2.4 & 24.5\\ \hline
         \end{tabular}
     \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratio in favour of the combined model. Largest evidence value bolded.
     Methods in \autoref{ssec:GMCev}.
@@ -267,11 +186,11 @@ The MAP parameters for the total slice model confirm our supposition that those 
     \begin{tabular}{|l|l|l|l|}
         \hline
         {\bf Parameter} & {\bf Total MAP} & {\bf Dorsal MAP} & {\bf Ventral MAP}\\ \hline
-        Phase 1 $CT$ (h) & 24.2 & 30.5 & 19.7\\ \hline
-        Phase 1 $\epsilon$ & 0.91 & 0.65 & 1.23\\ \hline
-        Phase 2 $CT$ (h) & 25.1 & 19.5 & 30.1\\ \hline
-        Phase 2 $\epsilon$ & 0.98 & 1.4 & 0.76\\ \hline
-        Transition age & 36.3 & 37.7 & 36.0\\ \hline
+        Phase 1 $CT$ (h) & 20.8 & 30.5 & 19.7\\ \hline
+        Phase 1 $\epsilon$ & 1.14 & 0.65 & 1.23\\ \hline
+        Phase 2 $CT$ (h) & 24.9 & 19.5 & 30.1\\ \hline
+        Phase 2 $\epsilon$ & 1.0 & 1.4 & 0.76\\ \hline
+        Transition age & 35.9 & 37.7 & 36.0\\ \hline
         \end{tabular}
     \begin{flushleft}
         $CT$: cycle time.
@@ -299,6 +218,8 @@ The marginal posterior distributions of the total slice model, presented in \aut
 
 On the basis of this analysis, the best available hypothesis about the observed ontogeny of RPC population asymmetry across the dorsoventral axis is the pre-establishment of differential population size by asymmetrical progress of the embryonic specification wave, rather than differential proliferative schedules.
 
+\FloatBarrier
+
 \subsection{Cumulative thymidine labelling supports Galilean Monte Carlo Nested Sampling inference}
 \label{ssec:CMZcumedu}
 
@@ -323,6 +244,33 @@ To investigate the accuracy of the parameter estimates provided by the model stu
 \end{table}
 
 Firstly, there are approximately 3 orders of magnitude of evidence in favour of the combined model vs. the joint evidence for separate models (ie. 26.165 vs. 22.980). This model provides no support for differing cell cycle characteristics across the D/V retinal axis of asymmetry at 3dpf. This confirms that the differing D/V MAP parameter estimates observed in the slice model are unsubstantiated; the evidence supports broadly similar cell cycle characteristics across anatomical axes in 3dpf CMZ RPCs. The Nowakowski-calculated cell cycle time $T_c$ for the combined model, 14.6 $\pm$ 1.1 hr, includes the whole-eye MAP first phase $TC$, 14.5 hr, within one standard deviation, although not the first phase $TC$, 24.2 hr. This suggests the Nowakowski model has similar problems to the whole-eye models presented in \autoref{phaseMAPout}, substantially overstating cycle rate. Calculated S phase lengths are also unrealistically short. Finally, the data clearly diverge from a linear trend toward the end of the pulse (see \autoref{cumEdUlinreg}), showing the limitations of this model.
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a25MAP.png}}    
+    \caption{{\bf MAP model output and observations for thymidine slice model of 3dpf cumulative EdU labelling}}
+    Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{Danio} CMZs, at indicated chase times, during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
+
+    Methods in \autoref{ssec:rysBrdUpulse}.
+    \label{a25MAP}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a25MAP.png}}    
+    \caption{{\bf MAP model output and observations for thymidine slice model of 3dpf cumulative EdU labelling}}
+    Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{Danio} CMZs, at indicated chase times, during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
+
+    Methods in \autoref{ssec:rysBrdUpulse}.
+    \label{a25MAP}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a25marginals.png}}    
+    \caption{{\bf MAP model output and observations for thymidine slice model of 3dpf cumulative EdU labelling}}
+    Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{Danio} CMZs, at indicated chase times, during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
+
+    Methods in \autoref{ssec:rysBrdUpulse}.
+    \label{a25marginals}
+\end{figure}
 
 \section{The CMZ contributes stably to each cellular layer with time-variable lineage composition}
 

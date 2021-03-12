@@ -27,6 +27,8 @@ PCNA and EdU proliferative histochemistry giving rise to the data presented in \
 \label{ssec:rysBrdUpulse}
 The BrdU pulse-chase assay presented in \autoref{contributionfailure} was conducted by soaking 3dpf \textit{rys} larvae in 10\si{\milli\mole} BrdU for 8 hours. After a subsequent 7 day chase period, the 10dpf larvae were sacrificed and processed as described in \autoref{ssec:SMMEwholeretina}.
 
+\subsection{Cumulative EdU labelling assay}
+
 \subsection{Analysis of \textit{rys} nuclear parameters by Galilean Monte Carlo Nested Sampling}
 \label{ssec:rysnucev}
 The estimation of evidence for separate and combined mutant and sibling models of nuclear parameters presented in \autoref{nuclearev} was produced using the Julia package GMC\_NS.jl, presented in \autoref{chap:GMC}. 
@@ -85,6 +87,23 @@ Ensembles were converged to within 125 orders of magnitude likelihood compressio
 The code used to produce the differential position set samples is available in \autoref{ssec:difpossampleprep}. Ensembles are assembled in \autoref{ssec:difposassembly}, and converged in \autoref{ssec:difposlearner}.
 
 \section{Supplementary figures}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/a35sibMAP.png}}    
+    \caption{{\bf \textit{rys} CMZ RPCs fail to contribute to the neural retina}}
+    14\si{\micro\metre} coronal cryosections through representative sib (left panels) and \textit{rys} (right panels) eyes at 10dpf, 7 days after an 8hr BrdU pulse at 3dpf. Green: anti-BrdU labelling. Blue: Hoechst 33342 counterstain.
+    Methods in \autoref{ssec:rysBrdUpulse}.
+    \label{a35sibMAP}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/a35rysMAP.png}}    
+    \caption{{\bf MAP model output and observations for \textit{rys} mutant thymidine slice model of 5dpf cumulative EdU labelling}}
+    Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{rys} mutant CMZs at indicated chase times during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
+
+    Methods in \autoref{ssec:rysBrdUpulse}.
+    \label{a35rysMAP}
+\end{figure}
 
 \begin{sidewaysfigure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{rys/synteny2.png}}    

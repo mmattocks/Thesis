@@ -50,43 +50,59 @@ end
 y=y[sortperm(X)]
 sort!(X)
 
-pop_prior=fit(NormalInverseGamma,log.(popvec))
+pop_dist=fit(LogNormal,popvec)
 
-g1_prior=Normal(4.,2.)
 tc_prior=NormalInverseGamma(3.5,1.,5.,2.)
-s_prior=NormalInverseGamma(4.,2.,1.,1.)
+g1_prior=Beta(2.,2.)
+s_prior=Beta(2.,5.)
 sister_prior=Beta(8.,75.)
 
-priors_1_pop=[marginals(pop_prior)..., g1_prior, marginals(tc_prior)..., marginals(s_prior)..., sister_prior]
+tc_prior2=NormalInverseGamma(3.75,1.,5.,2.)
+pop2_prior=Beta(1.1,10.)
 
-p1_box=[3.3 5.8
-        .07 .26
-        1. 10.
-        .1 10.
-        eps() 2.7
-        eps() 20.
-        .1 200.
+priors_1_pop=[marginals(tc_prior)..., g1_prior, s_prior, sister_prior]
+priors_2_pop=[marginals(tc_prior2)..., g1_prior, s_prior, sister_prior,pop2_prior]
+
+priors_2_pop=vcat(priors_1_pop,priors_2_pop)
+
+p1_box=[2. 8.
+        .1 2
+        eps() 1.
+        eps() 1.
         eps() .5]
 
+p2_box=vcat(p1_box,vcat(p1_box,[eps() 1.]))
+
 p1_box=GMC_NS.to_unit_ball.(p1_box,priors_1_pop)
+p2_box=GMC_NS.to_unit_ball.(p2_box, priors_2_pop)
 
-ep="/bench/PhD/NGS_binaries/CNS/A25/1pop"
+ep1="/bench/PhD/NGS_binaries/CNS/A25/1pop"
+ep2="/bench/PhD/NGS_binaries/CNS/A25/2pop"
 const pulse_time=10.5
-const mc_its=Int64(1.5e5)
+const mc_its=Int64(1e5)
 const end_time=10.5
-constants=[X, pulse_time, mc_its, end_time]
+constants=[pop_dist, X, pulse_time, mc_its, end_time]
 
-if isfile(ep*"/ens")
-    e=deserialize(ep*"/ens")
-else
-    @info "Assembling ensemble at $ep"
-    gmcd=GMC_DEFAULTS
-    gmcd[1]=5
-    e=Thymidine_Ensemble(ep, 100, y, priors_1_pop, constants, p1_box, gmcd)
+for (ep,priors,box) in zip([ep1,ep2],[priors_1_pop,priors_2_pop],[p1_box,p2_box])
+    if isfile(ep*"/ens")
+        e=deserialize(ep*"/ens")
+    else
+        @info "Assembling ensemble at $ep"
+        gmcd=GMC_DEFAULTS
+        gmcd[1]=5
+        e=Thymidine_Ensemble(ep, 100, y, priors, constants, box, gmcd)
+    end
+
+    uds=Vector{Vector{Function}}([[liwi_display],[convergence_display],[ensemble_display]])
+    lds=Vector{Vector{Function}}([[model_obs_display],[model_obs_display],[model_obs_display]])
+
+    converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-3)
 end
 
-uds=Vector{Vector{Function}}([[liwi_display],[convergence_display],[evidence_display]])
-lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
+e1=deserialize(ep1*"/ens")
+e2=deserialize(ep2*"/ens")
 
-converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-3)
+ev1=measure_evidence(e1)
+ev2=measure_evidence(e2)
 
+CMZNicheSims.print_marginals(e1,"/bench/PhD/Thesis/images/cmz/a25marginals.png")
