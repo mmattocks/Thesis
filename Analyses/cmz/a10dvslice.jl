@@ -90,7 +90,7 @@ uds=Vector{Vector{Function}}([[],[liwi_display],[convergence_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
 
 gmc_settings=GMC_DEFAULTS
-gmc_settings[end]=25000
+gmc_settings[end]=300
 
 for (pth,constants,obs) in zip(paths,constants,obsset)
     if isfile(pth*"/ens")
