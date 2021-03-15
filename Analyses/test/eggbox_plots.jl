@@ -10,6 +10,7 @@ box=[-1. 1.
      -1. 1.]
 
 gmc=copy(GMC_DEFAULTS)
+gmc[2]=1e-3
 
 e=Eggbox_Ensemble("Eggbox_test", 400, priors, box, gmc...)
 
@@ -40,13 +41,13 @@ thousand=deepcopy(plt)
 plot!(thousand, title="1000 iterates")
 scatter!(thousand, harvest_xs(e), marker=:cross, markercolor=:black, legend=:none)
 
-converge_ensemble!(e,backup=(true,100), max_iterates=10000, converge_factor=1e-6)
+converge_ensemble!(e,backup=(true,100), max_iterates=5000, converge_factor=1e-6)
 
 tenthousand=deepcopy(plt)
-plot!(tenthousand, title="10000 iterates")
+plot!(tenthousand, title="5000 iterates")
 scatter!(tenthousand, harvest_xs(e), marker=:cross, markercolor=:black, legend=:none)
 
-converge_ensemble!(e,backup=(true,100), converge_factor=1e-12)
+converge_ensemble!(e,backup=(true,100), converge_factor=1e-6)
 
 converged=deepcopy(plt)
 plot!(converged, title="Converged ($(length(e.log_Li)) iterates)")

@@ -61,8 +61,6 @@ end
 
 gmc=GMC_DEFAULTS
 gmc[1]=5
-gmc[2]=1.e-15
-gmc[end]=2e4
 
 uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
 
@@ -84,7 +82,7 @@ pn_box=[pmin_μ pmax_μ;pmin_λ pmax_λ]
 vn_priors=[Uniform(vmin_μ,vmax_μ),Uniform(vmin_λ,vmax_λ)]
 vn_box=[vmin_μ vmax_μ;vmin_λ vmax_λ]
 
-n_models=50
+n_models=100
 
 for (pth,prior,box,eststring) in zip([pne_pth, vne_pth],[pn_priors, vn_priors],[pn_box,vn_box],["PopEst","VolEst"])
     for (nx,x) in enumerate(X)

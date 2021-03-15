@@ -1,7 +1,10 @@
 using BayesianLinearRegression,CSV,DataFrames,Distributions,CMZNicheSims,GMC_NS, Serialization, Plots
 a10pth="/bench/PhD/datasets/A10 measurements 2018update.csv"
 
-pth="/bench/PhD/NGS_binaries/CNS/A10/emulti_decay"
+edpth="/bench/PhD/NGS_binaries/CNS/A10/ed_decay"
+evpth="/bench/PhD/NGS_binaries/CNS/A10/ev_decay"
+empth="/bench/PhD/NGS_binaries/CNS/A10/emulti_decay"
+paths=[edpth,evpth,empth]
 
 default(legendfont = (10), guidefont = (12), tickfont = (10))
 
@@ -38,7 +41,11 @@ for t_df in groupby(a10df, "Time point (d)")
     end
 end
 
-obs=[measure_dict["Dorsal CMZ (#)"],measure_dict["Ventral CMZ (#)"]]
+dobs=measure_dict["Dorsal CMZ (#)"]
+vobs=measure_dict["Ventral CMZ (#)"]
+mobs=[measure_dict["Dorsal CMZ (#)"],measure_dict["Ventral CMZ (#)"]]
+
+obsset=[dobs,vobs,mobs]
 
 dpopdist=fit(LogNormal,measure_dict["Dorsal CMZ (#)"][1])
 vpopdist=fit(LogNormal,measure_dict["Ventral CMZ (#)"][1])
@@ -56,7 +63,10 @@ lm=Lens_Model(factor,power,14.)
 
 mc_its=Int64(1e6)
 
-constants=[X,[dpopdist,vpopdist],lm,mc_its,2]
+ed_constants=[X,dpopdist,lm,mc_its]
+ev_constants=[X,vpopdist,lm,mc_its]
+em_constants=[X,[dpopdist,vpopdist],lm,mc_its]
+constants=[ed_constants,ev_constants,em_constants]
 
 priors=[LogNormal(log(20),log(2)),Uniform(eps(),.03),LogNormal(log(.9),log(1.6))]
 
@@ -70,14 +80,21 @@ lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_d
 
 gmc_settings=GMC_DEFAULTS
 gmc_settings[end]=25000
+gmc_settings[end]=100
 
-if isfile(pth*"/ens")
-    e=deserialize(pth*"/ens")
-else
-    e=MultiSlice_Decay_Ensemble(pth,3000,obs, priors, constants, box, gmc_settings)
+for (pth,constants,obs) in zip(paths,constants,obsset)
+    if isfile(pth*"/ens")
+        e=deserialize(pth*"/ens")
+    else
+        if !occursin("emulti",pth)
+            e=Decay_Ensemble(pth,1000,obs, priors, constants, box, gmc_settings)
+        else
+            e=MultiSlice__Decay_Ensemble(pth,1000,obs, priors, constants, box, gmc_settings)
+        end
+    end
+
+    converge_ensemble!(e,backup=(true,20),upper_displays=uds, lower_displays=lds, disp_rot_its=50, mc_noise=.3, converge_factor=1e-6)
 end
-
-converge_ensemble!(e,backup=(true,20),upper_displays=uds, lower_displays=lds, disp_rot_its=50, mc_noise=.3, converge_factor=1e-6)
 
 edm=deserialize(pth*"/ens")
 

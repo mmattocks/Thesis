@@ -90,13 +90,14 @@ for (ep,priors,box) in zip([ep1,ep2],[priors_1_pop,priors_2_pop],[p1_box,p2_box]
         @info "Assembling ensemble at $ep"
         gmcd=GMC_DEFAULTS
         gmcd[1]=5
+        gmcd[end]=100
         e=Thymidine_Ensemble(ep, 100, y, priors, constants, box, gmcd)
     end
 
     uds=Vector{Vector{Function}}([[liwi_display],[convergence_display],[ensemble_display]])
     lds=Vector{Vector{Function}}([[model_obs_display],[model_obs_display],[model_obs_display]])
 
-    converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-3)
+    converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-6)
 end
 
 e1=deserialize(ep1*"/ens")
