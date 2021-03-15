@@ -116,13 +116,13 @@ uds=Vector{Vector{Function}}([[],[liwi_display],[convergence_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display],[ensemble_display]])
 
 gmc_settings=GMC_DEFAULTS
-gmc_settings[end]=300
+gmc_settings[end]=100
 
 for (pth,prior,constants,box) in zip(paths,priors,constants,boxes)
     if isfile(pth*"/ens")
         e=deserialize(pth*"/ens")
     else
-        e=CMZ_Ensemble(pth,3000,obs, prior, constants, box, gmc_settings)
+        e=CMZ_Ensemble(pth,1000,obs, prior, constants, box, gmc_settings)
     end
 
     converge_ensemble!(e,backup=(true,50),upper_displays=uds, lower_displays=lds, disp_rot_its=100, mc_noise=.3, converge_factor=1e-6)
