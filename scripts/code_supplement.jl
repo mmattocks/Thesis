@@ -1,8 +1,7 @@
 function crawl_minted(apdx_pth::String, path_labels::Vector{Pair{String,Vector{String}}}, types::Dict{String,String}, filelabels::Dict{String,String})
     io = open(apdx_pth, "w")
     println(io, "\\chapter{Code Appendix}")
-    println(io, "\\section{Code and Output Archive}")
-    println(io, "\\label{sec:archive}")
+    println(io, "\\label{chap:code}")
 
     println(io, "\\setmonofont[Contextuals={Alternate}]{Fira Code}")
     for (path,labels) in path_labels
@@ -57,6 +56,7 @@ filelabels=Dict(
     "He_output_plot.py" => "ssec:He_output_plot",
     "Wan_output_plot.py" => "ssec:Wan_output_plot",
     "Mitotic_rate_plot.py" => "ssec:Mitotic_rate_plot",
+    "SPSA_fixture.py" => "ssec:SPSAfix",
     "CMZ_lh.jl" => "ssec:CMZlh",
     "lens_model.jl" => "ssec:slicelensmodel",
     "a10popsurvey.jl"=>"ssec:a10popsurvey",
@@ -64,17 +64,22 @@ filelabels=Dict(
     "a10periodisation.jl" => "ssec:a10periodisation",
     "a10dvratio.jl" => "ssec:a10dvratio",
     "a10dvslice.jl"=>"ssec:a10dvslice",
+    "a10dvdecayslice.jl"=>"ssec:a10dvdecayslice",
     "a10nvln.jl"=>"ssec:a10nvln",
     "a19lineagetrace.jl"=>"ssec:a19lineagetrace",
     "a25dvlinreg.jl" => "ssec:a25dvlinreg",
+    "a25thymidinesim.jl"=>"ssec:a25thymidinesim",
     "a27linreg.jl" => "ssec:a27linreg",
     "a27GMC_NS.jl" => "ssec:a27GMC_NS",
+    "a35thymidinesim.jl"=>"ssec:a35thymidinesim",
     "BBM_sample_prep.jl" => "ssec:BBMsampleprep",
     "BBM_refinement_prep.jl" => "ssec:BBMrefinementprep",
     "BBM_survey.jl" => "ssec:BBMsurvey",
     "BBM_survey_refinement.jl" => "ssec:BBMsurveyrefinement",
     "BBM_survey_analysis.jl" => "ssec:BBMsurveyanalysis",
     "BBM_refinement_analysis.jl" => "ssec:BBMrefinementanalysis",
+    "baum-welch.jl" => "ssec:BaumWelch",
+    "churbanov.jl" => "ssec:Churbanov",
     "IPM_likelihood.jl" => "ssec:IPMlikelihood",
     "ryspont.jl" => "ssec:ryspont",
     "rysp_GMC_NS.jl" => "ssec:rysp_GMC_NS",
@@ -84,7 +89,10 @@ filelabels=Dict(
     "qPCR.jl"=>"ssec:qPCR",
     "occupancy.py"=>"ssec:occupancy",
     "position_overlap.jl"=>"ssec:position_overlap",
-    "dif_pos_learner.jl" => "ssec:dif_pos_learner"
+    "dif_pos_learner.jl" => "ssec:dif_pos_learner",
+    "spike_recovery.jl" => "ssec:spike_recovery",
+    "dif_pos_sample_prep.jl"=>"ssec:dif_pos_sample_prep",
+    "dif_pos_assembly.jl"=>"ssec:dif_pos_assembly"
 )
 
 crawl_minted(ca_pth,pls,types, filelabels)

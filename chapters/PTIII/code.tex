@@ -1,6 +1,5 @@
 \chapter{Code Appendix}
-\section{Code and Output Archive}
-\label{sec:archive}
+\label{chap:code}
 \setmonofont[Contextuals={Alternate}]{Fira Code}
 
 \section{\protect\path{SMME}}
@@ -23,6 +22,7 @@ Github repository: \url{https://github.com/mmattocks/SMME}
 \subsection{\protect\path{/python_fixtures/Kolmogorov_fixture.py}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{python}{/srv/git/SMME/python_fixtures/Kolmogorov_fixture.py}
 \subsection{\protect\path{/python_fixtures/SPSA_fixture.py}}
+\label{ssec:SPSAfix}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{python}{/srv/git/SMME/python_fixtures/SPSA_fixture.py}
 \subsection{\protect\path{/python_fixtures/Wan_output_fixture.py}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{python}{/srv/git/SMME/python_fixtures/Wan_output_fixture.py}
@@ -158,6 +158,12 @@ Github repository: \url{https://github.com/mmattocks/CMZNicheSims.jl}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/CMZ_sim/CMZ_lh.jl}
 \subsection{\protect\path{/src/CMZ_sim/CMZ_model.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/CMZ_sim/CMZ_model.jl}
+\subsection{\protect\path{/src/cycle_decay_sim/decay_constructor.jl}}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/cycle_decay_sim/decay_constructor.jl}
+\subsection{\protect\path{/src/cycle_decay_sim/decay_ensemble.jl}}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/cycle_decay_sim/decay_ensemble.jl}
+\subsection{\protect\path{/src/cycle_decay_sim/decay_lh.jl}}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/cycle_decay_sim/decay_lh.jl}
 \subsection{\protect\path{/src/multislice_sim/multislice_ensemble.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/CMZNicheSims/src/multislice_sim/multislice_ensemble.jl}
 \subsection{\protect\path{/src/multislice_sim/multislice_model.jl}}
@@ -198,10 +204,12 @@ Github repository: \url{https://github.com/mmattocks/BioBackgroundModels.jl}
 \subsection{\protect\path{/src/EM/EM_converge.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioBackgroundModels/src/EM/EM_converge.jl}
 \subsection{\protect\path{/src/EM/baum-welch.jl}}
+\label{ssec:BaumWelch}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioBackgroundModels/src/EM/baum-welch.jl}
 \subsection{\protect\path{/src/EM/chain.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioBackgroundModels/src/EM/chain.jl}
 \subsection{\protect\path{/src/EM/churbanov.jl}}
+\label{ssec:Churbanov}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioBackgroundModels/src/EM/churbanov.jl}
 \subsection{\protect\path{/src/genome_sampling/partition_masker.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioBackgroundModels/src/genome_sampling/partition_masker.jl}
@@ -299,6 +307,7 @@ Github repository: \url{https://github.com/mmattocks/BioMotifInference.jl}
 \subsection{\protect\path{/test/runtests.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioMotifInference/test/runtests.jl}
 \subsection{\protect\path{/test/spike_recovery.jl}}
+\label{ssec:spike_recovery}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/srv/git/BioMotifInference/test/spike_recovery.jl}
 
 \section{\protect\path{AWSWrangler}}
@@ -313,6 +322,9 @@ Github repository: \url{https://github.com/mmattocks/Thesis/Analyses}
 \subsection{\protect\path{/cmz/a10correlation.jl}}
 \label{ssec:a10correlation}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10correlation.jl}
+\subsection{\protect\path{/cmz/a10dvdecayslice.jl}}
+\label{ssec:a10dvdecayslice}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10dvdecayslice.jl}
 \subsection{\protect\path{/cmz/a10dvratio.jl}}
 \label{ssec:a10dvratio}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10dvratio.jl}
@@ -325,18 +337,19 @@ Github repository: \url{https://github.com/mmattocks/Thesis/Analyses}
 \subsection{\protect\path{/cmz/a10periodisation.jl}}
 \label{ssec:a10periodisation}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10periodisation.jl}
+\subsection{\protect\path{/cmz/a10phvsdecay.jl}}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10phvsdecay.jl}
 \subsection{\protect\path{/cmz/a10popsurvey.jl}}
 \label{ssec:a10popsurvey}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a10popsurvey.jl}
 \subsection{\protect\path{/cmz/a19lineagetrace.jl}}
 \label{ssec:a19lineagetrace}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a19lineagetrace.jl}
-\subsection{\protect\path{/cmz/a25GMC_NS.jl}}
-\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a25GMC_NS.jl}
 \subsection{\protect\path{/cmz/a25dvlinreg.jl}}
 \label{ssec:a25dvlinreg}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a25dvlinreg.jl}
 \subsection{\protect\path{/cmz/a25thymidinesim.jl}}
+\label{ssec:a25thymidinesim}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a25thymidinesim.jl}
 \subsection{\protect\path{/cmz/a27GMC_NS.jl}}
 \label{ssec:a27GMC_NS}
@@ -345,6 +358,7 @@ Github repository: \url{https://github.com/mmattocks/Thesis/Analyses}
 \label{ssec:a27linreg}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/cmz/a27linreg.jl}
 \subsection{\protect\path{/rys/a35thymidinesim.jl}}
+\label{ssec:a35thymidinesim}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/a35thymidinesim.jl}
 \subsection{\protect\path{/rys/a37.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/a37.jl}
@@ -390,18 +404,23 @@ Github repository: \url{https://github.com/mmattocks/Thesis/Analyses}
 \label{ssec:BBMsurveyrefinement}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/bg_models/BBM_survey_refinement.jl}
 \subsection{\protect\path{/rys/nested_sampling/dif_pos_assembly.jl}}
+\label{ssec:dif_pos_assembly}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/dif_pos_assembly.jl}
 \subsection{\protect\path{/rys/nested_sampling/dif_pos_learner.jl}}
 \label{ssec:dif_pos_learner}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/dif_pos_learner.jl}
 \subsection{\protect\path{/rys/nested_sampling/dif_pos_sample_prep.jl}}
+\label{ssec:dif_pos_sample_prep}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/dif_pos_sample_prep.jl}
 \subsection{\protect\path{/rys/nested_sampling/local_test.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/local_test.jl}
 \subsection{\protect\path{/rys/nested_sampling/prior_test.jl}}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/prior_test.jl}
 \subsection{\protect\path{/rys/nested_sampling/spike_recovery.jl}}
+\label{ssec:spike_recovery}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/nested_sampling/spike_recovery.jl}
 \subsection{\protect\path{/rys/position_analysis/position_overlap.jl}}
 \label{ssec:position_overlap}
 \inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/rys/position_analysis/position_overlap.jl}
+\subsection{\protect\path{/test/eggbox_plots.jl}}
+\inputminted[breaklines, mathescape, linenos,   numbersep=5pt, frame=lines, framesep=2mm]{julia}{/bench/PhD/Thesis/Analyses/test/eggbox_plots.jl}

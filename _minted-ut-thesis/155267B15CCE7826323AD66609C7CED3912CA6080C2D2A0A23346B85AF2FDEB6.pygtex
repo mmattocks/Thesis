@@ -1,6 +1,6 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
 \PYG{c}{\PYGZsh{}UTILITY PROGRESSMETER, REPORTS WORKER NUMBER AND CURRENT ITERATE}
-\PYG{n}{mutable} \PYG{n}{struct} \PYG{n}{ProgressHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Real}\PYG{p}{\PYGZcb{}} \PYG{o}{\PYGZlt{}:} \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{AbstractProgress}
+\PYG{k}{mutable} \PYG{k}{struct} \PYG{n}{ProgressHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Real}\PYG{p}{\PYGZcb{}} \PYG{o}{\PYGZlt{}:} \PYG{n}{ProgressMeter}\PYG{o}{.}\PYG{n}{AbstractProgress}
     \PYG{n}{thresh}\PYG{o}{::}\PYG{n}{T}
     \PYG{n}{dt}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
     \PYG{n}{val}\PYG{o}{::}\PYG{n}{T}

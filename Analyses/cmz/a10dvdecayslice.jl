@@ -117,13 +117,10 @@ mapm=deserialize(em.models[findmax([m.log_Li for m in em.models])[2]].path)
 
 println("\\begin{tabular}{|l|l|l|l|}")
 println("\\hline")
-println("{\\bf Parameter} & {\\bf Total MAP} & {\\bf Dorsal MAP} & {\\bf Ventral MAP}\\ \\hline")
-println("Phase 1 \$CT\$ (h) & $(round(mapm.θ[1], digits=1)) & $(round(mapd.θ[1], digits=1)) & $(round(mapv.θ[1], digits=1))\\\\ \\hline")
-println("Phase 1 \$\\epsilon\$ & $(round(mapm.θ[2], digits=2)) & $(round(mapd.θ[2], digits=2)) & $(round(mapv.θ[2], digits=2))\\\\ \\hline")
-println("Phase 2 \$CT\$ (h) & $(round(mapm.θ[3], digits=1)) & $(round(mapd.θ[3], digits=1)) & $(round(mapv.θ[3], digits=1))\\\\ \\hline")
-println("Phase 2 \$\\epsilon\$ & $(round(mapm.θ[4], digits=2)) & $(round(mapd.θ[4], digits=2)) & $(round(mapv.θ[4], digits=2))\\\\ \\hline")
-println("Transition age & $(round(mapm.θ[5], digits=1)) & $(round(mapd.θ[5], digits=1)) & $(round(mapv.θ[5], digits=1))\\\\ \\hline")
-println("\\end{tabular}")
+println("{\\bf Parameter} & {\\bf Combined MAP} & {\\bf Dorsal MAP} & {\\bf Ventral MAP}\\ \\hline")
+println("\$CT_{i}\$ (h) & $(round(mapm.θ[1], digits=1)) & $(round(mapd.θ[1], digits=1)) & $(round(mapv.θ[1], digits=1))\\\\ \\hline")
+println("\$\\kappa\$ decay& $(round(mapm.θ[2], digits=4)) & $(round(mapd.θ[2], digits=4)) & $(round(mapv.θ[2], digits=4))\\\\ \\hline")
+println("\$\\epsilon\$ exit& $(round(mapm.θ[3], digits=3)) & $(round(mapd.θ[3], digits=3)) & $(round(mapv.θ[3], digits=3))\\\\ \\hline")
 
 X=ed.constants[1]
 
@@ -152,22 +149,61 @@ mv_mean=mapm.slices[2].disp_mat[:,2]
 mv_upper=mapm.slices[2].disp_mat[:,3].-mapm.slices[2].disp_mat[:,2]
 mv_lower=mapm.slices[2].disp_mat[:,2].-mapm.slices[2].disp_mat[:,1]
 
-mapmd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xformatter=_->"", ylabel="Population")
+mapmd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xformatter=_->"", xticks=X, ylabel="Population")
 plot!(mapmd_plt, X, md_mean, ribbon=(md_lower,md_upper), color=:green, label="Combined model D population")
-annotate!([(8,200,Plots.text("A",18))])
+annotate!([(8,140,Plots.text("A",18))])
 
-mapmv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", showaxis=:y, ylabel="Population", xformatter=_->"",)
+mapmv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", showaxis=:y, ylabel="Population", xformatter=_->"",xticks=X)
 plot!(mapmv_plt, X, mv_mean, ribbon=(mv_lower,mv_upper), color=:darkmagenta, label="Combined model V population")
-annotate!([(8,145,Plots.text("B",18))])
+annotate!([(8,120,Plots.text("B",18))])
 
 mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", xlabel="Age (dpf)", xticks=X, ylabel="Population")
 plot!(mapd_plt, X, d_mean, ribbon=(d_lower,d_upper), color=:green, label="Separate model D population")
-annotate!([(8,150,Plots.text("C",18))])
+annotate!([(8,125,Plots.text("C",18))])
 
 mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population", xticks=X)
 plot!(mapv_plt, X, v_mean, ribbon=(v_lower,v_upper), color=:darkmagenta, label="Separate model V population")
-annotate!([(8,250,Plots.text("D",18))])
+annotate!([(8,140,Plots.text("D",18))])
 
 combined_map=Plots.plot(mapmd_plt,mapmv_plt,mapd_plt,mapv_plt,layout=grid(2,2), size=(1200,900),  link=:x)
 
-savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10dvMAP.png")
+savefig(combined_map,"/bench/PhD/Thesis/images/cmz/a10dvdecayMAP.png")
+
+dkdes=posterior_kde(ed)
+vkdes=posterior_kde(ev)
+mkdes=posterior_kde(em)
+
+ymarg=map(x->pdf(priors[1],x),mkdes[1].x)
+
+ctmarg=plot(mkdes[1].x, ymarg, color=:darkmagenta, fill=true, fillalpha=.5,xlims=[0,144], xlabel="Initial Cycle Time (hr)", ylabel="Probability density", label="Prior")
+plot!(mkdes[1].x,mkdes[1].density,color=:green, fill=true, fillalpha=.5, label="Combined  Posterior")
+plot!(dkdes[1].x,dkdes[1].density,color=:orange, fill=true, fillalpha=.25, label="Dorsal Posterior")
+plot!(vkdes[1].x,vkdes[1].density,color=:blue, fill=true, fillalpha=.25, label="Ventral Posterior")
+plot!([mapm.θ[1],mapm.θ[1]],[0,maximum(mkdes[1].density)],color=:darkgreen, label="Combined MAP")
+plot!([mapd.θ[1],mapd.θ[1]],[0,maximum(dkdes[1].density)],color=:darkred, label="Dorsal MAP")
+plot!([mapv.θ[1],mapv.θ[1]],[0,maximum(vkdes[1].density)],color=:darkblue, label="Ventral MAP")
+annotate!([(0,.06,Plots.text("A",18))])
+
+ymarg=map(x->pdf(priors[2],x),mkdes[2].x)
+kmarg=plot(mkdes[2].x, ymarg, color=:darkmagenta, fill=true, fillalpha=.5, xlims=[0,.03], xlabel="Decay constant κ", ylabel="Probability density", label="Prior")
+plot!(mkdes[2].x,mkdes[2].density,color=:green, fill=true, fillalpha=.5, label="Combined  Posterior")
+plot!(dkdes[2].x,dkdes[2].density,color=:orange, fill=true, fillalpha=.25, label="Dorsal Posterior")
+plot!(vkdes[2].x,vkdes[2].density,color=:blue, fill=true, fillalpha=.25, label="Ventral Posterior")
+plot!([mapm.θ[2],mapm.θ[2]],[0,maximum(mkdes[2].density)],color=:darkgreen, label="Combined MAP")
+plot!([mapd.θ[2],mapd.θ[2]],[0,maximum(dkdes[2].density)],color=:darkred, label="Dorsal MAP")
+plot!([mapv.θ[2],mapv.θ[2]],[0,maximum(vkdes[2].density)],color=:darkblue, label="Ventral MAP")
+annotate!([(0,225,Plots.text("B",18))])
+
+ymarg=map(x->pdf(priors[3],x),mkdes[3].x)
+ermarg=plot(mkdes[3].x, ymarg, color=:darkmagenta, fill=true, fillalpha=.5, xlims=[0,4], xlabel="Niche exit rate ϵ", ylabel="Probability density", label="Prior")
+plot!(mkdes[3].x,mkdes[3].density,color=:green, fill=true, fillalpha=.5, label="Combined  Posterior")
+plot!(dkdes[3].x,dkdes[3].density,color=:orange, fill=true, fillalpha=.25, label="Dorsal Posterior")
+plot!(vkdes[3].x,vkdes[3].density,color=:blue, fill=true, fillalpha=.25, label="Ventral Posterior")
+plot!([mapm.θ[3],mapm.θ[3]],[0,maximum(mkdes[3].density)],color=:darkgreen, label="Combined MAP")
+plot!([mapd.θ[3],mapd.θ[3]],[0,maximum(dkdes[3].density)],color=:darkred, label="Dorsal MAP")
+plot!([mapv.θ[3],mapv.θ[3]],[0,maximum(vkdes[3].density)],color=:darkblue, label="Ventral MAP")
+annotate!([(0,1.2,Plots.text("C",18))])
+
+
+ph1c=plot(ctmarg,kmarg,ermarg, layout=grid(3,1),size=(1000,1200))
+savefig(ph1c,"/bench/PhD/Thesis/images/cmz/a10decaymarg.png")

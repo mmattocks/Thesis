@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Chain\PYGZus{}Report}
+\PYG{k}{struct} \PYG{n}{Chain\PYGZus{}Report}
     \PYG{n}{id}\PYG{o}{::}\PYG{n}{Chain\PYGZus{}ID}
     \PYG{n}{final\PYGZus{}hmm}\PYG{o}{::}\PYG{n}{BHMM}
     \PYG{n}{test\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}

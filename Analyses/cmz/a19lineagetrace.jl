@@ -172,16 +172,16 @@ isl_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in isl_ln_mts]
 
 islchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Isl"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Isl"]...), marker=:square, color=:darkmagenta, markerstrokecolor=:darkmagenta, markersize=3, label="Isl+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom,  xformatter=_->"", showaxis=:y)
 plot!(X, isl_mean,ribbon=(isl_lower,isl_upper), color=:darkmagenta, label="Isl+ mean", ylims=[0,.5])
-annotate!([(15,.05,Plots.text("B",18))])
+annotate!([(15,.05,Plots.text("B(†)",18))])
 
-pax6_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Pax6"][n])) for n in 1:length(X)]
-pax6_mean=[exp(mean(mt)) for mt in pax6_ln_mts]
-pax6_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in pax6_ln_mts]
-pax6_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pax6_ln_mts]
+pax6_n_mts=[fit(MarginalTDist,t_measure_dict["Pax6"][n]) for n in 1:length(X)]
+pax6_mean=[mean(mt) for mt in pax6_n_mts]
+pax6_lower=[mean(mt)-quantile(mt,.025) for mt in pax6_n_mts]
+pax6_upper=[quantile(mt,.975)-mean(mt) for mt in pax6_n_mts]
 
 pax6chart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Pax6"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Pax6"]...), marker=:circle, color=:darkmagenta, markersize=3, markerstrokecolor=:darkmagenta, label="Pax6+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:top,  xformatter=_->"", showaxis=:y, ylabel="Fraction of GCL cohort labelled")
 plot!(X, pax6_mean,ribbon=(pax6_lower,pax6_upper), color=:darkmagenta, label="Pax6+ mean", ylims=[0,.6])
-annotate!([(15,.45,Plots.text("C",18))])
+annotate!([(15,.45,Plots.text("C(N)",18))])
 
 islp_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["Isl_Pax6"][n])) for n in 1:length(X)]
 islp_mean=[exp(mean(mt)) for mt in islp_ln_mts]
@@ -194,10 +194,10 @@ annotate!([(15,.05,Plots.text("D(†)",18))])
 
 gcl_subplot=plot(islchart, pax6chart, islpchart, layout=grid(3,1), link=:x)
 
-pax6i_n_mts=[fit(MarginalTDist,t_measure_dict["INL_Pax6"][n]) for n in 1:length(X)]
-pax6i_mean=[mean(mt) for mt in pax6i_n_mts]
-pax6i_lower=[mean(mt)-quantile(mt,.025) for mt in pax6i_n_mts]
-pax6i_upper=[quantile(mt,.975)-mean(mt) for mt in pax6i_n_mts]
+pax6i_ln_mts=[fit(MarginalTDist,log.(t_measure_dict["INL_Pax6"][n])) for n in 1:length(X)]
+pax6i_mean=[exp(mean(mt)) for mt in pax6i_ln_mts]
+pax6i_lower=[exp(mean(mt))-exp(quantile(mt,.025)) for mt in pax6i_ln_mts]
+pax6i_upper=[exp(quantile(mt,.975))-exp(mean(mt)) for mt in pax6i_ln_mts]
 
 inlpax6chart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["INL_Pax6"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["INL_Pax6"]...), marker=:square, color=:blue, markersize=3, markerstrokecolor=:blue, label="Pax6+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom, xformatter=_->"", showaxis=:y)
 plot!(X, pax6i_mean,ribbon=(pax6i_lower,pax6i_upper), color=:blue, label="Pax6+ mean")
@@ -239,7 +239,7 @@ z_upper=[quantile(mt,.975)-mean(mt) for mt in z_n_mts]
 
 zchart=scatter(vcat([[X[n] for i in 1:length(t_measure_dict["Zpr1"][n])] for n in 1:length(X)]...),vcat(t_measure_dict["Zpr1"]...), marker=:square, color=:green, markerstrokecolor=:green, markersize=3, label="Zpr1+ data", xticks=X, foreground_color_legend=nothing, background_color_legend=nothing, legend=:bottom, xlabel="Age (dpf)", ylabel="Frac. OPL labelled")
 plot!(X, z_mean,ribbon=(z_lower,z_upper), color=:green, label="HM+ mean", ylims=[0,.55])
-annotate!([(15,.15,Plots.text("I(N†)",18))])
+annotate!([(15,.15,Plots.text("I(N)",18))])
 
 l=@layout [[layers{0.5h};gcl] [inl{0.8h};opl]]
 combined=plot(layers_chart,gcl_subplot, inl_subplot,zchart, size=(1200,1200),layout=l)
@@ -310,7 +310,7 @@ for ms in keys(t_measure_dict)
 end
 
 for ms in keys(t_measure_dict)
-    if ms in ["INL_Pax6","INL","Isl","Isl_Pax6","ONL","Zpr1"]
+    if ms in ["Pax6","INL","ONL","Zpr1"]
         efunc=Normal_Ensemble
         pf="cn_"
     else
@@ -331,7 +331,7 @@ for ms in keys(t_measure_dict)
 end
 
 for ms in keys(t_measure_dict)
-    if ms in ["INL_Pax6","INL","Isl","Isl_Pax6","ONL","Zpr1"]
+    if ms in ["Pax6","INL","ONL","Zpr1"]
         pf="n_"
     else
         pf="ln_"

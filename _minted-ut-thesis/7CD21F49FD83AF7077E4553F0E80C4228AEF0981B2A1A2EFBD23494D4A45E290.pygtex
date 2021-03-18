@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Worker\PYGZus{}Monitor}
+\PYG{k}{struct} \PYG{n}{Worker\PYGZus{}Monitor}
     \PYG{n}{idx}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
     \PYG{n}{persist}\PYG{o}{::}\PYG{k+kt}{BitMatrix}
     \PYG{n}{last\PYGZus{}seen}\PYG{o}{::}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}

@@ -1,7 +1,7 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
 \PYG{c}{\PYGZsh{}KMER ORDER/SEQUENCE INTEGER CODING UTILITIES}
 \PYG{c}{\PYGZsh{}higher order DNA alphabet}
-\PYG{n}{struct} \PYG{n}{CompoundAlphabet}
+\PYG{k}{struct} \PYG{n}{CompoundAlphabet}
   \PYG{n}{symbols}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{},}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
   \PYG{n}{integers}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}}
   \PYG{c}{\PYGZsh{}build a CompoundAlphabet for DNA of some order\PYGZus{}no}
@@ -27,7 +27,7 @@
 \PYG{k}{end}
 
 
-\PYG{n}{struct} \PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}
+\PYG{k}{struct} \PYG{n}{N\PYGZus{}Order\PYGZus{}ntSequence}
     \PYG{n}{alphabet}\PYG{o}{::}\PYG{n}{CompoundAlphabet}
     \PYG{n}{seq\PYGZus{}lengths}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}}
     \PYG{n}{order\PYGZus{}kmers}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Mer}\PYG{p}{\PYGZob{}}\PYG{n}{DNAAlphabet}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{p}{\PYGZcb{}\PYGZcb{}\PYGZcb{}\PYGZcb{}}

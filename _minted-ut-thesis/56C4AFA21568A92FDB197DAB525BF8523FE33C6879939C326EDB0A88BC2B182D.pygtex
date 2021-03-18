@@ -1,12 +1,12 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Order\PYGZus{}Report}
+\PYG{k}{struct} \PYG{n}{Order\PYGZus{}Report}
     \PYG{n}{converged\PYGZus{}K}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
     \PYG{n}{converged\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
     \PYG{n}{failed\PYGZus{}K}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
     \PYG{n}{failed\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
 \PYG{k}{end}
 
-\PYG{n}{struct} \PYG{n}{Partition\PYGZus{}Report}
+\PYG{k}{struct} \PYG{n}{Partition\PYGZus{}Report}
     \PYG{n}{partition\PYGZus{}id}\PYG{o}{::}\PYG{n}{String}
     \PYG{n}{naive\PYGZus{}lh}\PYG{o}{::}\PYG{k+kt}{Float64}
     \PYG{n}{orddict}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Integer}\PYG{p}{,}\PYG{n}{Order\PYGZus{}Report}\PYG{p}{\PYGZcb{}}

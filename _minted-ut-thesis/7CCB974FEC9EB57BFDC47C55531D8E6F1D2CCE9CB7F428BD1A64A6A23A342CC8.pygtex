@@ -10,7 +10,7 @@
 \PYG{l+s}{hmm = BHMM([0.9 0.1; 0.1 0.9], [Normal(0,1), Normal(10,1)])}
 \PYG{l+s}{```}
 \PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
-\PYG{n}{struct} \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{\PYGZlt{}:} \PYG{n}{AbstractHMM}\PYG{p}{\PYGZob{}}\PYG{n}{Univariate}\PYG{p}{\PYGZcb{}}
+\PYG{k}{struct} \PYG{n}{BHMM}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}} \PYG{o}{\PYGZlt{}:} \PYG{n}{AbstractHMM}\PYG{p}{\PYGZob{}}\PYG{n}{Univariate}\PYG{p}{\PYGZcb{}}
     \PYG{n}{a}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}}
     \PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{n}{T}\PYG{p}{\PYGZcb{}}
     \PYG{n}{B}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{n}{Categorical}\PYG{p}{\PYGZcb{}}

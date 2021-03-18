@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{mutable} \PYG{n}{struct} \PYG{n}{Permute\PYGZus{}Tuner}
+\PYG{k}{mutable} \PYG{k}{struct} \PYG{n}{Permute\PYGZus{}Tuner}
     \PYG{n}{inst}\PYG{o}{::}\PYG{n}{Permute\PYGZus{}Instruct}
     \PYG{n}{velocities}\PYG{o}{::}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}}
     \PYG{n}{successes}\PYG{o}{::}\PYG{k+kt}{BitMatrix} \PYG{c}{\PYGZsh{}(memoryxfunc)}

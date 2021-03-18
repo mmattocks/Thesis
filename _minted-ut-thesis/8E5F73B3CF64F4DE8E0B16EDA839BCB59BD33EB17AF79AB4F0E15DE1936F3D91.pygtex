@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{LoadConfig}
+\PYG{k}{struct} \PYG{n}{LoadConfig}
     \PYG{n}{k\PYGZus{}range}\PYG{o}{::}\PYG{k+kt}{UnitRange}
     \PYG{n}{o\PYGZus{}range}\PYG{o}{::}\PYG{k+kt}{UnitRange}
     \PYG{n}{blacklist}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}}

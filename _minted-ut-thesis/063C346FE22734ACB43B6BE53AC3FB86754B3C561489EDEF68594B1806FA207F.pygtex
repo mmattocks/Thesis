@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Report\PYGZus{}Folder}
+\PYG{k}{struct} \PYG{n}{Report\PYGZus{}Folder}
     \PYG{n}{partition\PYGZus{}id}\PYG{o}{::}\PYG{n}{String}
     \PYG{n}{partition\PYGZus{}report}\PYG{o}{::}\PYG{n}{Partition\PYGZus{}Report}
     \PYG{n}{replicate\PYGZus{}report}\PYG{o}{::}\PYG{n}{Replicate\PYGZus{}Report}

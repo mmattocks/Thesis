@@ -162,11 +162,11 @@
 %% This generates the abstract page, with the line spacing adjusted
 %% according to SGS guidelines.
 \begin{abstract}
-Increasing integration of sophisticated statistical and computational techniques into the analysis of cell and molecular biological data has created many opportunities for explaining organogenic phenomena by numerical analysis. This thesis first examines the suitability of the most developed of these explanations for the development of the \textit{D. rerio} eye, the stochastic mitotic mode explanation (SMME) for retinal progenitor cell (RPC) function, and demonstrates that it is neither the best available explanation, nor theoretically defensible. It is shown that a deterministic alternative model is an improved explanation for the data, and that the SMME cannot explain postembryonic RPC function. These studies support earlier hypotheses of a linear progression of competency phases over the hypothesized ``stochastic'' nature of RPC lineage commitment.
+Increasing integration of statistical and computational techniques into the analysis of cell and molecular biological data has created opportunities for explaining organogenic phenomena by numerical analysis. This thesis first examines the suitability of the most developed of these explanations for the development of the \textit{D. rerio} eye, the stochastic mitotic mode explanation (SMME) for retinal progenitor cell (RPC) function, and demonstrates that it is neither the best available explanation, nor theoretically defensible. It is shown that a deterministic alternative model is an improved explanation for the data, and that the SMME cannot explain postembryonic RPC function. These studies support earlier hypotheses of a linear progression of competency phases over the hypothesized ``stochastic'' nature of RPC lineage commitment.
 
-A Bayesian model comparison framework, relying centrally on the Galilean Monte Carlo nested sampling algorithm for estimation of model evidence and posterior parameter distributions, is subsequently elaborated as an improved method for testing models in organogenesis. The utility of this approach is proved by comparing models of \textit{D. rerio} RPC populations in the postembryonic Circumferential Marginal Zone (CMZ). The inferential framework is used to show that the activity of CMZ RPCs in the postembryonic period is best characterised by two distinct phases of proliferative activity with similar timing across morphological axes, despite asymmetrical population dynamics. Changes to RPC lineage commitment across the two phases suggest an explanation for the changing photoreceptor mosaic. These studies establish that CMZ RPCs are a dynamic population, whose postembryonic function is not adequately described as a recapitulation of an embryonic program.
+A Bayesian model comparison framework, relying centrally on the Galilean Monte Carlo nested sampling algorithm for estimation of model evidence and posterior parameter distributions, is subsequently elaborated as an improved method for testing models in organogenesis. The utility of this approach is proved by comparing models of \textit{D. rerio} RPC populations in the postembryonic Circumferential Marginal Zone (CMZ). The inferential framework is used to show that the activity of CMZ RPCs in the postembryonic period is best characterised by a decaying cell cycle rate, with similar activity across morphological axes, despite asymmetrical population dynamics. Changes to RPC lineage commitment across the two phases suggest an explanation for the changing photoreceptor mosaic. These studies establish that CMZ RPC behaviours change over time, whose postembryonic function is not adequately described as a recapitulation of an embryonic program.
 
-Finally, the \textit{D. rerio} mutant \textit{rys} is shown to arise from a lesion in the npat locus, and the apparently paradoxically enlarged CMZ RPC population observed in these animals is demonstrated to arise from a failure of these cells to specify and exit the proliferative niche, and not from a proliferative defect. Nested sampling is used to prove that unique populations of nucleosome positions in \textit{rys} mutants and sibling arise from separate causal processes. A mechanism for these observations involving simultaneous changes to the subunit composition of the nucleosome pool and loss of translational control is advanced.
+Finally, the \textit{D. rerio} mutant \textit{rys} is shown to arise from a lesion in the npat locus, and the apparently paradoxically enlarged CMZ RPC population observed in these animals is demonstrated to arise from a failure of these cells to specify and exit the proliferative niche, and not from a proliferative defect. Nested sampling is used to show that unique populations of nucleosome positions in \textit{rys} mutants and sibling arise from separate causal processes. A mechanism for these observations involving simultaneous changes to the subunit composition of the nucleosome pool, and loss of translational control, is suggested.
 
 %% *** Put your Abstract here. ***
 %% (At most 150 words for M.Sc. or 350 words for Ph.D.)
@@ -179,6 +179,8 @@ Finally, the \textit{D. rerio} mutant \textit{rys} is shown to arise from a lesi
 
 %% This generates a "dedication" section, if needed -- just a paragraph
 %% formatted flush right (uncomment to have it appear in the document).
+
+\makebox[\textwidth][r]{\includegraphics[width=.45\textwidth]{Basmalah.png}}    
 \begin{dedication}
 This work is dedicated to the memory of my brother Gareth Akerman.
 % *** Put your Dedication here. ***
@@ -197,7 +199,7 @@ This work is dedicated to the memory of my brother Gareth Akerman.
 %% This generates an "acknowledgements" section, if needed
 %% (uncomment to have it appear in the document).
 \begin{acknowledgements}
-The completion of this thesis was possible only due to three teachers: my supervisor Dr. Vince Tropepe, who supported it with beatific patience and generosity, my advisor Dr. Umar Faruq Abdullah, who taught me that my scientific problems were in fact metaphysical and gave me the courage to proceed, and my sifu Liz Parry, who taught me how to stand and breathe in a fight. It further required the longsuffering care of my lovely wife Wing. I am indebted in innumerable ways to members, past and present, of the Tropepe, Bruce, Tepass, and Godt labs, as well as to other 6th floor denizens and the broader CSB community. I am particularly indebted to Monica Dixon and Loksum Wong for their extensive teachings and careful scientific example. Henry Hong and Audrey Darabie helped in innumerable ways with the imaging work and were a consistent source of encouragement and good cheer. All of the data generated here relied on the contributions of many hands, not least of which are the many involved with the long hours in care and feeding of the fish. I have gratefully included experimental work entirely generated by Monica Dixon and Maria Augusta Sartori in \autoref{chap:rys}; the underlying mapping work was performed by Jason Willer of . I thank my committee members, particularly Dr. Ulrich Tepass and Dr. Rod Bremner, for their time and helpful suggestions. I am finally indebted to Dr. John Skilling, both for delivering me to a coherent statistical understanding in his published work, and for a generous response to an 11th-hour email which enabled me to complete \path{GMC_NS.jl} and to use it extensively in the final analyses.
+The completion of this thesis was possible only due to three teachers: my supervisor Dr. Vince Tropepe, who supported it with beatific patience and generosity, my advisor Dr. Umar Faruq Abdullah, who taught me that my scientific problems were in fact metaphysical and gave me the courage to proceed, and my sifu Liz Parry, who taught me how to stand and breathe in a fight. It further required the longsuffering care of my lovely wife Wing. I am indebted in innumerable ways to members, past and present, of the Tropepe, Bruce, Tepass, and Godt labs, as well as to other 6th floor denizens and the broader CSB community. I am particularly indebted to Monica Dixon and Loksum Wong for their extensive teachings and careful scientific example. Henry Hong and Audrey Darabie helped in innumerable ways with the imaging work and were a consistent source of encouragement and good cheer. All of the data generated here relied on the contributions of many hands, not least of which are the many involved with the long hours in care and feeding of the fish. I have gratefully included experimental work entirely generated by Monica Dixon and Maria Augusta Sartori in \autoref{chap:rys}; the underlying mapping work was performed by Jason Willer of the University of Louisville. I thank my committee members, particularly Dr. Ulrich Tepass and Dr. Rod Bremner, for their time and helpful suggestions. I am finally indebted to Dr. John Skilling, both for delivering me to a coherent statistical understanding in his published work, and for a lengthy email which enabled me to complete \path{GMC_NS.jl} and to use it extensively in the final analyses.
 \end{acknowledgements}
 
 %% This generates the Table of Contents (on a separate page).
@@ -232,7 +234,6 @@ The completion of this thesis was possible only due to three teachers: my superv
 \include{chapters/intro}
 
 \part{Modelling Studies}
-\include{chapters/PTI/PTIintro}
 \include{chapters/PTI/RPCreview}
 \include{chapters/PTI/SMME}
 \include{chapters/PTI/SMMEoutro}
@@ -247,11 +248,11 @@ The completion of this thesis was possible only due to three teachers: my superv
 %supplementary materials
 \part{Supplementary Materials}
 %general supplementary material
-\include{chapters/PTIII/allsup}
 %chapter method and supplementary appendices
 \include{chapters/PTIII/SMMEsupp}
 \include{chapters/PTIII/CMZsupp}
 \include{chapters/PTIII/ryssupp}
+\include{chapters/PTIII/allsupp}
 %theoretical appendix
 \include{chapters/PTIII/theoryA}
 \include{chapters/PTIII/theoryB}

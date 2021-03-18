@@ -1,8 +1,8 @@
-\chapter{GMC\_NS.jl: Nested sampling by Galilean Monte Carlo for biological models}
+\chapter{GMC\_NS.jl: Nested sampling by Galilean Monte Carlo}
 \label{chap:GMC}
 \path{GMC_NS.jl} implements a basic Galilean Monte Carlo nested sampler \cite{Skilling2012,Skilling2019} in pure Julia. It uses the improved Galilean reflection scheme of Skilling's 2019 GMC publication \cite{Skilling2019}, with increased performance and detailed balance preserved. It uses the natural attrition of model-particles getting stuck in posterior modes to regulate the number of live particles in the model ensemble. This approach partially achieves the same end as algorithms which dynamically adjust the ensemble size based on parameters of the ensemble \cite{Feroz2009,Higson2019}. A minimum ensemble size may be supplied by the user, which is maintained by initializing a new trajectory isotropically from the position of an existing particle; this ensures that the ensemble may be sampled to convergence.
 
-It should be noted that \path{GMC_NS.jl} is a prototype; while it finds posteriors in relatively few iterates, it oversamples less important early regions of the posterior. See \autoref{sec:eggbox} for more information.
+It should be noted that \path{GMC_NS.jl} is a prototype; while it finds posteriors in relatively few iterates, it oversamples less important early regions of the posterior. See \autoref{ssec:eggbox} for more information.
 
 \section{Implementation notes}
 
@@ -12,7 +12,7 @@ The basic sampling scheme followed is, first, to initialize an ensemble of model
 
 \path{GMC_NS.jl} attempts to maintain efficient GMC sampling by per-particle PID tuning of the GMC timestep. GMC treats models as particles defined by their parameter vectors, which give their positions in parameter space, and a velocity vector, initalised isotropically and only changed when the particle "reflects" off the ensemble's likelihood contour. In GMC, when a model-particle is moved through the parameter space (in this case, because it is the least likely particle in the ensemble), a new position is proposed by extending some distance along its velocity vector. This distance is determined by scaling the velocity vector by a "timestep" value, which defines the per-iterate rate at which the particle traverses the parameter space. As the model ensemble is compressed to the posterior, this timestep must decline in order for proposals to be acceptable, as the amount of available parameter space declines rapidly. Additionally, GMC particles may enter convoluted regions of parameter space that form small likelihood-isthmuses to other, more likely regions. In order to deal with this, each trajectory is assigned its own PID tuner, which maintains an independent timestep value for the trajectory. The PID algorithm is tuned to target an unobstructed move rate. In short, PID tuning will reduce the timestep if the particle is frequently reflecting off the likelihood boundary (in which case it is crossing the remaining prior mass without sampling much from within it, or it is in a highly convoluted area of the local likelihood surface), and extend the timestep if it the particle frequently moves without encountering the boundary, so that particles that are closely sampling an open region without encountering the boundary begin to "speed up".
 
-PID constants and default GMC settings have been crudely tuned to produce the best possible result with the stated sampling scheme on the eggbox problem, as described in \autoref{sec:eggbox}.
+PID constants and default GMC settings have been crudely tuned to produce the best possible result with the stated sampling scheme on the eggbox problem, as described in \autoref{ssec:eggbox}.
 
 \section{Ensemble, Model, and Model Record interfaces}
 In operation, \path{GMC_NS.jl} maintains a \path{GMC_NS_Ensemble} mutable struct in memory. The directory to which the sampler ought to save the ensemble is specified by its \path{path} field. \path{GMC_NS.jl} does not maintain calculated models in memory, instead serializing them to this directory. In order to track the positions and likelihoods of model-particles within the ensemble and as samples from the posterior, a \path{GMC_NS_Ensemble} maintains two vectors of \path{GMC_NS_Model_Records} as fields; \path{models} for live particles, and \path{posterior_samples} for the previous positions along trajectories. Observations against which models are being scored, prior distributions on model parameters, model constants (if any), and the sampling box are specified by the \path{GMC_NS_Ensemble}'s \path{obs}, \path{priors}, \path{constants}, and \path{box} fields, respectively. The \path{GMC_NS_Ensemble} also specifies settings for the GMC sampler and the PID tuner. Sensible defaults for these values may be passed (usually, splatted) en masse to an ensemble constructor with the \path{GMC_DEFAULTS} constant exported by \path{GMC_NS.jl}.
@@ -54,13 +54,14 @@ The GMC sampler is governed by settings specified in \path{GMC_NS_Ensemble} fiel
 Parameters of the ensemble and most-likely model can be monitored on-line, while \path{GMC_NS.jl} is working. This is done by specifying a vector of function vectors (ie a \path{Vector{Vector{Function}}}). One such vector may be supplied to specify the displays to be shown above the \path{ProgressMeter}, one for those below, supplied as the \path{upper_displays} or \path{lower_displays} keyword arguments to \path{converge ensemble!()}. \path{GMC_NS.jl} will rotate the upper and lower displays to the next vector of display functions every \path{disp_rot_its} sampling iterates, supplied as another \path{converge_ensemble!()} keyword argument. Default display functions are available in \path{/src/utilities/progress_displays.jl} and are exported for easy composition of the function vectors.
 
 \subsection{Eggbox diagnostic}
-The ``eggbox test'' is a toy model designed by Feroz et al. \cite{Feroz2009}, and used by others for use in characterising nested sampling algorithms \cite{Buchner2016}. It uses the likelihood function $logL = (2 + cos(5π \cdot x1) \cdot cos(5π \cdot x2))^5$. This function has 18 optima and a canonical logZ evidence score of 235.88. The most efficient solution to this problem is afforded by MultiNest; it accurately sums the model evidence in approximately 10000 iterates with 400 particles. \path{GMC_NS.jl} correctly finds the 18 optima of the eggbox, and converges in fewer iterates, as displayed in \autoref{eggboxfig}. However, it substantially underestimates the model's evidence; typical \path{GMC_NS.jl} logZ evidence estimates for the eggbox are consistently ~229. This tendency to systematically underestimate the evidence should be kept in mind when examining the evidence estimates in this thesis.
+\label{ssec:eggbox}
+The ``eggbox test'' is a toy model designed by Feroz et al. \cite{Feroz2009}, and used by others for use in characterising nested sampling algorithms \cite{Buchner2016}. It uses the likelihood function $logL = (2 + cos(5π \cdot x1) \cdot cos(5π \cdot x2))^5$. This function has 18 optima and a canonical logZ evidence score of 235.88. The most efficient solution to this problem is afforded by MultiNest; it accurately sums the model evidence in approximately 10000 iterates with 400 particles. \path{GMC_NS.jl} correctly finds the 18 optima of the eggbox, and converges in fewer iterates, as displayed in \autoref{eggboxfig}. However, it substantially underestimates the model's evidence; typical \path{GMC_NS.jl} logZ evidence estimates for the eggbox are consistently ~229. This tendency to systematically underestimate model evidence should be kept in mind when examining the evidence estimates in this thesis.
 
-% \begin{figure}[!h]
-%     \makebox[\textwidth][c]{\includegraphics{GMC/eggbox.png}}    
-%     \caption{{\bf \path{GMC_NS.jl} nested sampling the eggbox toy model}
-%     \label{eggboxfig}
-% \end{figure}
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{GMC/eggbox.png}}    
+    \caption{{\bf GMC-NS.jl nested sampling the eggbox toy model}}
+    \label{eggboxfig}
+\end{figure}
 
 The eggbox may be estimated with the following code:
 
@@ -93,8 +94,6 @@ The eggbox may be estimated with the following code:
     converge_ensemble!(e,backup=(true,100), lower_displays=lds, converge_factor=1e-6)
 \end{minted}
 
-which produces the following output:
-
 \subsection{Example use}
 \path{GMC_NS.jl} is supplied with two simple, but useful, statistical models by default. These are the \path{Normal_Model} and \path{LogNormal_Model} subtypes of \path{GMC_NS_Model}. Users may familiarize themselves with \path{GMC_NS.jl}'s operation by the use of these models. A simple demonstration is supplied in the \path{/test} directory of the package. The program is detailed with additional comments below. The demonstration involves converging an ensemble of 10 \path{Normal_Model} chains initialized from an inaccurate \path{NormalGamma} prior on data generated from a known \path{Normal} distribution.
 
@@ -125,7 +124,6 @@ box=[0. 1000.
 
 #Start with the default sampler settings
 #Index 1: Lower the minimum number of ensemble particles to 5
-#Index 2: The minimum allowable particle timestep is set to a very small number; the likelihood of the model parameterisation can be determined precisely and is well behaved over the parameter space.
 gmc=GMC_DEFAULTS
 gmc[1]=5
 gmc[2]=1.e-15
@@ -146,11 +144,11 @@ converge_ensemble!(e,backup=(true,100),upper_displays=uds, lower_displays=lds, d
 Typical output after executing this program is presented in \autoref{GMCnormoutput}. The maximum a priori parameters may be read off the $\theta$ line of the \path{model_obs_display} below the status line. The algorithm estimates that the model from which the sample was drawn has a $\mu$ of $\sim$ 100.29 and a precision of $\sim$ .045, corresponding to a $\sigma$ of $\sim$ 4.7; the global optimum has been found despite the poor starting prior.
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics{BMI/output.png}}    
-    \caption{{\bf Example \protect\path{BMI.jl} Output}}
+    \makebox[\textwidth][c]{\includegraphics[width=.8\textwidth]{GMC/output.png}}    
+    \caption{{\bf Example GMC-NS.jl output}}
     \label{GMCnormoutput}
 \end{figure}
 
 \section{Future Directions}
 
-\path{GMC_NS.jl} could be improved in at least three ways. Firstly, it ought to be trajectory- or sampling chain-centric rather than ensemble-centric, so that ensembles can be dynamically assembled in the manner suggested by Speagle \cite{Speagle2020}, which might fix the evidence accuracy problem this sampler exhibits. Secondly, an ellipsoidal search routine has been coded for \path{GMC_NS.jl}, but remains to be implemented; this could be used to initialize new chains in a dynamic sampling routine. Lastly, the GMC PID tuning system likely needs improvement. pI an pD constants are largely superfluous, and there may be a more fundamentally justified way to confer the information supplied by boundary contact to the particle by way of timestep tuning.
+\path{GMC_NS.jl} could be improved in at least four ways. Firstly, it ought to be trajectory- or sampling chain-centric rather than ensemble-centric, so that ensembles can be dynamically assembled in the manner suggested by Speagle \cite{Speagle2019}, which might fix the evidence accuracy problem this sampler exhibits. Secondly, an ellipsoidal search routine has been coded for \path{GMC_NS.jl}, but remains to be implemented; this could be used both to initialize new chains in a dynamic sampling routine, and to estimate the size of posterior mode particles are currently in, for tuning purposes. Thirdly, the GMC PID tuning system likely needs improvement. pI an pD constants are largely superfluous, and there may be a more fundamentally justified way to confer the information supplied by boundary contact to the particle by way of timestep tuning. Lastly, the sampler should be refactored to use multiple different random number generation algorithms, not solely the standard Mersenne twister, which may cause problems with resonance under certain unusual circumstances [John Skilling, personal correspondence].

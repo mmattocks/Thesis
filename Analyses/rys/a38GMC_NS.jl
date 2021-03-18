@@ -42,16 +42,15 @@ end
 
 
 gmc=GMC_DEFAULTS
-gmc[1]=5
+gmc[1]=15
 gmc[2]=1.e-15
-gmc[end]=2e4
 gmcdir="/bench/PhD/NGS_binaries/GMC_NS/A38"
 
 
 uds=Vector{Vector{Function}}([[convergence_display],[evidence_display],[info_display]])
 lds=Vector{Vector{Function}}([[model_obs_display],[ensemble_display]])
 
-n_models=50
+n_models=150
 
 evdict=Dict{String,Measurement}()
 

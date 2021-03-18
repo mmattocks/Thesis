@@ -1,4 +1,93 @@
 \chapter{Supplementary materials for \autoref{chap:CMZ}}
+
+\subsection{Normal and LogNormal models of population data}
+\label{ssec:NormalModels}
+
+We first investigated the appropriateness of Normal vs. LogNormal models for measured and calculated parameters of the CMZ and the neural retina, presented in \autoref{PLHRtable}.
+
+\begin{table}[!ht]
+    \centering
+    \caption{
+    {\bf Likelihood ratio comparison between Normal and Log-Normal models of retinal population parameters}}
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    {\bf Parameter} & {\bf $\mathcal{N}$ logLH} & {\bf Log-$\mathcal{N}$ logLH} & {\bf logLR} \\ \hline
+    Sectional PCNA+ve & -285.611 & {\bf -283.214} & 2.397\\ \hline
+    Lens diameter & {\bf -203.102} & -203.854 & -0.752\\ \hline
+    CMZ annular pop.($\dagger$)  & -484.768 & {\bf -482.733} & 2.035\\ \hline
+    RPE length & {\bf -368.232} & -368.609 & -0.377\\ \hline
+    CR thickness ($\dagger$) & {\bf -240.858} & -241.032 & -0.174\\ \hline
+    CR volume ($\dagger$) & -1091.615 & {\bf -1091.146} & 0.469\\ \hline
+    \end{tabular}
+    \begin{flushleft} $\mathcal{N}$: Normal distribution. logLH: logarithm of p(D|M), the likelihood of the data given the model. logLR: logarithm of the likelihood ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest likelihoods are bolded. $\dagger$: Calculated quantities. Sectional PCNA+ve: population of PCNA-positive CMZ RPCs per 14$\mu$m cryosection. CMZ annular pop: population of annular CMZ. RPE: retinal pigmented epithelium. CR: cellular retina.
+    Methods in \autoref{ssec:PCNA} and \autoref{ssec:CMZretmeas}.
+    Code in \autoref{ssec:a10popsurvey}.
+    \end{flushleft}
+    \label{PLHRtable}
+\end{table}
+
+These results suggest that the organism-level population distribution of eye-level CMZ population counts, as assayed by PCNA immunostaining, is better modelled Log-Normally than Normally. This is true whether we test the primary per-section count meaurements, or the estimated whole-annulus population, even though this quantity is calculated using the Normally-distributed lens diameter\footnote{The apparent superiority of the Normal model for lens diameter may be due to the paucity of data at later time points; as described in \autoref{ssec:CMZretmeas}, lenses are difficult to retain in this histological context.}. The most likely Log-Normal representations of the CMZ populations are about two orders of magnitude more likely than the Normal alternative. Additionally, although Normal models are slightly favoured for describing the population-level distributions of RPE length and cellular retina thickness, the derived cellular retina volume quantity is better modeled by a Log-Normal distribution. 
+
+Since the choice of model describing the estimated annular population and retinal volume is critical to the success of later inferences, we used Galilean Monte Carlo-Nested Sampling (GMC-NS) to estimate the Bayesian evidence (the marginal probability of the data over all model parameterisations) for these hypotheses. Evidence estimates and ratios are presented in Table \ref{PZRtable}.
+
+\begin{table}[!ht]
+    \centering
+    \caption{
+    {\bf Evidence favours Log-Normal models of retinal population parameters}}
+    \begin{tabular}{|l|l|l|l|l|}
+    \hline
+    {\bf Parameter} & {\bf $\mathcal{N}$ logZ} & {\bf Log-$\mathcal{N}$ logZ} & {\bf logZR} & {\bf $\sigma$ significance}\\ \hline
+    CMZ Population & -1457.0 ± 3.7 & {\bf -1005.0 ± 3.5} & 452.1 ± 5.1 & 89.45479335402516\\ \hline
+    Estimated Retinal Volume & -2042.2 ± 3.3 & {\bf -1525.2 ± 4.1} & 517.0 ± 5.3 & 97.87822790648408\\ \hline
+    \end{tabular}
+    \begin{flushleft} $\mathcal{N}$: Normal distribution. logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the log-$\mathcal{N}$ model. Largest evidence values bolded. CR: cellular retina.
+        Methods in \autoref{ssec:CMZpopvolest}.
+        Code in \autoref{ssec:a10nvln}.
+    \end{flushleft}
+    \label{PZRtable}
+\end{table}
+
+Full estimation of the Bayesian evidence for the Normal vs. Log-Normal hypotheses for our calculated parameters produces confirms the rough calculation of likelihood ratio from the single-fit MAP models, although the extent to which LogNormal models are better justified than Normal differs betwene the methods.
+
+If between-individual variation in retinal CMZ population and retinal volume are both well-modelled Log-Normally, the question of their independence arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, after postembryonic central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these clusters vs. the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that this volume is well correlated with the size of the CMZ. Since the manner in which we model the CMZ differ depending on our assessment of the dependence of these retinal parameters, we performed Bayesian model selection by the so-called \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
+
+We find that individual CMZ population and retinal volume estimates are best described by uncorrelated models at in all ages, with the exception of 23.0 dpf, where the evidence weakly favours correlation. It is interesting that the evidence in favour of non-correlation is weakest between 17 and 30 dpf, suggesting the correlation at 23.0 dpf is not spurious, but is related to CMZ activity at this time. These data are displayed in \autoref{corrtable}. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself, which suggests that the rate of retinal contribution from the CMZ is probably highest between 17 and 23 days. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
+
+\begin{table}[!ht]
+    \centering
+    \caption{{\bf Evidence favours uncorrelated linear models of CMZ-population and retinal volume over time}}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        {\bf Age (dpf)} & {\bf Uncorrelated logZ} & {\bf Correlated logZ} & {\bf logZR}\\ \hline
+        3.0 & {\bf -87.651} & -91.902 & 4.252\\ \hline
+        5.0 & {\bf -90.0} & -92.362 & 2.362\\ \hline
+        8.0 & {\bf -90.918} & -96.013 & 5.095\\ \hline
+        12.0 & {\bf -91.183} & -99.049 & 7.866\\ \hline
+        17.0 & {\bf -94.818} & -96.668 & 1.85\\ \hline
+        23.0 & -103.386 & {\bf -103.219} & 0.167\\ \hline
+        30.0 & {\bf -103.511} & -104.092 & 0.581\\ \hline
+        60.0 & {\bf -115.025} & -118.169 & 3.144\\ \hline
+        90.0 & {\bf -113.533} & -122.427 & 8.894\\ \hline
+        180.0 & {\bf -116.778} & -124.547 & 7.769\\ \hline
+        360.0 & {\bf -121.016} & -128.637 & 7.621\\ \hline
+        \end{tabular}
+    \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the uncorrelated model. Largest evidence values bolded.
+    Methods in \autoref{ssec:CMZpopvolest}, \autoref{ssec:CMZEmpBayes}.
+    Code in \autoref{ssec:a10correlation}.
+    
+    \end{flushleft}
+    \label{corrtable}
+\end{table}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=.75\textwidth]{cmz/3dcorr.png}}    
+    \caption{{\bf CMZ population and retinal volume estimates are uncorrelated at 3dpf}}
+    Individual CMZ population estimate vs retinal volume estimate for 3dpf animals. Uncorrelated and correlated linear models of these variables are plotted as the mean$\pm$95\% CI of the predictive distribution of the fitted model. 
+    Methods in \autoref{ssec:CMZpopvolest}, \autoref{ssec:CMZEmpBayes}.
+    Code in \autoref{ssec:a10correlation}.
+    \label{gausscorrelation}
+\end{figure}
+
 \section{Materials and methods}
 \subsection{Zebrafish husbandry}
 Zebrafish husbandry was performed as described in \autoref{ssec:husbandry}.
@@ -37,7 +126,7 @@ After each staining group's final secondary antibody was removed, slides were ri
 The 4C4 antibody was a generous gift of Dr. Pamela Raymond. It has been empirically determined to mark microglia \cite{Becker2001}. It was used according to the methods described above with a Cy2 secondary antibody.
 
 \subsection{Confocal micrograph acquisition and processing}
-All confocal micrographs presented in \autoref{chap:CMZ} were acquired on a Leica TCS SP5 II microscope, operated using the LAS AF microscopy software (Leica). Data was assessed by using Bitplane Imaris software (v.). Specifically, the Imaris watershed segmentation algorithm was applied to the nuclear counterstain channel to segment cellular nuclei. Colocalisation of particular markers (ie. PCNA, EdU, or lineage markers) was assessed by thresholding signal from these channels with the segmented nuclear volumes to produce a subpopulation of colabelled nuclei. The segmented Imaris scenes and the associated settings are available in the thesis \hyperref[archive]{HDD archive}.
+All confocal micrographs presented in \autoref{chap:CMZ} were acquired on a Leica TCS SP5 II microscope, operated using the LAS AF microscopy software (Leica). Data was assessed by using Bitplane Imaris software (v1.5.1). Specifically, the Imaris watershed segmentation algorithm was applied to the nuclear counterstain channel to segment cellular nuclei. Colocalisation of particular markers (ie. PCNA, EdU, or lineage markers) was assessed by thresholding signal from these channels with the segmented nuclear volumes to produce a subpopulation of colabelled nuclei. The segmented Imaris scenes and the associated settings are available in the thesis \hyperref[sec:archive]{HDD archive}.
 
 \subsection{Retinal measurements}
 \label{ssec:CMZretmeas}
@@ -49,42 +138,17 @@ The overall CMZ population estimates were derived by the calculations presented 
 
 \subsection{Monte Carlo estimation of CMZ population and retinal volume rates of change}
 \label{ssec:MCrates}
-In order to estimate the mean daily rate of change of the CMZ population and retinal volume estimates, we performed to Monte Carlo difference operations between samples drawn from the estimated LogNormal distributions at subsequent timepoints. This allows us to empirically estimate the uncertainty on these rates, as the difference between two T-distributions is not, itself, T-distributed.
+In order to estimate the mean daily rate of change of the CMZ population and retinal volume estimates, we performed to Monte Carlo difference operations between samples drawn from the estimated LogNormal distributions at subsequent timepoints. This allows us to empirically estimate the uncertainty on these rates, as the difference between two T-distributions is not, itself, T-distributed. The relevant code is found in \autoref{ssec:a10popsurvey}, and uses functions from \hyperref[NGRefTools]{NGRefTools.jl}.
 
 
 \subsection{Evidence estimation by Empirical Bayes linear regression}
 \label{ssec:CMZEmpBayes}
-Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package \path{BayesianLinearRegression.jl}, which implements Bishop's algorithm in a high performance manner. 
-
-
-% \autoref{EBtable} summarizes the \autoref{chap:CMZ} tables and figures which use this technique, along with links to model documentation and the code used to produce the table orfigure.
-
-% \begin{table}[!ht]
-%     \caption{Empirical Bayes estimates: models and code}
-%     \begin{tabular}{|l|l|l|l|l|l|l|} 
-%         \hline
-%         {\bf Table/Figure} & {\bf Model} & {\bf Code} \\ \hline \hline
-
-%     \end{tabular}
-%     \label{EBtable}
-% \end{table}
+Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package \path{BayesianLinearRegression.jl}, which implements Bishop's algorithm.
 
 \subsection{Evidence estimation by Galilean Monte Carlo nested sampling}
 \label{ssec:GMCev}
 
-Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref{Nested}[nested sampling algorithm] \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Maximum a posteriori outputs are calculated from the most likely model parameterisation sampled during this process.
-
-% \autoref{GMCtable} summarizes the \autoref{chap:CMZ} figures which use these techniques, along with links to model documentation and the code used to produce the figures.
-
-% \begin{table}[!ht]
-%     \caption{Galilean Monte Carlo estimates: models and code}
-%     \begin{tabular}{|l|l|l|l|l|l|l|} 
-%         \hline
-%         {\bf Table/Figure} & {\bf Model} & {\bf Code} \\ \hline \hline
-%         \autoref{PZRtable} & \hyperref[NormalModels]{Normal \& LogNormal} & \autoref{ssec:a10nvln} \\ \hline
-%     \end{tabular}
-%     \label{GMCtable}
-% \end{table}
+Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[ssec:GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref[ssec:nested]{nested sampling algorithm} \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Maximum a posteriori outputs are calculated from the most likely model parameterisation sampled during this process.
 
 \subsection{Estimation of posterior distributions of phase model parameters}
 \label{ssec:GMCkde}
@@ -94,7 +158,13 @@ Posterior distributions presented in \autoref{phasemarginals} and \autoref{dvmar
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/morphology.png}}    
-    \caption{{\bf Developmental progression of naso-temporal population asymmetry in the CMZ.}}
+    \caption{{\bf Overview of \textit{D. rerio} retinal parameters during morphogenesis}}
+    All estimates are presented as the marginal posterior distribution of the mean, from uninformative priors, with 95\% credibility intervals.
+    Panel A: Thickness of the retina, measured in its center.
+    Panel B: Length of the retinal pigmented epithelium, measured from one side of the lens to the other.
+    Panel C: Diameter of the lens.
+    Panel D: Diameter of the optic nerve, measured in its center.
+    Panel E: total thickness of the retina, divided by the thicknesses of the layers that compose it.
     \label{morphology}
 \end{figure}
 
@@ -130,34 +200,33 @@ Posterior distributions presented in \autoref{phasemarginals} and \autoref{dvmar
 
 \FloatBarrier
 
-\section{Evidence calculations for models of layer and lineage contribution}
+\section{Supplementary Tables}
 \FloatBarrier
 
 \begin{table}[!ht]
-    \caption{Evidence for Normal vs. Log-Normal models of layer and lineage contribution}
+    \caption{{\bf Evidence for Normal vs. Log-Normal models of layer and lineage contribution}}
     \begin{tabular}{|l|l|l|l|l|l|l|} 
         \hline
         {\bf Layer} & {\bf Marker} & {\bf Cell type} & {\bf $\mathcal{N}$ logZ} & {\bf Log-$\mathcal{N}$ logZ} & {\bf logZR} & {\bf $\sigma$ sign.}\\ \hline \hline
-        GCL & Cohort & All GCL cells & -92.81 ± 0.56 & {\bf-63.93 ± 0.19} & 28.88 ± 0.6 & 48.5\\ \hline \hline
-        GCL & Isl2b & RGC & -56.3 ± 0.76 & {\bf -46.91 ± 0.35} & 9.38 ± 0.84 & 11.2\\ \hline
-        GCL & Pax6 & Displaced am. & -110.7 ± 1.2 & {\bf -35.39 ± 0.34} & 75.3 ± 1.2 & 62.1\\ \hline
-        GCL & Isl2b/Pax6 & RGC subtype & -16.38 ± 0.18 & {\bf -3.25 ± 0.6} & 13.13 ± 0.63 & 20.9\\ \hline \hline
-        INL & Cohort & All INL cells & {\bf -84.56 ± 0.91} & -286.89 ± 0.68 & -202.3 ± 1.1 & 178.3\\ \hline \hline
-        INL & Pax6 & Amacrine cell & {\bf -13.99 ± 0.24} & -18.5 ± 0.25 & -4.52 ± 0.35 & 12.9\\ \hline
-        INL & PKC$\beta$ & Bipolar cell & -13.66 ± 0.16 & {\bf 8.68 ± 0.44} & 22.34 ± 0.47 & 47.7\\ \hline
-        INL & GS & M\"{u}ller glia & -12.36 ± 0.23 & {\bf 14.18 ± 0.48} & 26.54 ± 0.53 & 50.3\\ \hline
-        INL & HM & Horizontal cell & -16.44 ± 0.27 & {\bf 9.15 ± 0.37} & 25.59 ± 0.46 & 55.6\\ \hline \hline
-        ONL & Cohort & All ONL cells & {\bf -128.68 ± 1.0} & -171.66 ± 0.63 & -43.0 ± 1.2 & 36.5\\ \hline \hline
-        ONL & Zpr1 & Double cones & {\bf -42.25 ± 0.72} & -54.25 ± 0.37 & -11.99 ± 0.81 & 14.9\\ \hline
+        GCL & Cohort & All GCL cells &  -65.52 ± 0.66 & {\bf -30.96 ± 1.0} & 34.6 ± 1.2 & 28.9\\ \hline
+        GCL & Isl2b & RGC & -36.64 ± 0.54 & {\bf -23.76 ± 0.59} & 12.88 ± 0.79 & 16.2\\ \hline
+        GCL & Pax6 & Displaced am. & {\bf -40.08 ± 0.71} & -40.28 ± 0.46 & -0.19 ± 0.85 & 0.2\\ \hline
+        GCL & Isl2b/Pax6 & RGC subtype & -22.09 ± 0.39 & {\bf -16.82 ± 0.83} & 5.27 ± 0.92 & 5.8\\ \hline \hline
+        INL & Cohort & All INL cells & {\bf -52.65 ± 0.66} & -120.1 ± 1.4 & -67.5 ± 1.5 & 44.2\\ \hline
+        INL & Pax6 & Amacrine cell & -23.09 ± 0.39 & {\bf -9.14 ± 0.46} & 13.95 ± 0.61 & 23.0\\ \hline
+        INL & PKC$\beta$ & Bipolar cell & -21.59 ± 0.34 & {\bf 2.81 ± 0.54} & 24.4 ± 0.64 & 38.0\\ \hline
+        INL & GS & M\"{u}ller glia & -21.45 ± 0.32 & {\bf 10.18 ± 0.6} & 31.63 ± 0.68 & 46.4\\ \hline
+        INL & HM & Horizontal cell & -22.52 ± 0.36 & {\bf 3.02 ± 0.6} & 25.55 ± 0.7 & 36.5\\ \hline \hline
+        ONL & Cohort & All ONL cells &{\bf -63.19 ± 0.7} & -81.6 ± 1.3 & -18.5 ± 1.5 & 12.3\\ \hline
+        ONL & Zpr1 & Double cones &  {\bf -31.63 ± 0.6} & -26.29 ± 0.6 & 5.34 ± 0.85 & 6.3\\ \hline
     \end{tabular}
-   
     \begin{flushleft}logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence.  Largest evidence values bolded. logZR: evidence ratio; positive values in favour of Log-$\mathcal{N}$ model.
     \end{flushleft}
     \label{lineage_nlnev}
 \end{table}
 
 \begin{table}[!ht]
-    \caption{Evidence for combined vs. split models of layer and lineage contribution across the dorso-ventral axis}
+    \caption{{\bf Evidence for combined vs. separate models of layer and lineage contribution across the dorso-ventral axis}}
     \begin{tabular}{|l|l|l|l|l|l|l|} 
         \hline
         {\bf Layer} & {\bf Marker} & {\bf Cell type} & {\bf Combined D-V logZ} & {\bf Split D-V logZ} & {\bf logZR} & {\bf $\sigma$ sign.}\\ \hline \hline
@@ -177,8 +246,6 @@ Posterior distributions presented in \autoref{phasemarginals} and \autoref{dvmar
 \end{flushleft}
 \label{lineage_dvev}
 \end{table}
-
-\section{Likelihood ratio calculations for Normal and Log-Normal models of layer and lineage contribution}
 
 \begin{table}[!ht]
     \begin{tabular}{|l|l|l|l|l|l|l|} 

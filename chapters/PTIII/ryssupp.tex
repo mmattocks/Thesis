@@ -14,7 +14,7 @@ Injections into 1-2 cell embryos were conducted by standard techniques \cite{Wes
 
 \subsection{Morpholino injections}
 \label{ssec:moinjxn}
-Morpholino injections were performed by Maria Augusta Sartori by methods previously described \cite{Wong2015}.
+Morpholino injections were performed by Maria Augusta Sartori by methods previously described \cite{Wong2015a}.
  
 \subsection{Morphological photography}
 The photographs presented in \autoref{ryspic} were obtained with the transmitted light optics of a Zeiss fluorescent stereoscope (SteREO Lumar.V12), using ZEN Imaging software.
@@ -28,6 +28,8 @@ PCNA and EdU proliferative histochemistry giving rise to the data presented in \
 The BrdU pulse-chase assay presented in \autoref{contributionfailure} was conducted by soaking 3dpf \textit{rys} larvae in 10\si{\milli\mole} BrdU for 8 hours. After a subsequent 7 day chase period, the 10dpf larvae were sacrificed and processed as described in \autoref{ssec:SMMEwholeretina}.
 
 \subsection{Cumulative EdU labelling assay}
+\label{ssec:RyscumEdU}
+The cumulative EdU labelling experiment which was used to estimate cell cycle parameters in \autoref{a35kdes} was conducted as described in \autoref{ssec:SMMEcumedu}.
 
 \subsection{Analysis of \textit{rys} nuclear parameters by Galilean Monte Carlo Nested Sampling}
 \label{ssec:rysnucev}
@@ -35,33 +37,30 @@ The estimation of evidence for separate and combined mutant and sibling models o
 
 \subsection{Progenitor identity marker immunohistochemistry}
 \label{ssec:rysprogenIHC}
+Pax6 immunohistochemistry was performed as described in \autoref{ssec:CMZlintrace}.  In situ hybridization for npat transcript was performed by Monica Dixon by standard methods \cite{Westerfield2000}.
 
 \subsection{Caspase-3 immunohistochemistry}
 \label{ssec:ryscaspase}
-Caspase-3 immunohistochemistry was performed by Monica Dixon. 
-
-\subsection{In situ hybridization}
-\label{ssec:rysISH}
-In situ hybridization for npat transcript was performed by Monica Dixon.
+Caspase-3 immunohistochemistry was performed by Monica Dixon, using histochemical methods described in \autoref{ssec:CMZlintrace}, substituting the appropriate anti-caspase-3 primary antibody.
 
 \subsection{Electron microscopy}
 \label{ssec:rysEM}
 Images presented in \autoref{rysEM} were produced from ultrathin sections for transmission electron microscopy, prepared as described previously \cite{Lindsey2012} by Monica Dixon and Audrey Darabie. These sections were imaged on a Hitachi H-7000 transmission electron microscope using AMT Image Capture Engine software. 
 
-\subsection{RT-PCR analysis of \textit{rys} npat expression}
-\autoref{ssec:rysPCR}
-The RT-PCR analysis of \textit{rys} npat expression presented in \autoref{npatrtpcr} was conducted by Monica Dixon.
+\subsection{qPCR analysis of \textit{rys} npat expression}
+\label{ssec:rysPCR}
+The RT-PCR analysis of \textit{rys} npat expression presented in \autoref{npatrtpcr} was conducted by Monica Dixon by standard methods \cite{Sambrook1989}.
 
 \subsection{qPCR analysis of \textit{rys} histone expression}
-\autoref{ssec:rysqPCR}
-The qPCR analysis of \textit{rys} histone expression presented in \autoref{histonertpcr} was conducted by Maria Augusta Sartori.
+\label{ssec:rysqPCR}
+The qPCR analysis of \textit{rys} histone expression presented in \autoref{histonertpcr} was conducted by Maria Augusta Sartori. Briefly, total mRNA was extracted from groups of sib and rys embryos at the appropriate age. Two separate pools of cDNAs were generated from the isolated mRNAs, primed with random hexamers and oligo-dTs. These cDNA pools were used as the templates for the amplification of total histone transcript and polyadenylated transcript, respectively. This was done using primers degenerate for the named class of histone; individual transcripts are not identified. A Bayesian analysis of these data was perfomed in \autoref{ssec:qPCR}. 
 
 \subsection{\textit{rys} MNase digestions and NGS}
 Two 10-animal pools each of 5dpf \textit{rys} sib and rys animals had fresh nucleosome-protected MNase fragments produced using the Takara Biotech micrococcal nuclease kit. These digests were submitted to the SickKids TCAG  facility for Illumina HiSeq 2500 NGS, with two lanes run per pool.
 
 \subsection{Nucleosome position calling}
 \label{ssec:rysposcall}
-The nucleosome position calling pipeline used in \autoref{chap:rys} was automated using the Java machine learning framework KNIME \cite{Dietz2016} workspace incorporating KNIME4NGS nodes \cite{Hastreiter2017}. The pipeline is depicted in figureautoref. Node settings are largely default and are available in the \path{knime_workspace} \hyperref[sec:archive]{thesis archive}.
+The nucleosome position calling pipeline used in \autoref{chap:rys} was automated using the Java machine learning framework KNIME \cite{Dietz2016} workspace incorporating KNIME4NGS nodes \cite{Hastreiter2017}. Node settings are largely default and are available in the \path{knime_workspace} folder of the \hyperref[sec:archive]{thesis archive}.
 
 Briefly, FastQC (v0.11.8) \cite{Andrews2018} was used to characterise the quality of the fastq sequence files describing the nucleosome-protected fragment pool from the MNase digestions described above. No sequence from any of the two duplicates of the two pools was rejected due to low quality. Sequences were found to be of uniformly high quality, with low adapter content. These results are available in the \path{fastqc} \hyperref[sec:archive]{thesis git archive}. TrimGalore (v0.5.0) \cite{Andrews2018a} was used to remove trailing adapter bases, using Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR). The trim reports are available in the \hyperref[sec:archive]{thesis git archive}.  Bowtie 2 \cite{Langmead2012} with default settings was used to map reads to the zebrafish genome (GRCz11). Nucleosome positions were called from the resulting sequence alignment map (SAM) files by using DANPOS2 (v2.2.2) \cite{Chen2013}. As DANPOS2 is no longer supported, and the code contained errors preventing execution, a fixed version of this code has been uploaded to \path{https://github.com/mmattocks/DANPOS2fix} and filed in the \hyperref[sec:archive]{thesis HDD archive}, along with the called output positions.
 
@@ -72,27 +71,28 @@ The DANPOS nodes of the KNIME workflow are python nodes which execute DANPOS2 it
 \autoref{nucgendist} was produced from the DANPOS2-called positions for the pooled \textit{rys} sibling and mutant MNase-protected fragment datasets. For each numbered \textit{D. rerio} chromosomal scaffold (1-25), as well as for scaffolds not assigned to any chromsome (NC), the number of sibling positions was divided by the total length of the scaffold. These values were compared to the naively expected number of positions per scaffold, determined by dividing the total number of positions per kilobase of genomic material, then multiplying the particular scaffold length. The per-chromosome relative number of positions, as well as fold-differences from the naive expected value, are displayed in pie chart format in Panel A. The Panel C chart displays the result of normalizing these position values by relative occupancy, as determined by DANPOS2. 
 
 \subsubsection{Background Hidden Markov modelling of \textit{D. rerio} genomic sequence emission}
-The Julia package \path{BioBackgroundModels.jl} was used to perform background Hidden Markov Model selection on samples of \textit{D. rerio} genomic material, in order to serve as a model of genomic noise for subsequent \hyperref[ICA]{Independent Component Analysis} (ICA) modelling of nucleosome positions, described below. The general strategy pursued was to first train a zoo of 3 replicates each of all HMMs with 1-6 states, emitting 0\textsuperscript{th}-2\textsuperscript{nd} order DNA kmers, on each of three broad partitions of the GRCz11 zebrafish genome, as described in \autoref{chap:BBM}, and initializing the zoo's EM chains using the default \path{autotransition_init} function, which samples from an uninformative prior on state emission vectors, but a transition matrix prior heavily favouring state autotransition. This zoo was converged to an EM step likelihood delta of \num{1e-3} on \num{2e6} bp sampled without replacement from each of these partitions, then evaluated by testing against a further \num{2e6} bp sampled as a test set. The best model triplicate for each partition, in every case the 6 state, 0th order triplicate, was selected for further refinement by EM training on a new \num{8e6} bp sampled from the appropriate partitions. After this refinement process was complete, the triplicate chains were inspected using \path{BioBackgroundModels.jl}'s reports. The convergence of the triplicate on the same region of the parameter space, and the stationarity of the chains were verified before selecting the most likely models of the refined triplicate to represent \textit{D. rerio} genomic background noise in the \path{BioMotifInference.jl} ICA models.
+The Julia package \path{BioBackgroundModels.jl} was used to perform background Hidden Markov Model selection on samples of \textit{D. rerio} genomic material, in order to serve as a model of genomic noise for subsequent \hyperref[ssec:ICA]{Independent Component Analysis} (ICA) modelling of nucleosome positions, described below. The general strategy pursued was to first train a zoo of 3 replicates each of all HMMs with 1-6 states, emitting 0\textsuperscript{th}-2\textsuperscript{nd} order DNA kmers, on each of three broad partitions of the GRCz11 zebrafish genome, as described in \autoref{chap:BBM}, and initializing the zoo's EM chains using the default \path{autotransition_init} function, which samples from an uninformative prior on state emission vectors, but a transition matrix prior heavily favouring state autotransition. This zoo was converged to an EM step likelihood delta of \num{1e-3} on \num{2e6} bp sampled without replacement from each of these partitions, then evaluated by testing against a further \num{2e6} bp sampled as a test set. The best model triplicate for each partition, in every case the 6 state, 0th order triplicate, was selected for further refinement by EM training on a new \num{8e6} bp sampled from the appropriate partitions. After this refinement process was complete, the triplicate chains were inspected using \path{BioBackgroundModels.jl}'s reports. The convergence of the triplicate on the same region of the parameter space, and the stationarity of the chains were verified before selecting the most likely models of the refined triplicate to represent \textit{D. rerio} genomic background noise in the \path{BioMotifInference.jl} ICA models.
 
 The code to sample GRCz11 for the initial zoo training task is available in \autoref{ssec:BBMsampleprep}, for the refinement task in \autoref{ssec:BBMrefinementprep}. EM execution code is found in \autoref{ssec:BBMsurvey} and \autoref{ssec:BBMsurveyrefinement}. Analysis code is given in \autoref{ssec:BBMsurveyanalysis} and \autoref{ssec:BBMrefinementanalysis}.
 
 \subsection{Evidence and maximum a posteriori estimation of ICA models of \textit{rys} nucleosome position sequence emission}
 \label{ssec:rysBMI}
-The Julia package BioMotifInference.jl, presented in \autoref{chap:BMI} was used to perform \hyperref[ssec:BayesEpistemology]{evidence and MAP estimation} of \hyperref[ICA]{Independent Component Analysis} \hyperref[PWM]{PWM source} models of nucleosome position emission. The ICA models used had 8 PWM sources ranging from 3 to 10 positions in length. Model ensembles were initialized by sampling from uninformative source priors and an mixing prior of .07 (ie. for each source, mean 7\% of observations will begin mixed with that source).
+The Julia package BioMotifInference.jl, presented in \autoref{chap:BMI} was used to perform \hyperref[ssec:BayesEpistemology]{evidence and MAP estimation} of \hyperref[ssec:ICA]{Independent Component Analysis} \hyperref[ssec:PWM]{PWM source} models of nucleosome position emission. The ICA models used had 8 PWM sources ranging from 3 to 10 positions in length. Model ensembles were initialized by sampling from uninformative source priors and an mixing prior of .07 (ie. for each source, mean 7\% of observations will begin mixed with that source).
 
 Observation sets comprised samples of 7092 nucleosome positions from each of the \textit{rys} mutant and sibling differential position sets, corresponding to approximately 1 Mbp for each of the mutant and sibling sets, and 2 Mbp for the combined set.
 
 Ensembles were converged to within 125 orders of magnitude likelihood compression. 
 
-The code used to produce the differential position set samples is available in \autoref{ssec:difpossampleprep}. Ensembles are assembled in \autoref{ssec:difposassembly}, and converged in \autoref{ssec:difposlearner}.
+The code used to produce the differential position set samples is available in \autoref{ssec:dif_pos_sample_prep}. Ensembles are assembled in \autoref{ssec:dif_pos_assembly}, and converged in \autoref{ssec:dif_pos_learner}.
 
 \section{Supplementary figures}
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/a35sibMAP.png}}    
-    \caption{{\bf \textit{rys} CMZ RPCs fail to contribute to the neural retina}}
-    14\si{\micro\metre} coronal cryosections through representative sib (left panels) and \textit{rys} (right panels) eyes at 10dpf, 7 days after an 8hr BrdU pulse at 3dpf. Green: anti-BrdU labelling. Blue: Hoechst 33342 counterstain.
-    Methods in \autoref{ssec:rysBrdUpulse}.
+    \caption{{\bf  MAP model output and observations for \textit{rys} sibling thymidine slice model of 5dpf cumulative EdU labelling}}
+    Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{rys} mutant CMZs at indicated chase times during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
+
+    Methods in \autoref{ssec:RyscumEdU}. Code in \autoref{ssec:a35thymidinesim}.
     \label{a35sibMAP}
 \end{figure}
 
@@ -101,7 +101,7 @@ The code used to produce the differential position set samples is available in \
     \caption{{\bf MAP model output and observations for \textit{rys} mutant thymidine slice model of 5dpf cumulative EdU labelling}}
     Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{rys} mutant CMZs at indicated chase times during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
 
-    Methods in \autoref{ssec:rysBrdUpulse}.
+    Methods in \autoref{ssec:RyscumEdU}. Code in \autoref{ssec:a35thymidinesim}.
     \label{a35rysMAP}
 \end{figure}
 
@@ -119,7 +119,8 @@ The code used to produce the differential position set samples is available in \
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/npat transcripts.jpg}}    
-    \caption{{\bf npat is overexpressed in \textit{rys}}} 
+    \caption{{\bf npat is overexpressed in \textit{rys}}}
+    qPCR data for npat transcript amplified from pools of \textit{rys} mutant (red), sibling (green), and wild-type control (blue), at 6dpf (left) and 8dpf of age (right). Error bars indicate standard deviation. 
     \label{npatrtpcr}
 \end{figure}
 
@@ -131,14 +132,16 @@ The code used to produce the differential position set samples is available in \
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/rys_4c4.png}}    
-    \caption{{\bf 4C4-positive microglia engulf \textit{rys} mutant RPCs}} 
+    \caption{{\bf 4C4-positive microglia engulf \textit{rys} mutant RPCs}}
+    Maximum intensity projection of \textit{rys} mutant retina at 5dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Labelled in red, a 4C4-positive microglia engulfs TUNEL-positive apoptotic fragments in the vicinity of the CMZ. Blue channel: Hoechst 33258; Green channel: TUNEL; Red channel: 4C4.
     \label{phagocytosis}
 \end{figure}
 
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/morpholinoqPCR.png}}    
-    \caption{{\bf Morpholinos directed to npat result in histone transcript overexpression similar to \textit{rys}}} 
+    \caption{{\bf Morpholinos directed to npat result in histone transcript overexpression similar to \textit{rys}}}
+    qPCR analysis of fold changes in histone family transcript expression, both polyadenylated (left panel), and total (right panel), after injection at the one-cell stage with morpholino directed to the npat start codon.
     \label{morpholinoRTPCR}
 \end{figure}
 
@@ -152,6 +155,7 @@ The code used to produce the differential position set samples is available in \
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=.75\textwidth]{rys/bghmm.png}}    
     \caption{{\bf Test likelihoods for background HMMs trained on \textit{D. rerio} genome partitions}}
+    Panels are gridded by genomic partition (left-to-right, exonic, intergenic, and periexonic sequences) and emission symbol order (top-to-bottom, 0th order, 1st order, 2nd order). Within each panel, increasing state number is represented on the x axis, while test likelihood is on the y axis. Each cross gives the likelihood of one of the three replicates optimised by EM for each order/state/partition combination. Magenta line indicates the likelihood of a naive model (1-state, equiprobable emission of each base). Only 0th order models prove to be more plausible than this naive control.
     \label{BHMMlh}
 \end{figure}
 
@@ -171,7 +175,7 @@ The code used to produce the differential position set samples is available in \
 \section{Supplementary tables}
 
 \begin{table}[!ht]
-    \caption{Evidence for Normal vs. Log-Normal models of layer and lineage contribution}
+    \caption{{\bf Evidence for separate models of retinal parameters in anti-npat morpholino-injected animals}}
     \begin{tabular}{|l|l|l|l|l|l|} 
         \hline
         {\bf Morpholino} & {\bf Measurement} & {\bf Separate logZ} & {\bf Combined logZ} & {\bf logZR} & {\bf $\sigma$ sign.}\\ \hline \hline

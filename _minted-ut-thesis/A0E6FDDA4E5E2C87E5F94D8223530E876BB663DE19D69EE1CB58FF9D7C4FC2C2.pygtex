@@ -1,10 +1,10 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Model\PYGZus{}Record} \PYG{c}{\PYGZsh{}record struct to associate a log\PYGZus{}Li with a saved, calculated model}
+\PYG{k}{struct} \PYG{n}{Model\PYGZus{}Record} \PYG{c}{\PYGZsh{}record struct to associate a log\PYGZus{}Li with a saved, calculated model}
     \PYG{n}{path}\PYG{o}{::}\PYG{n}{String}
     \PYG{n}{log\PYGZus{}Li}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}
 \PYG{k}{end}
 
-\PYG{n}{struct} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model} \PYG{c}{\PYGZsh{}Independent component analysis position weight matrix model}
+\PYG{k}{struct} \PYG{n}{ICA\PYGZus{}PWM\PYGZus{}Model} \PYG{c}{\PYGZsh{}Independent component analysis position weight matrix model}
     \PYG{n}{name}\PYG{o}{::}\PYG{n}{String} \PYG{c}{\PYGZsh{}designator for saving model to posterior}
     \PYG{n}{origin}\PYG{o}{::}\PYG{n}{String} \PYG{c}{\PYGZsh{}functions instantiating IPMs should give an informative desc of the means by which the model was generated}
     \PYG{n}{sources}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Tuple}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractMatrix}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractFloat}\PYG{p}{\PYGZcb{},}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Integer}\PYG{p}{\PYGZcb{}\PYGZcb{}} \PYG{c}{\PYGZsh{}vector of PWM signal sources (LOG PROBABILITY!!!) tupled with an index denoting the position of the first PWM base on the prior matrix\PYGZhy{} allows us to permute length and redraw from the appropriate prior position}

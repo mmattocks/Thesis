@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Replicate\PYGZus{}Report}
+\PYG{k}{struct} \PYG{n}{Replicate\PYGZus{}Report}
     \PYG{n}{ids}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{\PYGZcb{}} \PYG{c}{\PYGZsh{}replicates }
     \PYG{n}{state\PYGZus{}vecs}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,}\PYG{k+kt}{Matrix}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}} \PYG{c}{\PYGZsh{}vectors of autotransition probabilities evolving by iterate, concatanated to matrices, indexed by Chain\PYGZus{}ID}
     \PYG{n}{emission\PYGZus{}arrays}\PYG{o}{::}\PYG{k+kt}{Dict}\PYG{p}{\PYGZob{}}\PYG{n}{Chain\PYGZus{}ID}\PYG{p}{,}\PYG{k+kt}{Array}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{}\PYGZcb{}} \PYG{c}{\PYGZsh{}iterate*symbol*state\PYGZus{}vecs}

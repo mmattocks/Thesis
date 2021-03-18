@@ -1,5 +1,5 @@
 \begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
-\PYG{n}{struct} \PYG{n}{Chain\PYGZus{}ID}
+\PYG{k}{struct} \PYG{n}{Chain\PYGZus{}ID}
     \PYG{n}{obs\PYGZus{}id}\PYG{o}{::}\PYG{k+kt}{AbstractString}
     \PYG{n}{K}\PYG{o}{::}\PYG{k+kt}{Integer}
     \PYG{n}{order}\PYG{o}{::}\PYG{k+kt}{Integer}
@@ -14,7 +14,7 @@
     \PYG{k}{return} \PYG{k+kc}{true}
 \PYG{k}{end}
 
-\PYG{n}{struct} \PYG{n}{EM\PYGZus{}step}
+\PYG{k}{struct} \PYG{n}{EM\PYGZus{}step}
     \PYG{n}{iterate}\PYG{o}{::}\PYG{k+kt}{Integer}
     \PYG{n}{hmm}\PYG{o}{::}\PYG{n}{BHMM}
     \PYG{n}{log\PYGZus{}p}\PYG{o}{::}\PYG{k+kt}{AbstractFloat}

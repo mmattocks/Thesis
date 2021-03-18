@@ -14,7 +14,8 @@ The three model ensemble types specified by \path{CNS.jl} are as follows:
 The operation of these simulators is described in more detail below. In general, the workflow is to assemble the assemble, converge it, and to estimate the model evidence and posterior parameters from the converged ensemble. For more on evidence and posterior estimation by \path{GMC_NS.jl}, see \autoref{chap:GMC}.
 
 \section{\protect\path{CMZ_Ensemble} model and usage}
-A \path{CMZ_Ensemble} consists of \path{CMZ_Model}s whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of a system of difference equations for simulated retinae, initialized from independent samples from the population and volume distributions specified in the ensemble constants vector. The update functions are specified in general by \autoref{popeq} and \autoref{voleq}. However, the implementation of these functions in the model likelihood function (\path{CMZ_mc_llh}, found in \autoref{ssec:CMZlh}) differs from this presentation; the equations are not evaluated stepwise day-by-day, but are rather updated for the next model event, either an observation timepoint or a phase transition date. The specific equations used in this function are of the computationally efficient factorial form suggested by Langtangen \cite[p. 559]{Langtangen2012}, so that the equation for the CMZ population $n$ days after some time 0 becomes:
+\label{sec:CMZmodel}
+A \path{CMZ_Ensemble} consists of \path{CMZ_Model}s whose likelihood is assessed by \hyperref[ssec:MonteCarlo]{Monte Carlo} evaluation of a system of difference equations for simulated retinae, initialized from independent samples from the population and volume distributions specified in the ensemble constants vector. The update functions are specified in general by \autoref{popeq} and \autoref{voleq}. However, the implementation of these functions in the model likelihood function (\path{CMZ_mc_llh}, found in \autoref{ssec:CMZlh}) differs from this presentation; the equations are not evaluated stepwise day-by-day, but are rather updated for the next model event, either an observation timepoint or a phase transition date. The specific equations used in this function are of the computationally efficient factorial form suggested by Langtangen \cite[p. 559]{Langtangen2012}, so that the equation for the CMZ population $n$ days after some time 0 becomes:
 
 \[
     p_n=p_{0} \cdot (2^{\frac{24}{CT}} - \epsilon)^{n}
@@ -58,8 +59,9 @@ As an example, an ensemble with 3000 chains and using the default GMC sampler se
 
 The \path{mc_noise} parameter for \path{CNS.jl} models can be estimated by calculating the standard deviation of repeated evaluations of a parameter vector with a reasonably high likelihood, given the data vectors. The suggested value is roughly appropriate for \num{1e6} Monte Carlo iterates, given the data vectors used in \autoref{ssec:a10periodisation}.
 
-\section{\protect\path{Slice_Ensemble} usage}
-A \path{Slice_Ensemble} consists of \path{Slice_Model}s, whose likelihood is assessed by \hyperref[MonteCarlo]{Monte Carlo} evaluation of a hybrid system of a difference equation and a power-law equation, representing a simulated CMZ RPC population in a retinal slice of arbitrary thickness. The \path{Slice_Model} likelihood function uses the same factorial solution to calculate the CMZ population after time steps of $n$ days as that described for \path{CMZ_Model}s. However, these population values are penalized by a value determined by using the power-law model of lens growth to determine the change in CMZ circumference over this time period, and the per-slice contribution required to expand the CMZ by this amount, given the present slice population and slice thickness (see \autoref{ssec:slicelensmodel} for this calculation).
+\section{\protect\path{Slice_Ensemble} model and usage}
+\label{sec:slicemodel}
+A \path{Slice_Ensemble} consists of \path{Slice_Model}s, whose likelihood is assessed by \hyperref[ssec:MonteCarlo]{Monte Carlo} evaluation of a hybrid system of a difference equation and a power-law equation, representing a simulated CMZ RPC population in a retinal slice of arbitrary thickness. The \path{Slice_Model} likelihood function uses the same factorial solution to calculate the CMZ population after time steps of $n$ days as that described for \path{CMZ_Model}s. However, these population values are penalized by a value determined by using the power-law model of lens growth to determine the change in CMZ circumference over this time period, and the per-slice contribution required to expand the CMZ by this amount, given the present slice population and slice thickness (see \autoref{ssec:slicelensmodel} for this calculation).
 
 \path{Slice_Model}s are broadly similar to \path{CMZ_Model}s. The parameter vectors required to assemble a \path{Slice_Ensemble} differ from those mentioned for a \path{CMZ_Ensemble}, however, and are summarised below. 
 
@@ -77,14 +79,35 @@ A \path{Slice_Ensemble} consists of \path{Slice_Model}s, whose likelihood is ass
     \item Box matrix: Two columns each of the same length as the prior, defining the minimum (column 1) and maximum (column 2) bounds for each parameter dimension to be sampled.
 \end{enumerate}
 
-As an example, an ensemble with 3000 chains and using the default GMC sampler settings may be initialized and sampled as follows, where variable names correspond to the vectors described above:
+\section{\protect\path{Decay_Ensemble} model and usage}
+\label{sec:decaymodel}
+\path{Decay_Model}s are \path{Slice_Model}s that are parameterised to represent a continuous process of cell cycle rate decay (that is, lengthening cycle times). They use identical \path{Lens_Model}s to abstract the effects of the stretching 3-dimensional retina on the CMZ slice. Unlike the phased \path{CMZ_Model}s and \path{Slice_Model}s, \path{Decay_Model}s are parameterised solely by an initial cycle time $CT_{i}$, an exponential decay constant $\kappa$, and a constant exit rate $\epsilon$. Daily cycle time is evaluated as $CT_{t}=CT_i*e^{\kappa \cdot t}$. This is used to update the population value by the \path{Slice_Model} difference equation, penalized by the exit rate for the amount of CMZ growth implied by the \path{Lens_Model}.
 
-\begin{minted}[breaklines,
-    mathescape,
-    linenos,
-    numbersep=5pt,
-    frame=lines,
-    framesep=2mm]{julia}
-    e=CMZ_Ensemble(path, 3000, observations, prior, constants, box, GMC_DEFAULTS)
-    converge_ensemble!(e,backup=(true,50), mc_noise=.3)
-\end{minted}
+A \path{Decay_Ensemble} is identical to a \path{Slice_Ensemble} except that it has only the three parameters in the order mentioned, and the corresponding prior vector, and omits the Phases constant.
+
+\section{\protect\path{MultiSlice_Ensemble} model and usage}
+A \path{MultiSlice_Model} consists of more than one slice observations set which are governed by identical parameter vectors. This allows independent observations from different areas of the CMZ to be collectively modelled by one \path{Slice_Model} or \path{Decay_Model} parameter vector. This can be used to represent a CMZ with morphological asymmetry but regulatory homogeneity, and is used as an alternative to separate models of morphologically distinguished slices in \autoref{chap:CMZ}. 
+
+A \path{MultiSlice_Ensemble} is parameterised identically to the corresponding \path{Slice_Ensemble} or \path{Decay_Ensemble}, except that a vector of per-slice observations subvectors, and a vector of per-slice population distribution is provided. The \path{MultiSlice_Model} uses the paired observations and population distributions in vector order to build a vector of the appropriate slice model type, of the same length.
+
+\section{\protect\path{Thymidine_Ensemble} model and usage}
+\label{sec:thymidinemodel}
+Unlike the population-level models described above, the \path{Thymidine_Model} is a cell-based lineage simulator. It retains the slice model concept of comparing simulated observations directly to counts obtained from cryosections. Because these counts are obtained over a short time period (1 day), no effort is made to account for the growth of the eye. It uses an explicitly modelled cell cycle with G1, S, and G2\/M phases.
+
+The model assumes a LogNormal distribution of overall cell cycle lengths. It is parameterised by $TC_{\mu}$ and $TC_{\sigma^{2}}$ values for this LogNormal distribution (a \hyperref[ssec:normalgamma]{Normal Inverse Gamma prior} should be used), a fraction $s$ which gives the length of S-phase by multiplying into the sampled $TC$, a fraction $g1$, which gives the fraction of the remaining time which comes before S-phase as G1, and implies the length of the G2\/M phase afterwards. Finally, the fraction $sis$ is randomly added to or subtracted from the cell cycle length determined for one sibling of a mitosis to give the cell cycle length of the other. This represents the correlated sibling cell cycle times which characterise \textit{Danio} RPC populations, as usefully observed and modelled by He et al. \cite{He2012}. The parameter vector is given in the order \path{[tc$\mu$, tc$\sigma^{2}$, g1_frac, s_frac, sis_frac]}.
+
+The model assumes linear labelling of nuclear contents over the cell cycle, and implements a minimum value for detection as a thymidine-labelled cell (\path{DETECTION_THRESHOLD}, set to .15 by default). This represents cells with a dusting of thymidine signal that are not counted as labelled, which normally occurs in confocal stack segmentation routines.
+
+To simulate more than one subpopulation with independent cycle parameters, additional sets of the 5 parameters outlined above can be concatenated, with this vector appended by a parameter denoting the fraction of the population to which each additional parameterisation applies.
+
+The \path{Thymidine_Ensemble} is constructed similarly to the other models, except that it requires a constants vector as follows:
+
+Constants vector: A \path{Vector{<:Any}} containing, in order:
+\begin{enumerate}
+    \item T vector: Vector of integers or round floats, chase time in hours from beginning of pulse for each observations subvector
+    \item Pulse: Float giving the length of the thymidine pulse in hours
+    \item Monte Carlo iterates: Integer specifying the number of retinae to be simulated at each point sampled from the parameter space. \num{1e5}-\num{5e5} usually gives sufficient density over the discrete distribution to avoid noise associated with simulated count values that were not observed at all.
+    \item End time: Float defining how long to run the simulation- should usually be the time of the last set of observations
+\end{enumerate}
+
+Unlike the population-level models, which fit LogNormal distributions to samples of output collected by Monte Carlo execution, the \path{Thymidine_Model} constructs discrete nonparametric distributions of simulated counts of labelled cells. This allows the model parameters to produce population distributions that diverge from smooth, continuous distributions. This is particularly notable in the banding pattern of some output, where some counts are very unlikely to be observed. This can allow the model to better reflect the prevalence of even-sized RPC lineages, for instance \cite{He2012}.

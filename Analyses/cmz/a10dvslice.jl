@@ -145,7 +145,7 @@ catvobs=vcat([ev.obs[t] for t in 1:length(X)]...)
 
 dXs=vcat([[X[n] for i in 1:length(ed.obs[n])] for n in 1:length(X)]...)
 vXs=vcat([[X[n] for i in 1:length(ev.obs[n])] for n in 1:length(X)]...)
-dvXs=vcat([[X[n] for i in 1:length(em.obs[n])] for n in 1:length(X)]...)
+dvXs=vcat([[X[n] for i in 1:length(em.obs[1][n])] for n in 1:length(X)]...)
 
 d_mean=mapd.disp_mat[:,2]
 d_upper=mapd.disp_mat[:,3].-mapd.disp_mat[:,2]
@@ -163,21 +163,21 @@ mv_mean=mapm.slices[2].disp_mat[:,2]
 mv_upper=mapm.slices[2].disp_mat[:,3].-mapm.slices[2].disp_mat[:,2]
 mv_lower=mapm.slices[2].disp_mat[:,2].-mapm.slices[2].disp_mat[:,1]
 
-mapmd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xticks=plotticks, xformatter=_->"", ylabel="Population")
+mapmd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", showaxis=:y, xformatter=_->"", xticks=X, ylabel="Population")
 plot!(mapmd_plt, X, md_mean, ribbon=(md_lower,md_upper), color=:green, label="Combined model D population")
 annotate!([(8,200,Plots.text("A",18))])
 
-mapmv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", showaxis=:y, ylabel="Population", xticks=plotticks, xformatter=_->"",)
+mapmv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", showaxis=:y, ylabel="Population", xformatter=_->"",xticks=X)
 plot!(mapmv_plt, X, mv_mean, ribbon=(mv_lower,mv_upper), color=:darkmagenta, label="Combined model V population")
 annotate!([(8,145,Plots.text("B",18))])
 
-mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", xlabel="Age (dpf)", xticks=plotticks, ylabel="Population")
+mapd_plt=scatter(dXs,catdobs, marker=:cross, color=:black, markersize=3, label="Dorsal CMZ population data", xlabel="Age (dpf)", xticks=X, ylabel="Population")
 plot!(mapd_plt, X, d_mean, ribbon=(d_lower,d_upper), color=:green, label="Separate model D population")
 annotate!([(8,150,Plots.text("C",18))])
 
-mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population", xticks=plotticks)
+mapv_plt=scatter(vXs,catvobs, marker=:cross, color=:black, markersize=3, label="Ventral CMZ population data", xlabel="Age (dpf)", ylabel="Population", xticks=X)
 plot!(mapv_plt, X, v_mean, ribbon=(v_lower,v_upper), color=:darkmagenta, label="Separate model V population")
-annotate!([(8,200,Plots.text("D",18))])
+annotate!([(8,250,Plots.text("D",18))])
 
 combined_map=Plots.plot(mapmd_plt,mapmv_plt,mapd_plt,mapv_plt,layout=grid(2,2), size=(1200,900),  link=:x)
 
@@ -199,7 +199,8 @@ lens!([15, 45], [.35, 1.6], inset = (1, bbox(0.2, 0.05, 0.75, 0.55)), colorbar=:
 
 annotate!([(4,4.5,Plots.text("A",18))])
 
-ph1ctmarg=plot(Uniform(10,144), color=:darkmagenta, fill=true, 
+ymarg=map(x->pdf(cycle_prior[1],x),kdes[1].x)
+ph1ctmarg=plot(kdes[1].x, ymarg, color=:darkmagenta, fill=true, 
 fillalpha=.5,xlims=[0,144], ylabel="p",xaxis=false, xformatter=_->"", legend=:none)
 plot!(kdes[1].x,kdes[1].density,color=:green, fill=true, fillalpha=.5)
 plot!([mapm.θ[1],mapm.θ[1]],[0,maximum(kdes[1].density)],color=:black,linewidth=1)
@@ -230,8 +231,8 @@ lens!([15, 45], [.35, 1.6], inset = (1, bbox(0.2, 0.05, 0.75, 0.55)), colorbar=:
 
 annotate!(ph2marg,[(4,4.5,Plots.text("B",18))])
 
-
-ph2ctmarg=plot(Uniform(10,144), color=:darkmagenta, fill=true, 
+ymarg=map(x->pdf(cycle_prior[1],x),kdes[1].x)
+ph2ctmarg=plot(kdes[1].x, ymarg, color=:darkmagenta, fill=true,  
 fillalpha=.5, ylabel="p", xlims=[0,144], xaxis=false, xformatter=_->"", legend=:none)
 plot!(kdes[3].x,kdes[3].density,color=:green, fill=true, fillalpha=.5)
 plot!([mapm.θ[3],mapm.θ[3]],[0,maximum(kdes[3].density)],color=:black,linewidth=1)
