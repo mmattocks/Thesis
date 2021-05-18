@@ -47,9 +47,9 @@ Since the choice of model describing the estimated annular population and retina
     \label{PZRtable}
 \end{table}
 
-Full estimation of the Bayesian evidence for the Normal vs. Log-Normal hypotheses for our calculated parameters produces confirms the rough calculation of likelihood ratio from the single-fit MAP models, although the extent to which LogNormal models are better justified than Normal differs betwene the methods.
+Full estimation of the Bayesian evidence for the Normal vs. Log-Normal hypotheses for our calculated parameters produces confirms the rough calculation of likelihood ratio from the single-fit MAP models, although the extent to which LogNormal models are better justified than Normal differs between the methods.
 
-If between-individual variation in retinal CMZ population and retinal volume are both well-modelled Log-Normally, the question of their independence arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, after postembryonic central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these clusters vs. the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that this volume is well correlated with the size of the CMZ. Since the manner in which we model the CMZ differ depending on our assessment of the dependence of these retinal parameters, we performed Bayesian model selection by the so-called \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
+If between-individual variation in retinal CMZ population and retinal volume are both well-modelled Log-Normally, the question of their independence arises. It seems plausible that the size of the CMZ population would be roughly proportional to the overall volume of the retina, after postembryonic central specification, and establishment of the peripheral CMZ remnant. Moreover, since the growth of retinal volume over the life of the organism is driven primarily by the CMZ\footnote{One observes occasional proliferative clusters in the central retina throughout the life of the fish; these are typically ascribed to M\"{u}ller glial repair processes. I am unaware of any estimate as to the relative contribution of these clusters vs. the CMZ. As we shall see, there is probably more turnover in the specified retina than previously believed. As a result, the relative contribution of these central clusters should probably be subject to statistical estimation; they may be more significant than mere lesion-repair sites.}, it seems likely that this volume is well correlated with the size of the CMZ. Since the manner in which we model the CMZ differ depending on our assessment of the dependence of these retinal parameters, we performed Bayesian model selection by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method for linear regression, which provides for direct estimation of the evidence for models consisting of linear equations of variables \cite{Bishop2006}.
 
 We find that individual CMZ population and retinal volume estimates are best described by uncorrelated models at in all ages, with the exception of 23.0 dpf, where the evidence weakly favours correlation. It is interesting that the evidence in favour of non-correlation is weakest between 17 and 30 dpf, suggesting the correlation at 23.0 dpf is not spurious, but is related to CMZ activity at this time. These data are displayed in \autoref{corrtable}. Of particular importance are the data for 3dpf embryos, as we intend to seed model retinae with CMZ populations and volumes drawn from these distributions. The data for these animals are plotted in \autoref{gausscorrelation}. The general lack of correlation between CMZ population and retinal volume estimates may be due to the loss of information involved in the estimation calculations; on the other hand, it is more plausible that CMZ population should be associated with the rate of retinal volume growth rather than the volume of the retina itself, which suggests that the rate of retinal contribution from the CMZ is probably highest between 17 and 23 days. Because growth rate data are unavailable for single individuals, we cannot make this inference directly.
 
@@ -143,12 +143,12 @@ In order to estimate the mean daily rate of change of the CMZ population and ret
 
 \subsection{Evidence estimation by Empirical Bayes linear regression}
 \label{ssec:CMZEmpBayes}
-Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package \path{BayesianLinearRegression.jl}, which implements Bishop's algorithm.
+Evidence comparisons presented without estimated standard deviations ($\sigma$) of significance are produced by the \hyperref[ssec:EmpiricalBayes]{Empirical Bayes} method of linear regression, as presented in Bishop's standard machine learning textbook \cite{Bishop2006}. Calculations were performed using the Julia package \path{BayesianLinearRegression.jl}, which implements Bishop's algorithm. Values are presented in log base $e$.
 
 \subsection{Evidence estimation by Galilean Monte Carlo nested sampling}
 \label{ssec:GMCev}
 
-Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[ssec:GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref{BayesEpistemology}[Bayesian evidence], or marginal probability of the model over the posterior sample is calculated by the \hyperref[ssec:nested]{nested sampling algorithm} \cite{Skilling2006}. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Maximum a posteriori outputs are calculated from the most likely model parameterisation sampled during this process.
+Evidence comparisons presented with estimated standard deviations ($\sigma$) of significance are produced by converging ensembles of \hyperref[ssec:GMC]{Galilean Monte Carlo} sample chains, which collectively constitute a sample from the posterior in rigorous detailed balance \cite{Skilling2019}. The \hyperref[ssec:BayesEpistemology]{Bayesian evidence}, or marginal probability of the model over the posterior sample is calculated by the \hyperref[ssec:nested]{nested sampling algorithm} \cite{Skilling2006}, and is presented in log base $e$. Calculations were performed by the use of the Julia packages \path{GMC_NS.jl} and \path{CMZNicheSims.jl}, written for this thesis and presented in \autoref{chap:GMC} and \autoref{chap:CNS}, respectively. Maximum a posteriori outputs are calculated from the most likely model parameterisation sampled during this process.
 
 \subsection{Estimation of posterior distributions of phase model parameters}
 \label{ssec:GMCkde}
@@ -157,36 +157,44 @@ Posterior distributions presented in \autoref{phasemarginals} and \autoref{dvmar
 \section{Supplementary Figures}
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/morphology.png}}    
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/morphology.png}}    
     \caption{{\bf Overview of \textit{D. rerio} retinal parameters during morphogenesis}}
     All estimates are presented as the marginal posterior distribution of the mean, from uninformative priors, with 95\% credibility intervals.
     Panel A: Thickness of the retina, measured in its center.
     Panel B: Length of the retinal pigmented epithelium, measured from one side of the lens to the other.
     Panel C: Diameter of the lens.
     Panel D: Diameter of the optic nerve, measured in its center.
-    Panel E: total thickness of the retina, divided by the thicknesses of the layers that compose it.
+    Panel E: total thickness of the retina, divided by the thicknesses of the layers that compose it. GCL: Ganglion cell layer. IPL: Inner plexiform layer. INL: Inner nuclear layer. OPL: Outer plexiform layer. ONL: Outer nuclear layers. RPE: Retinal pigmented epithelium.
+
+    Methods in \autoref{ssec:CMZretmeas}. Code in \autoref{ssec:a10morphology}.
     \label{morphology}
 \end{figure}
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{cmz/NTontology.png}}    
     \caption{{\bf Developmental progression of naso-temporal population asymmetry in the CMZ.}}
-    Marginal posterior distribution of mean nasal (N) and temporal (T) population size in 14$\mu$m transverse cryosections (panel A) or intra-individual N/T count asymmetry ratio (panel B), $\pm 95\%$ credible interval, n=6 animals per age. Data points represent mean counts from three central sections of an experimental animal's eye. 
+    Marginal posterior distribution of mean nasal (N) and temporal (T) population size in 14$\mu$m transverse cryosections (panel A) or intra-individual N/T count asymmetry ratio (panel B), $\pm 95\%$ credible interval, n=6 animals per age. Data points represent mean counts from three central sections of an experimental animal's eye.
+    Code in \autoref{ssec:a20dvratio}.
     \label{NTontology}
 \end{figure}
 
-
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=.7\textwidth]{cmz/a27linreg.png}}    
-    \caption{{\bf Linear regressions of temporally correlated and uncorrelated models of central retinal and 30dpf CMZ-contributed cohorts}}
-    \label{a27linreg}
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/polymodality.png}}    
+    \caption{{\bf Polymodality of CMZ model MAP estimates}}
+    Four of the six most likely models found in the MAP sample of the combined decay slice model presented in \autoref{decaymarginals}, located on the marginal distribution of initial cycle time (top panel), and with model output displayed in bottom panels. Note that very different initial CT values produce comparable explanations of the data. Code in \autoref{ssec:a10decayslicediagnostic}.
+    \label{polymodality}
 \end{figure}
-
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=.7\textwidth]{cmz/3ddvlinreg.png}}    
     \caption{{\bf Linear regressions performed on cumulative labelling data from dorsal, ventral, and combined CMZ sectional populations}}
     \label{cumEdUlinreg}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=.7\textwidth]{cmz/a27linreg.png}}    
+    \caption{{\bf Linear regressions of temporally correlated and uncorrelated models of central retinal and 30dpf CMZ-contributed cohorts}}
+    \label{a27linreg}
 \end{figure}
 
 \begin{figure}[!h]

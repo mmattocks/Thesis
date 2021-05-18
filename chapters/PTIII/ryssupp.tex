@@ -88,6 +88,12 @@ The code used to produce the differential position set samples is available in \
 \section{Supplementary figures}
 
 \begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/mitosis.png}}    
+    \caption{{\bf 10dpf mutant \textit{rys} RPCs are mitotic}} 3d volume reconstruction of a complete mitotic figure in a \textit{rys} mutant CMZ RPC at 10dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Blue channel: Hoechst 33258; Green channel: PCNA; Red channel: EdU. Scale bars: \SI{4}{\micro\metre}.
+    \label{rysmitosis}
+\end{figure}
+
+\begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/a35sibMAP.png}}    
     \caption{{\bf  MAP model output and observations for \textit{rys} sibling thymidine slice model of 5dpf cumulative EdU labelling}}
     Count of EdU-positive cells observed in 14\si{\micro\metre} coronal cryosections through \textit{rys} mutant CMZs at indicated chase times during a 10 mM EdU pulse (magenta crosses), overlaid with MAP model output. Probability mass distribution of the discrete non-parametric output is shown by color scale; yellow values include counts with >.05 mass. Output mean and 95\% mass are indicated by solid and dashed white lines.
@@ -103,6 +109,13 @@ The code used to produce the differential position set samples is available in \
 
     Methods in \autoref{ssec:RyscumEdU}. Code in \autoref{ssec:a35thymidinesim}.
     \label{a35rysMAP}
+\end{figure}
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/rys_4c4.png}}    
+    \caption{{\bf 4C4-positive microglia engulf \textit{rys} mutant RPCs}}
+    Maximum intensity projection of \textit{rys} mutant retina at 5dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Labelled in red, a 4C4-positive microglia engulfs TUNEL-positive apoptotic fragments in the vicinity of the CMZ. Blue channel: Hoechst 33258; Green channel: TUNEL; Red channel: 4C4.
+    \label{phagocytosis}
 \end{figure}
 
 \begin{sidewaysfigure}[!h]
@@ -125,18 +138,11 @@ The code used to produce the differential position set samples is available in \
 \end{figure}
 
 \begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/mitosis.png}}    
-    \caption{{\bf 10dpf mutant \textit{rys} RPCs are mitotic}} 3d volume reconstruction of a complete mitotic figure in a \textit{rys} mutant CMZ RPC at 10dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Blue channel: Hoechst 33258; Green channel: PCNA; Red channel: EdU.
-    \label{rysmitosis}
+    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/morpholino injection images.png}}    
+    \caption{{\bf npat morpholino injectants do not recapitulate \textit{rys} retinal disorganisation phenotype}}
+    Representative \SI{14}{\micro\metre} central coronal cryosections through eyes of zebrafish embryos injected at the 1-2 cell stage with control, ATG- and splice-directed npat morpholinos, alongside uninjected siblings. Maximum intensity projection micrographs, with red staining of PCNA+ve nuclei against a blue Hoechst 33342 counterstain, are presented alongside dot schematics, displaying the positions of nuclei in blue, with PCNA+ve CMZ nuclei highlighted in yellow.
+    \label{morpholinoschematic}
 \end{figure}
-
-\begin{figure}[!h]
-    \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/rys_4c4.png}}    
-    \caption{{\bf 4C4-positive microglia engulf \textit{rys} mutant RPCs}}
-    Maximum intensity projection of \textit{rys} mutant retina at 5dpf, from a confocal micrograph of a 14\si{\micro\metre} coronal cryosection. Labelled in red, a 4C4-positive microglia engulfs TUNEL-positive apoptotic fragments in the vicinity of the CMZ. Blue channel: Hoechst 33258; Green channel: TUNEL; Red channel: 4C4.
-    \label{phagocytosis}
-\end{figure}
-
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{rys/morpholinoqPCR.png}}    
@@ -198,4 +204,20 @@ The code used to produce the differential position set samples is available in \
     \begin{flushleft}logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence.  Largest evidence values bolded. logZR: evidence ratio; positive values in favour of stable model.
     \end{flushleft}
     \label{morpholinoev}
+\end{table}
+
+
+\begin{table}
+    \caption{{\bf \textit{rys} mutant differential nucleosome positions are less typical of the genome than those mapped to sibling positions}}
+
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        {\bf Sequence set} & {\bf \textit{rys} naive LH} & {\bf sib naive LH} & {\bf LH ratio}\\ \hline
+        Differential & -6.3402e7 & -5.271e7 & -1.0692e7\\ \hline
+        Mapped & -2.2921e8 & -2.2617e8 & -3.0407e6\\ \hline
+        \end{tabular}
+
+        \begin{flushleft}naive LH: log-Likelihood of sequences, given genomic background noise models alone. Higher values are more likely a priori, indicating sequences more typical of the genome. LH ratio given with \textit{rys} mutant sequences as the denominator. Note that the ratio of the differential sequences is much greater than that of the mapped sequences, indicating that the \textit{rys} differential position set is much less typical of the genome than mutant sequences which are found overlapping sibling positions. Code in \autoref{ssec:overall_naive}.
+        \end{flushleft}
+        \label{naivelhtable}
 \end{table}

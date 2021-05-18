@@ -60,11 +60,14 @@ filelabels=Dict(
     "CMZ_lh.jl" => "ssec:CMZlh",
     "lens_model.jl" => "ssec:slicelensmodel",
     "a10popsurvey.jl"=>"ssec:a10popsurvey",
+    "a10morphology.jl"=>"ssec:a10morphology",
     "a10correlation.jl"=>"ssec:a10correlation",
     "a10periodisation.jl" => "ssec:a10periodisation",
     "a10dvratio.jl" => "ssec:a10dvratio",
+    "a20dvratio.jl" => "ssec:a20dvratio",
     "a10dvslice.jl"=>"ssec:a10dvslice",
     "a10dvdecayslice.jl"=>"ssec:a10dvdecayslice",
+    "a10decayslicediagnostic.jl"=>"ssec:a10decayslicediagnostic",
     "a10nvln.jl"=>"ssec:a10nvln",
     "a19lineagetrace.jl"=>"ssec:a19lineagetrace",
     "a25dvlinreg.jl" => "ssec:a25dvlinreg",
@@ -92,7 +95,8 @@ filelabels=Dict(
     "dif_pos_learner.jl" => "ssec:dif_pos_learner",
     "spike_recovery.jl" => "ssec:spike_recovery",
     "dif_pos_sample_prep.jl"=>"ssec:dif_pos_sample_prep",
-    "dif_pos_assembly.jl"=>"ssec:dif_pos_assembly"
+    "dif_pos_assembly.jl"=>"ssec:dif_pos_assembly",
+    "overall_naive.jl"=>"ssec:overall_naive"
 )
 
 crawl_minted(ca_pth,pls,types, filelabels)

@@ -169,7 +169,7 @@ p2_mean=map2.disp_mat[:,2,1]
 p2_upper=map2.disp_mat[:,1,1].-map2.disp_mat[:,2,1]
 p2_lower=map2.disp_mat[:,2,1].-map2.disp_mat[:,3,1]
 
-map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:top, background_color_legend=nothing)
+map2_popplt=scatter(Xs,catpobs, marker=:cross, color=:black, markersize=3, label="CMZ population estimate", ylabel="Population", showaxis=:y, xticks=plotticks, xformatter=_->"", legend=:topright, background_color_legend=nothing)
 plot!(map2_popplt, X, p2_mean, ribbon=(p2_lower,p2_upper), color=:darkmagenta, label="2-phase model population")
 lens!([2, 32], [300, 5700], inset = (1, bbox(0.6, 0.0, 0.38, 0.7)))
 annotate!([(30,1.25e4,Plots.text("A1",18))])

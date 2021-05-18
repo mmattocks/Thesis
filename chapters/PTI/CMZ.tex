@@ -12,7 +12,17 @@ As described in more detail in \autoref{ssec:NormalModels}, we conclude that pop
 
 \section{Survey of CMZ population and gross retinal contribution}
 
-If it is true that the majority of zebrafish retinogenesis occurs postembryonically, and that models trained on embryonic data do not describe this period well, as seen in \autoref{chap:SMME}, what characterises this CMZ-driven phase of retinogenesis? We first estimate mean CMZ annulus population and retinal volume over the first year of life, in \autoref{CMZoverall}, panels A and C.
+If it is true that the majority of zebrafish retinogenesis occurs postembryonically, and that models trained on embryonic data do not describe this period well, as seen in \autoref{chap:SMME}, what characterises this CMZ-driven phase of retinogenesis? A schematic overview of the appearance of the CMZ during the first three months of post-embryonic life is presented in \autoref{cmz_dev_schematic}, displaying the progressive expansion of the neural retina and the relative size of the CMZ over this time period.
+
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{cmz/cmz_schematic.png}}    
+    \caption{{\bf Micrographic overview of CMZ development in \textit{D.rerio}, 3-90dpf}}
+    Representative confocal micrograph maximum intensity projections (MIPs) of \SI{14}{\micro\metre} coronal eye cryosections, processed via IHC, of zebrafish of noted ages. Magenta – anti-PCNA staining. Green – Hoechst 33342 nuclear staining. Note changing scale bars.
+    \label{cmz_dev_schematic}
+    Methods in \autoref{ssec:PCNA}.
+\end{figure}
+
+We first estimate mean CMZ annulus population and retinal volume over the first year of life, in \autoref{CMZoverall}, panels A and C. The lack of growth observed in the first week of life suggests an initial quiescent period in the population history of the CMZ. Observations in \autoref{rysCMZontogeny}, showing CMZ RPCs are proliferating too slowly to be labelled by a 12 hour pulse of a thymidine analogue at 10dpf in the siblings of npat mutants, also suggest this quiescence. On the other hand, we have good confidence that retinal volume continues to grow over this time; 99.56\% of the marginal posterior mass of the mean 5dpf estimate is above the 3dpf mean, which may indicate any proliferative pause is too short to appear in the retinal volume data.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/CMZoverall.png}}    
@@ -22,8 +32,6 @@ If it is true that the majority of zebrafish retinogenesis occurs postembryonica
     Methods in \autoref{ssec:CMZpopvolest}, \autoref{ssec:MCrates}.
     Code in \autoref{ssec:a10popsurvey}.
 \end{figure}
-
-The lack of growth observed in the first week of life suggests an initial quiescent period in the population history of the CMZ. Observations in \autoref{rysCMZontogeny}, showing CMZ RPCs are proliferating too slowly to be labelled by a 12 hour pulse of a thymidine analogue at 10dpf in the siblings of npat mutants, also suggest this quiescence. On the other hand, we have good confidence that retinal volume continues to grow over this time; 99.56\% of the marginal posterior mass of the mean 5dpf estimate is above the 3dpf mean, which may indicate any proliferative pause is too short to appear in the retinal volume data.
 
 The first two to three weeks of life (magnified in lens insets in panels A and C) see a slow build in both estimated CMZ annulus population and retinal volume compared to the large increase which follows. While zebrafish are better staged by size than age \cite{Parichy2009}, the onset of this growth seems to come earlier than the metamorphic transition from larval to juvenile stages at ~45dpf \cite{Singleman2014}. This raises the question of how the CMZ contributes to the retina during the critical period of exponential growth of the organism, between about 45 and 90dpf. It is plausible, for instance, that the growth of the CMZ population mainly reflects the increased cell cycle rate, with RPCs specifying at some steady rate, or that the CMZ builds itself up for a wave of increased niche exit and specification somewhat later, similarly to the sequence of events in the embryonic central retina.
 
@@ -155,7 +163,7 @@ The slice model proves to have greater success at explaining sectional counts th
     \makebox[\textwidth][c]{\includegraphics[width=1.0\textwidth]{cmz/a10dvMAP.png}}    
     \caption{{\bf Maximum a posteriori output of total, dorsal, and ventral CMZ slice models}}
     \label{dvMAPout}
-    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% probability density model output, for the total CMZ population model (panel A), dorsal CMZ population model (panel B), and ventral CMZ population model (panel C).
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% probability density model output, for the total CMZ population model (panels A \& B), dorsal CMZ population model (panel C), and ventral CMZ population model (panel D).
     Methods in \autoref{ssec:GMCev}.
     Code in \autoref{ssec:a10dvslice}. 
 \end{figure}
@@ -202,7 +210,7 @@ The MAP parameters for the combined slice model suggest that those found for the
 
 The marginal posterior distributions of the total slice model, presented in \autoref{dvmarginals}, are substantially more polymodal than those in \autoref{phasemarginals}. This illustrates how data can support multiple hypotheses about model parameters to different degrees. When the phase marginal $CT$ and $\epsilon$ are plotted together, they display the characteristic density curves displayed in Panels A and B of \autoref{dvmarginals}. This supplies the most interesting information available by estimating this slice model. Firstly, the posterior marginal distributions of the first and second phase are very close to one another. Importantly, when the $CT$-$\epsilon$ contour which gives a stable population is plotted (dotted lines), it becomes obvious that the bulk of the first phase posterior lies just under this curve, while the bulk of the second phase lies just above it. This strongly suggests that the population dynamics of the CMZ may be characterised by a relatively subtle shift across the stable population contour, rather than distinct phases.
 
-It should be noted that the MAP estimate does not occupy the most credible KDE kernel. An important property of nested sampling is that the accuracy of evidence calculations is traded off against the accuracy of estimating the posterior distribution \cite{Speagle2019}, as noted in \autoref{ssec:GMC}. Since we have here prioritized evidence estimation, this is the cause of this discrepancy; the MAP models themselves may have relatively little weight in the KDE estimates.
+It should be noted that the MAP estimate does not occupy the most credible KDE kernel. An important property of nested sampling is that the accuracy of evidence calculations is traded off against the accuracy of estimating the posterior distribution \cite{Speagle2019}, as noted in \autoref{ssec:GMC}. Since we have here prioritized evidence estimation, this is one cause of this discrepancy; the MAP models themselves may have relatively little weight in the KDE estimates. The oversampling of the prior periphery noted in \autoref{chap:GMC}, as well as the very significant polymodality of the model posteriors displayed in Supplementary \autoref{polymodality} also contribute to this problem\footnote{A more conventional approach to reporting posterior estimates is to provide the mean and variance of the distribution, rather than the position of the most likely model in the MAP ensemble. We have eschewed this because of the tendency of \path{GMC_NS} to oversample the prior volume.}.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/a10dvmarginals.png}}    
@@ -224,10 +232,20 @@ On the basis of the marginal posterior analysis of this model, we suspected that
 \FloatBarrier
 
 \section{Slice models of decaying cell cycle support anatomical homogeneity of RPC behaviour}
+\label{sec:decaymodel}
 
 To model the CMZ as a population of cells with a continuously lengthening cell cycle time, we modify the slice model described above by removing the phases and introducing an exponential decay equation for cycle time. This results in a slice model with three parameters: the initial cycle time ($CT_{i}$), a constant exit rate ($\epsilon$), and a decay constant ($\kappa$). Population values are updated daily as per \autoref{sliceeq}, including the use of the lens model, except that the cycle time $t$ days after initialising is determined by $CT_{t}=CT_{i} \cdot e^{\kappa \cdot t}$. More detail is provided in \autoref{sec:decaymodel}
 
-We performed the same sampling routine on the same 3-90dpf dataset used for the earlier slice models, to enable direct comparison between them. The evidence calculations are presented in \autoref{decayevtable}. The combined decay model substantially outperforms the combined slice model selected above. However, separate decay models outperform the combined decay model. Therefore, the model evidence supports the use of the decay model for describing RPC behaviour in general; however, there is insufficient evidence to distinguish between dorsal and ventral populations using this model.
+\begin{figure}[!h]
+    \makebox[\textwidth][c]{\includegraphics[width=1.0\textwidth]{cmz/a10dvdecayMAP.png}}    
+    \caption{{\bf Maximum a posteriori output of total, dorsal, and ventral CMZ decay models}}
+    \label{decayMAPoutput}
+    Population and volume estimates from observations (crosses) plotted with mean $\pm$ 95\% probability density model output, for the total CMZ population model (panel A \& B), dorsal CMZ population model (panel C), and ventral CMZ population model (panel D).
+    Methods in \autoref{ssec:GMCev}.
+    Code in \autoref{ssec:a10dvdecayslice}. 
+\end{figure}
+
+We performed the same sampling routine on the same 3-90dpf dataset used for the earlier slice models, to enable direct comparison between them. The evidence calculations are presented in \autoref{decayevtable}. The combined decay model substantially outperforms the combined slice model selected above, as well as separate decay models. Therefore, the model evidence supports the use of the decay model for describing RPC behaviour in general; however, there is insufficient evidence to distinguish between dorsal and ventral populations using this model.
 
 \begin{table}[!ht]
     \centering
@@ -244,7 +262,7 @@ We performed the same sampling routine on the same 3-90dpf dataset used for the 
     \label{decayevtable}
 \end{table}
 
-The MAP parameter estimate and decay models are summarised in \autoref{decayMAPtable}. Generally speaking, the values estimated for the parameters of the decay model suggest a much gentler proliferative schedule for RPCs, with initial cycle times measured in days, and daily niche exit rates of between 15-30\% of the RPC population. Cumulative thymidine analogue labelling results, presented below, suggest these values are unrealistically long. Interestingly, MAP parameterisations for the split Dorsal and Ventral models do not imply that dorsal RPCs are more active than those found ventrally. Probably, if consistent regional biases in CMZ RPC behaviour exist, better data would be required to constrain niche exit rate. Indeed, it seems likely that the lack of effective constraint on the model's niche exit rate $\epsilon$ allows for the unrealistically long $CT_{i}$ suggested by both combined and separate decay models. We conclude that explanations invoking differences in CMZ RPC behaviour across morphological axes  cannot be supported with our models and datasets, indicating tht morphological homogeneity of these parameters is descriptively adequate at this level.
+MAP model output for the combined and separate decay models is presented in \autoref{decayMAPoutput}, while the MAP parameter estimates are summarised in \autoref{decayMAPtable}. Generally speaking, the values estimated for the parameters of the decay model suggest a much gentler proliferative schedule for RPCs, with initial cycle times measured in days, and daily niche exit rates of between 15-30\% of the RPC population. Cumulative thymidine analogue labelling results, presented below, suggest these values are unrealistically long. Interestingly, MAP parameterisations for the split Dorsal and Ventral models do not imply that dorsal RPCs are more active than those found ventrally. Probably, if consistent regional biases in CMZ RPC behaviour exist, better data would be required to constrain niche exit rate. Indeed, it seems likely that the lack of effective constraint on the model's niche exit rate $\epsilon$ allows for the unrealistically long $CT_{i}$ suggested by both combined and separate decay models. We conclude that explanations invoking differences in CMZ RPC behaviour across morphological axes  cannot be supported with our models and datasets, indicating that morphological homogeneity of these parameters is descriptively adequate at this level.
 
 \begin{table}[!ht]
     \centering
@@ -282,6 +300,8 @@ Marginal distributions on these parameters are summarised in \autoref{decaymargi
     Code in \autoref{ssec:a10dvdecayslice}.    
 \end{figure}
 
+\FloatBarrier
+
 \section{Bayesian inference of cycle parameters from cumulative thymidine labelling experiments supports slice model cycle time estimates}
 \label{ssec:CMZcumedu}
 
@@ -305,7 +325,7 @@ We sought to confirm the plausibility of the $CT$ estimates obtained from modell
     \label{cumEdUtable}
 \end{table}
 
-Firstly, there are approximately 3 orders of magnitude of evidence in favour of the combined model vs. the joint evidence for separate models (ie. 26.165 vs. 22.980). In general, this suggests that there is little traction to be gained by separating observations these observations along the D/V axis. The Nowakowski-calculated cell cycle time $T_c$ for the combined model, 14.6 $\pm$ 1.1 hr, includes the whole-eye MAP first phase $TC$, 14.5 hr, within one standard deviation. This suggests the Nowakowski model has similar problems to the whole-eye models presented in \autoref{phaseMAPout}, substantially overstating cycle rate. Calculated S phase lengths are also unrealistically short. Finally, the data seem to diverge from a linear trend toward the end of the pulse (see \autoref{cumEdUlinreg}), showing the limitations of this model.
+Firstly, there are approximately 3 orders of magnitude of evidence in favour of the combined model vs. the joint evidence for separate models (ie. 26.165 vs. 22.980). In general, this suggests that there is little traction to be gained by separating these observations along the D/V axis. The Nowakowski-calculated cell cycle time $T_c$ for the combined model, 14.6 $\pm$ 1.1 hr, includes the whole-eye MAP first phase $TC$, 14.5 hr, within one standard deviation. This suggests the Nowakowski model has similar problems to the whole-eye models presented in \autoref{phaseMAPout}, substantially overstating cycle rate. Calculated S phase lengths are also unrealistically short. Finally, the data seem to diverge from a linear trend toward the end of the pulse (see \autoref{cumEdUlinreg}), showing the limitations of this model.
 
 Because the Nowakowski model is clearly inadequate for estimating RPC cycle parameters in the CMZ, we implemented a cell-based cycle simulator, similar to those in \autoref{chap:SMME}, to model discrete cumulative thymidine labelling counts, in lineages with explicitly simulated cycle events. This model is described further in \autoref{sec:thymidinemodel}. The MAP model output for this model is presented in \autoref{a25MAP}; it does a better job of describing the observations than the Nowakowski method, particularly at the earliest timepoints, due to simulation of cycle time correlation between sibling cells, as well as detector sensitivity. 
 
@@ -318,7 +338,7 @@ Because the Nowakowski model is clearly inadequate for estimating RPC cycle para
     \label{a25MAP}
 \end{figure}
 
-KDE estimation of marginal distributions over the model parameters are presented in \autoref{a25marg}. These estimates give us a clear picture of what can be learnt from these data; mean cycle time and the length of S phase as a fraction of the cycle time are significantly compressed relative to the prior, but little can be gleaned about the variance of the cycle time distribution, and almost no information is available about the G1 or sister shift fraction.
+KDE estimation of marginal distributions over the model parameters are presented in \autoref{a25marg}. These estimates give us a clear picture of what can be learnt from these data; mean cycle time and the length of S phase as a fraction of the cycle time are significantly compressed relative to the prior, but little can be gleaned about the variance of the cycle time distribution, and almost no information is available about the G1 or sister shift fraction. That is, for the parameters which the data offer little information, the posterior distribution correctly collapses back onto the prior, which indicates that this approach adequately copes with unconstrained parameters\footnote{The model is overparameterised relative to the available dataset. This was done deliberately to allow the model to be used with richer data than were available here; however, it does have the effect of making sampling against these observations less efficient than is achievable.}.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=.8\textwidth]{cmz/a25marginals.png}}    
@@ -329,7 +349,9 @@ KDE estimation of marginal distributions over the model parameters are presented
     \label{a25marg}
 \end{figure}
 
-The MAP parameters for the LogNormal distribution of cycle times produces a mean cycle time of 24.0 hr. This seems to be a more realistic estimate of RPC cell cycle time, and tends to support the longer values estimated in the slice models, although it does suggest the 50+ hour $CT_{i}$ estimates for the decay models may be excessively long. Because the thymidine simulator's output resembles observations more closely than the Nowakowski model, seems to produce more realistic parameter estimates, and clearly conveys how much information is available in the dataset, and about which parameters, we suggest that this explicit simulation approach should be preferred wherever the computational cost can be justified.
+The MAP parameters for the LogNormal distribution of cycle times produces a mean cycle time of 24.0 hr. This seems to be a more realistic estimate of RPC cell cycle time, and tends to support the longer values estimated in the slice models, although it does suggest the 50+ hour $CT_{i}$ estimates for the decay models may be excessively long. Furthermore, this result supports our observation in \autoref{PerLineageFig} that the He model examined in \autoref{chap:SMME} substantially overstates the per-lineage proliferative rate of RPCs, at least in the CMZ; the He model's mean cycle time of 6 hours is much too fast to correctly model this population. It is likely that most reports of similar, very short cycle times for embryonic RPCs are underestimates of the actual distribution of cycle times.
+
+Because the thymidine simulator's output resembles observations more closely than the Nowakowski model, produces more realistic parameter estimates than it, and clearly conveys how much information is available in the dataset, we suggest that this explicit simulation approach should be preferred to Nowakowski's method wherever the computational cost can be justified. 
 
 \section{The CMZ contributes stably to each cellular layer with time-variable lineage composition}
 
@@ -424,7 +446,7 @@ To investigate, we administered 24 hr pulses of EdU to 1dpf embryos, and followe
     \label{turnovertable}
 \end{table}
 
-There is more evidence for a model of cohort population that is stable over time than one correlated with time, indicating that the additional model complexity implied by allowing turnover is unjustified, for this early period. Despite this, we did find isolated instances where members of these cohorts were visibly being engulfed by 4C4-positive microglia; one such event is depicted in \autoref{CMZ4C4micrograph}. Moreover, we also observed TUNEL-positive nuclei in the central retina of \textit{rys} siblings in the early postembryonic period (\autoref{caspase}). This indicates that some level of turnover iw occuring during this earlier period. The evidence ratio in favour of the uncorrelated models is not overwhelming, which suggests that the cohorts are not turned over at a high enough rate to be detectable in the early period, although the process does occur even at this early age. In order to confirm this finding, we estimated the evidence for age-marginalized Log-Normal models of the population counts against age-differentiated models, representing time-constant and time-varying population models. This investigation resolvew any ambiguity: no time-varying model is justified by the available evidence, as summarized in \autoref{turnoverGMCtable}.
+There is more evidence for a model of cohort population that is stable over time than one correlated with time, indicating that the additional model complexity implied by allowing turnover is unjustified, for this early period. Despite this, we did find isolated instances where members of these cohorts were visibly being engulfed by 4C4-positive microglia; one such event is depicted in \autoref{CMZ4C4micrograph}. Moreover, we also observed TUNEL-positive nuclei in the central retina of \textit{rys} siblings in the early postembryonic period (\autoref{caspase}). This indicates that some level of turnover is occuring during this earlier period. The evidence ratio in favour of the uncorrelated models is not overwhelming, which suggests that the cohorts are not turned over at a high enough rate to be detectable in the early period, although the process does occur even at this early age. In order to confirm this finding, we estimated the evidence for age-marginalized Log-Normal models of the population counts against age-differentiated models, representing time-constant and time-varying population models. This investigation resolves any ambiguity: no time-varying model is justified by the available evidence, as summarized in \autoref{turnoverGMCtable}.
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=1.\textwidth]{cmz/4C4engulfment.png}}    
@@ -441,10 +463,10 @@ There is more evidence for a model of cohort population that is stable over time
 
 \begin{table}[!ht]
     \centering
-    \caption{{\bf GMC-NS evidence estimates confirm Empircal Bayes analysis of early cohort stability}}
+    \caption{{\bf GMC-NS evidence estimates confirm Empirical Bayes analysis of early cohort stability}}
     \begin{tabular}{|l|l|l|l|l|} \hline 
         {\bf Cohort} & {\bf Time-constant logZ} & {\bf Time-varying logZ} & {\bf logZR} & {\bf $\sigma$ Significance}\\ \hline
-        Embryonic central remnant & {\bf -857.08} ± 0.29 & -868.02 ± 0.6 & 10.94 ± 0.67 & 16.4\\ \hline
+        Embryonic central remnant & {\bf -857.08 ± 0.29} & -868.02 ± 0.6 & 10.94 ± 0.67 & 16.4\\ \hline
         1 month CMZ & {\bf -402.38 ± 0.31} & -405.76 ± 0.43 & 3.39 ± 0.53 & 6.4\\ \hline
     \end{tabular}
     \begin{flushleft} logZ: logarithm of p(D), the marginal likelihood of the data, or model evidence. logZR: evidence ratio; positive ratios in favour of the 2-phase model. Largest evidence value bolded.
@@ -457,7 +479,7 @@ There is more evidence for a model of cohort population that is stable over time
 \section{Summary: Modelling the postembryonic CMZ}
 CMZ population dynamics, as encapsulated in our datasets, are best explained by a model of slowly decaying cell cycle rate and constant niche exit rate. This parameterisation is superior to phased models of CMZ activity, although both imply an initial period characterised by CMZ population growth, followed by a second phase of during which the CMZ is depleted. These dynamics can be achieved with a a wide range of cycle times and niche exit rates, which we show by establishing posterior distributions on these parameters. These demonstrate that our estimates of cell cycle lengths are better constrained by our data than estimates of exit rates. The population of the CMZ displays an asymmetric structure which reverses over time; we have shown this is not due to time-shifting of the two proliferative phases across anatomical axes, nor can it be explained by different initial cell cycle times and decay rates. The proportional layer composition of CMZ-driven contributions is stable over this time, and does not display variability over the dorso-ventral axis. However, by estimating the evidence for time-stable and time-varying models of lineage contribution, we identified a decline in particular retinal lineage subtypes, particularly those of the INL, but including the GCL. This a potential explanation for the teleost postembryonic change in retinal mosaic pattern. Finally, we have shown that microglia-mediated turnover of retinal neurons is occurring at a rate too low to have a measurable effect on cohort sizes during this time.
 
-Thus, the niche history of the CMZ is not adequately explained by a ``frozen'' population of RPC progenitors, homeostatically recapitulating a program of development found in embryonic progenitors, as has been suggested previously \cite{Harris1998,Wan2016}, for the proliferative potential implied by these models is too low. Instead, a model that does not limit the size of lineages, but has a slowly decaying cell cycle rate, is sufficient to produce the observed niche population history. This suggests that the postembryonic CMZ is under a separate regulatory regime from the embryonic RPCs, which contribute the central, larval remnant of the neural retina. This period of RPC activity benefits from separate modelling and investigation.
+Thus, the niche history of the CMZ is not adequately explained by a ``frozen'' population of RPC progenitors, homeostatically recapitulating a program of development found in embryonic progenitors, as has been suggested previously \cite{Harris1998,Wan2016}, for the proliferative potential implied by these models is too low. Instead, a model that does not limit the size of lineages, but has a slowly decaying cell cycle rate, is sufficient to produce the observed niche population history. This suggests that the postembryonic CMZ is under a separate regulatory regime from the embryonic RPCs, which contribute the central, larval remnant of the neural retina. This period of RPC activity benefits from separate modelling and investigation. Moreover, the decaying cycle rate model suggests an explanation for the difference between animals that have sustained CMZ RPC activity in adulthood, like teleosts, versus those that do not, such as mammals: the rate of decay in mammals may simply be much higher.
 
 In addition to discovering unique features of postembryonic CMZ activity, we have proved out a general framework for Bayesian evaluation and selection of arbitrary biological models, which can inform both future experiments as well as modelling and theoretical choices. For instance, slice models more successfully combine population and morphological information, to answer questions about CMZ population structure, than do abstract whole-population models of the CMZ. From the foregoing analyses, we conclude that treating the CMZ population as a combined unit with shared proliferative parameter evolution is likely well justified, suggesting that much of the apparent complexity of the niche's population history can be usefully abstracted away.
 

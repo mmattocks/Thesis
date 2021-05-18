@@ -97,7 +97,7 @@ for (ep,priors,box) in zip([ep1,ep2],[priors_1_pop,priors_2_pop],[p1_box,p2_box]
     uds=Vector{Vector{Function}}([[liwi_display],[convergence_display],[ensemble_display]])
     lds=Vector{Vector{Function}}([[model_obs_display],[model_obs_display],[model_obs_display]])
 
-    converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-6)
+    converge_ensemble!(e,backup=(true,1),upper_displays=uds, lower_displays=lds, disp_rot_its=5, mc_noise=.14, converge_factor=1e-3)
 end
 
 e1=deserialize(ep1*"/ens")
@@ -106,4 +106,5 @@ e2=deserialize(ep2*"/ens")
 ev1=measure_evidence(e1)
 ev2=measure_evidence(e2)
 
+CMZNicheSims.print_MAP_output(e1, "/bench/PhD/Thesis/images/cmz/a25MAP.png", its=Int64(1e7))
 CMZNicheSims.print_marginals(e1,"/bench/PhD/Thesis/images/cmz/a25marginals.png")

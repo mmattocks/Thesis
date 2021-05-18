@@ -75,12 +75,12 @@ constants=[X, pulse_time, mc_its, end_time]
 
 for (ep, priors, bx, y) in zip([sp,rp], [s_priors, r_priors], [s_box,r_box], [sib_y, rys_y])
     if isfile(ep*"/ens")
-    e=deserialize(ep*"/ens")
+        e=deserialize(ep*"/ens")
     else
-    @info "Assembling ensemble at $ep"
-    gmcd=GMC_DEFAULTS
-    gmcd[1]=5
-    e=Thymidine_Ensemble(ep, 100, y, priors, constants, bx, gmcd)
+        @info "Assembling ensemble at $ep"
+        gmcd=GMC_DEFAULTS
+        gmcd[1]=5
+        e=Thymidine_Ensemble(ep, 100, y, priors, constants, bx, gmcd)
     end
 
     uds=Vector{Vector{Function}}([[liwi_display],[convergence_display],[evidence_display]])

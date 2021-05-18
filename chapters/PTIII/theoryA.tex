@@ -1,6 +1,8 @@
 \chapter{Theoretical Appendix A: Model theory and statistical methods}
+\label{chap:theoryA}
 
 \section{Model Theory}
+\label{modeltheory}
 This thesis is concerned with a particular kind of scientific model: those that are subject to mathematical analysis, and tractable subjects for numerical simulation techniques. Most biological models do not fit this description, but increasing computing power has expanded the potential for, in particular, cellular and macromolecular explanations to be formalized and tested in this way. While doing so is sometimes derided as ``physics envy'', the reality is more complex. Simple heuristics are, sometimes, adequate biological explanations; much of differential diagnosis consists of reliable descriptive relations between qualitatively characterised signs in patients, and the presence of a pathogen, for instance. More often, the complexity of biological systems, and the sophistication of the instruments with which we probe them, give rise to observations which support more than one plausible causal explanation for the features of the data. The question of model comparison then immediately arises. Without numerical analysis, we may only make reference to the use of the model in applied domains where the model failure has commercial consequences. Because biological models are rarely required to succeed as engineering tools, for the prediction and control of outcomes of practical significance, an inability to analyse them numerically means that we are left only with rhetoric to assess their relative explanatory value. This approach to ``model comparison'' necessarily devolves into the anarchic Feyerabendian discursive chaos discussed in \autoref{sec:Feyerabend}. Feyerabend correctly points out that scientific models can only be compared against one another, and that the selection of comparative criteria can never be ``objective'' in the sense of being fully independent of the contingent situation and goals of the observer. Nothing can be done about this; either we look for relatively-better criteria and relatively-better models as judged by those criteria, or we remain in the realm of pure metaphysical rhetoric, without investigating their implications, what Feyerabend describes as the realm of the ``crank'':
 
 \begin{longquote}
@@ -32,7 +34,7 @@ This can be read aloud as ``the posterior probability of the proposition, given 
 
 This shows us that the evaluation of a model consists of supplying a prior probability for the proposition, $Pr(x)$, and a likelihood function, to assess the probability of the data given that proposition, ($Pr(data|x)$). As computed output: (over many propositions $x$), the total evidentiary mass of the data for this model, ($Pr(data)$), as well as the posterior parameter estimates, $Pr(x|data)$. Sample model parameters are drawn from the prior; the likelihood of these propositions about the data are calculated. By accumulating many such samples, the marginal probability of the model over all of these propositions (the evidence for the model) can be estimated. Because these samples may be weighted by their calculated likelihoods and position on the prior, we may also use them to estimate the marginal posterior probabilities of parameters of interest. 
 
-This encapsulates both the numerical procedures involved in model analysis, as well as the epistemological view implied by Bayesian statistics. That is, a model analysis is the joint product of the model and the data, which expresses our belief about the overall evidence for the model ($Pr(data)$)\footnote{ie. a better model gives higher marginal probability to observations than a worse one}, as well as allowing us to estimate the distribution of credibility we should assign to various values for parameters of the model (propositions), $Pr(x|data)$. These are the two fundamental levels on which quantitative measurements of natural systems allow us to make inferences. We may distinguish between models of the systems in a general sense by their evidence, when applied to the same overall dataset. This allows us to counterinductively test contradictory descriptions of the structure of the phenomenon against one another, inferring which is a better map to the territory. The second level of inference is the ranking of propositions for the parameterisation of models achieved by the sampling procedure. This allows us to determine which particular propositions about the system are supported, given the model and observations. Because the posterior distributions need not be unimodal, we can evaluate these modes as separate hypotheses that are supported to varying degrees by the data. 
+This encapsulates both the numerical procedures involved in model analysis, as well as the epistemological view implied by Bayesian statistics. That is, a model analysis is the joint product of the model and the data, which expresses our belief about the overall evidence for the model ($Pr(data)$)\footnote{ie. a better model gives higher marginal probability to observations than a worse one}, as well as allowing us to estimate the distribution of credibility we should assign to various values for parameters of the model (propositions), $Pr(x|data)$. These are the two fundamental levels on which quantitative measurements of natural systems allow us to make inferences. We may distinguish between models of the systems in a general sense by their evidence, when applied to the same overall dataset. This allows us to counterinductively test contradictory descriptions of the structure of the phenomenon against one another, inferring which is a better map to the territory. The second level of inference is the ranking of propositions for the parameterisation of models achieved by the sampling procedure. This allows us to determine which particular propositions about the system are supported, given the model and observations. Because the posterior distributions need not be unimodal, we can evaluate these modes as separate hypotheses that are supported to varying degrees by the data. An extensive review of the Bayesian approach to model evidence and model selection has been provided by Knuth et al., covering other methods of estimation not touched on here \cite{Knuth2015}.
 
 This view dispenses with interpretations of model selection as being about finding the ``true model'' of reality, or of estimating the actual, objective probabilities inhering in things or processes (a view disputed in \autoref{sec:chance}). Instead, we are guided to focus on the relative quality of models in explaining all of the relevant data we can gather; we may then evaluate the relative quality of specific propositions about the system within those models (i.e., the posterior distributions on model parameters) as we see fit.  
 
@@ -56,9 +58,9 @@ A second source of overfitting is the failure to properly account for uncertaint
 \label{ssec:SSM}
 
 \begin{figure}
-\includegraphics[scale=.5]{simplestochasticmodel}
+\includegraphics[scale=.75]{ssm2.png}
 \centering
-\caption{{\bf Simple stochastic stem cell model, representing probabilities of cell division events.}} Excerpted from \cite[p.61]{Fagan2013}. Black circles denote proliferative cells, while white and grey circles denote different types of postmitotic offspring. ``Number of progeny in P" is the number of mitotic offspring produced by each type of division. The probability of each division type must sum to 1, as all possibilities are represented, granting that the division types are defined by the postdivisional mitotic history of the offspring.
+\caption{{\bf Simple stochastic stem cell model, representing probabilities of cell division events.}} Black circles denote proliferative cells, while white and grey circles denote different types of postmitotic offspring. ``Number of progeny in P" is the number of mitotic offspring produced by each type of division. The probability of each division type must sum to 1, as all possibilities are represented, granting that the division types are defined by the postdivisional mitotic history of the offspring.
 \label{fig:SSM}
 \end{figure}
 
@@ -149,7 +151,7 @@ If a proposal is rejected, its current vector crosses the likelihood contour at 
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=.7\textwidth]{GMC.png}}    
-    \caption{{\bf The four directions of GMC particle movement.}} "North" is forward movement along the trajectory; East, South ,and West are reflected vectors. Excerpted from \cite{Skilling2019}.
+    \caption{{\bf The four directions of GMC particle movement.}} "North" is forward movement along the trajectory; East, South ,and West are reflected vectors. Excerpted from \cite{Skilling2019} under CC-BY 4.0.
     \label{GMCfig}
 \end{figure}
 
@@ -167,7 +169,7 @@ Integrating under the quality surface of the parameter space is likely to be an 
 
 \begin{figure}[!h]
     \makebox[\textwidth][c]{\includegraphics[width=.7\textwidth]{nested.png}}      
-    \caption{{\bf Schematic of evidence integration by nested sampling.}} L, likelihood. X gives the fraction of prior mass remaining. Excerpted from \cite{Skilling2006}.
+    \caption{{\bf Schematic of evidence integration by nested sampling.}} L, likelihood. X gives the fraction of prior mass remaining. Excerpted from \cite{Skilling2006}, copyright John Skilling.
     \label{nestedfig}
 \end{figure}
 

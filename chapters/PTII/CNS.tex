@@ -11,7 +11,7 @@ The three model ensemble types specified by \path{CNS.jl} are as follows:
     \item \protect\path{Thymidine_Ensemble}: ``Slice model'' of proliferative CMZ population exposed to a pulse of thymidine analogue, intended to model cell cycle kinetics in the CMZ over short time periods (hours). 
 \end{itemize}
 
-The operation of these simulators is described in more detail below. In general, the workflow is to assemble the assemble, converge it, and to estimate the model evidence and posterior parameters from the converged ensemble. For more on evidence and posterior estimation by \path{GMC_NS.jl}, see \autoref{chap:GMC}.
+The operation of these simulators is described in more detail below. In general, the workflow is to assemble the ensemble, converge it, and to estimate the model evidence and posterior parameters from the converged ensemble. For more on evidence and posterior estimation by \path{GMC_NS.jl}, see \autoref{chap:GMC}.
 
 \section{\protect\path{CMZ_Ensemble} model and usage}
 \label{sec:CMZmodel}
@@ -26,6 +26,8 @@ while the equation for retinal volume becomes:
 \[
     v_n=v_{0} + p_{0} \cdot \epsilon \cdot \mu_{cv} \cdot \frac{1 - (2^{\frac{24}{CT} - \epsilon})^{n-1}}{1 - (2^{\frac{24}{CT} - \epsilon})}
 \]
+
+, where $p_n$ and $v_n$ are the population and volume at day $n$, $p_{0}$ and $v_{0}$ are the initial population and volumes, CT is the cycle time in hours, $\epsilon$ is the exit rate from the niche (expressed as a fraction of the population), and $\mu_{cv}$ is a constant expressing mean cellular volume contributed to the retina by exiting cells.
 
 After Monte Carlo iterative simulation of many retinae, the resultant simulated population and volume distributions at the observed time points are estimated by fitting \path{LogNormal} \path{Distribution}s, after which the joint log likelihood of the observations given the simulation is calculated. The likelihood function is threaded so that the total number of Monte Carlo iterates for any given model parameter vector is divided equally between threads. For very large numbers of iterates, this can result in some load balancing inefficiency; in general, it is unneccessary to specify more than 5 million iterates in the ensemble constants vector (\autoref{constants} below). 1 million should be adequate for most purposes and allows the efficient sampling of $\geq$ 3 phase models on one performant machine.
 
@@ -81,7 +83,7 @@ A \path{Slice_Ensemble} consists of \path{Slice_Model}s, whose likelihood is ass
 
 \section{\protect\path{Decay_Ensemble} model and usage}
 \label{sec:decaymodel}
-\path{Decay_Model}s are \path{Slice_Model}s that are parameterised to represent a continuous process of cell cycle rate decay (that is, lengthening cycle times). They use identical \path{Lens_Model}s to abstract the effects of the stretching 3-dimensional retina on the CMZ slice. Unlike the phased \path{CMZ_Model}s and \path{Slice_Model}s, \path{Decay_Model}s are parameterised solely by an initial cycle time $CT_{i}$, an exponential decay constant $\kappa$, and a constant exit rate $\epsilon$. Daily cycle time is evaluated as $CT_{t}=CT_i*e^{\kappa \cdot t}$. This is used to update the population value by the \path{Slice_Model} difference equation, penalized by the exit rate for the amount of CMZ growth implied by the \path{Lens_Model}.
+\path{Decay_Model}s are \path{Slice_Model}s that are parameterised to represent a continuous process of cell cycle rate decay (that is, lengthening cycle times). They use identical \path{Lens_Model}s to abstract the effects of the stretching 3-dimensional retina on the CMZ slice. Unlike the phased \path{CMZ_Model}s and \path{Slice_Model}s, \path{Decay_Model}s are parameterised solely by an initial cycle time $CT_{i}$, an exponential decay constant $\kappa$, and a constant exit rate $\epsilon$. Daily cycle time is evaluated as $CT_{t}=CT_i \cdot e^{\kappa t}$. This is used to update the population value by the \path{Slice_Model} difference equation, penalized by the exit rate for the amount of CMZ growth implied by the \path{Lens_Model}.
 
 A \path{Decay_Ensemble} is identical to a \path{Slice_Ensemble} except that it has only the three parameters in the order mentioned, and the corresponding prior vector, and omits the Phases constant.
 
@@ -94,7 +96,7 @@ A \path{MultiSlice_Ensemble} is parameterised identically to the corresponding \
 \label{sec:thymidinemodel}
 Unlike the population-level models described above, the \path{Thymidine_Model} is a cell-based lineage simulator. It retains the slice model concept of comparing simulated observations directly to counts obtained from cryosections. Because these counts are obtained over a short time period (1 day), no effort is made to account for the growth of the eye. It uses an explicitly modelled cell cycle with G1, S, and G2\/M phases.
 
-The model assumes a LogNormal distribution of overall cell cycle lengths. It is parameterised by $TC_{\mu}$ and $TC_{\sigma^{2}}$ values for this LogNormal distribution (a \hyperref[ssec:normalgamma]{Normal Inverse Gamma prior} should be used), a fraction $s$ which gives the length of S-phase by multiplying into the sampled $TC$, a fraction $g1$, which gives the fraction of the remaining time which comes before S-phase as G1, and implies the length of the G2\/M phase afterwards. Finally, the fraction $sis$ is randomly added to or subtracted from the cell cycle length determined for one sibling of a mitosis to give the cell cycle length of the other. This represents the correlated sibling cell cycle times which characterise \textit{Danio} RPC populations, as usefully observed and modelled by He et al. \cite{He2012}. The parameter vector is given in the order \path{[tc$\mu$, tc$\sigma^{2}$, g1_frac, s_frac, sis_frac]}.
+The model assumes a LogNormal distribution of overall cell cycle lengths. It is parameterised by $TC_{\mu}$ and $TC_{\sigma^{2}}$ values for this LogNormal distribution (a \hyperref[ssec:normalgamma]{Normal Inverse Gamma prior} should be used), a fraction $s$ which gives the length of S-phase by multiplying into the sampled $TC$, a fraction $g1$, which gives the fraction of the remaining time which comes before S-phase as G1, and implies the length of the G2\/M phase afterwards. Finally, the fraction $sis$ is randomly added to or subtracted from the cell cycle length determined for one sibling of a mitosis to give the cell cycle length of the other. This represents the correlated sibling cell cycle times which characterise \textit{Danio} RPC populations, as usefully observed and modelled by He et al. \cite{He2012}. The parameter vector is given in the order \path{[tc}$\mu$\path{, tc}$\sigma^{2}$ \path{, g1_frac, s_frac, sis_frac]}.
 
 The model assumes linear labelling of nuclear contents over the cell cycle, and implements a minimum value for detection as a thymidine-labelled cell (\path{DETECTION_THRESHOLD}, set to .15 by default). This represents cells with a dusting of thymidine signal that are not counted as labelled, which normally occurs in confocal stack segmentation routines.
 
