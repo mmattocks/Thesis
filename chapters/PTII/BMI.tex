@@ -4,7 +4,13 @@
 \section{Introduction}
 While many methods to detect overrepresented motifs in nucleotide sequences, only one is a rigorously validated system of statistical inference that allows us to calculate the evidence for these motif models, given genomic observations: nested sampling \cite{Skilling2006}. Computational biologists almost immediately benefitted from Skilling's original publication, with the release of the Java-coded nMICA by Down et al. in 2005 \cite{Down2005}. Unfortunately, this code base is no longer being maintained. It is, moreover, desireable to take advantage of modern languages and programming techniques to improve the maintainability and productivity of important bioinformatic code. We therefore re-implemented Skilling's original algorithm, for use in inference of DNA motifs in Julia \cite{Bezanson2015}, as \path{BioMotifInference.jl}, hereafter \path{BMI.jl}.
 
-In brief, \path{BMI.jl} is intended to estimate the evidence for \hyperref[ssec:ICA]{Independent Component Analysis} models of \hyperref[ssec:PWM]{Position Weight Matrix} (PWM) signals on \hyperref[ssec:HMM]{Hidden Markov Models} of genomic background noise, and to estimate the \hyperref[ssec:MLE]{maximum a priori} parameters of detected signals. This allows the user to perform Bayesian model selection and comparison for generative hypotheses about genomic sequences of interest. The ICA approach is discussed in more detail in the relevant sections of \autoref{chap:theoryA}.
+In brief, \path{BMI.jl} is intended to estimate the evidence for \hyperref[ssec:ICA]{Independent Component Analysis} models of \hyperref[ssec:PWM]{Position Weight Matrix} (PWM) signals on \hyperref[ssec:HMM]{Hidden Markov Models} of genomic background noise (summarized in \autoref{fig:BMIschematic}), and to estimate the \hyperref[ssec:MLE]{maximum a priori} parameters of detected signals. This allows the user to perform Bayesian model selection and comparison for generative hypotheses about genomic sequences of interest. The ICA approach is discussed in more detail in the relevant sections of \autoref{chap:theoryA}.
+
+\begin{figure}
+    \makebox[\textwidth][c]{\includegraphics[width=.8\textwidth]{IPMlh.png}}    
+    \caption{{\bf Schematic representation of BioMotifInference likelihood algorithm.}}
+    \label{fig:BMIschematic}
+\end{figure}
 
 \section{Implementation of the nested sampling algorithm}
 
