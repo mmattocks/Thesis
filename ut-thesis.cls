@@ -321,10 +321,10 @@
       \vfill
       A thesis submitted in conformity with the requirements\\
       for the degree of {\@degree}\\
-      Graduate Department of {\@department}\\
+      Department of {\@department}\\
       University of Toronto\\
       \vfill
-      {\copyright} Copyright {\@gradyear} by {\@author}\\
+      {\copyright} Copyright by {\@author} {\@gradyear}\\
       \vspace{.01\textheight}
       \mbox{}
    \end{center}
@@ -353,13 +353,13 @@
 
 %% \begin{dedication}...\end{dedication} formats a dedication section
 %% (*not* on a separate page -- just a paragraph formatted flush right).
-\newenvironment*{dedication}%
+\newenvironment{dedication}%
   {\begin{flushright}}%
   {\end{flushright}}
 
 %% \begin{acknowledgements}...\end{acknowledgements} formats an
 %% acknowledgements section (*not* on a separate page).
-\newenvironment*{acknowledgements}%
+\newenvironment{acknowledgements}%
   {\begin{center}
       \section*{Acknowledgements}
    \end{center}
